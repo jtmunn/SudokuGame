@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Sudoku.Maui.Pages.SettingsPage"
+             Title="Settings"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="25">
+            <Label Text="Settings" 
+                   FontSize="32" 
+                   FontAttributes="Bold" 
+                   HorizontalOptions="Center" 
+                   Margin="0,0,0,20"
+                   TextColor="{DynamicResource TextColor}"/>
+            
+            <Frame Padding="15" 
+                   CornerRadius="10" 
+                   HasShadow="True"
+                   BackgroundColor="{DynamicResource SettingsFrameColor}"
+                   BorderColor="{DynamicResource SettingsFrameBorderColor}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Appearance" 
+                           FontSize="20" 
+                           FontAttributes="Bold"
+                           TextColor="{DynamicResource TextColor}"/>
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Theme:" 
+                               VerticalOptions="Center" 
+                               FontSize="16"
+                               TextColor="{DynamicResource SecondaryTextColor}"/>
+                        <Picker x:Name="ThemePicker" 
+                                SelectedIndexChanged="OnThemeChanged" 
+                                HorizontalOptions="FillAndExpand" 
+                                FontSize="16"
+                                TextColor="{DynamicResource TextColor}"
+                                BackgroundColor="{DynamicResource SettingsInputBackgroundColor}">
+                            <Picker.ItemsSource>
+                                <x:Array Type="{x:Type x:String}">
+                                    <x:String>Light</x:String>
+                                    <x:String>Dark</x:String>
+                                </x:Array>
+                            </Picker.ItemsSource>
+                        </Picker>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <Frame Padding="15" 
+                   CornerRadius="10" 
+                   HasShadow="True"
+                   BackgroundColor="{DynamicResource SettingsFrameColor}"
+                   BorderColor="{DynamicResource SettingsFrameBorderColor}">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Game Settings" 
+                           FontSize="20" 
+                           FontAttributes="Bold"
+                           TextColor="{DynamicResource TextColor}"/>
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Default Difficulty:" 
+                               VerticalOptions="Center" 
+                               FontSize="16"
+                               TextColor="{DynamicResource SecondaryTextColor}"/>
+                        <Picker x:Name="DifficultyPicker" 
+                                SelectedIndexChanged="OnDifficultyChanged" 
+                                HorizontalOptions="FillAndExpand" 
+                                FontSize="16"
+                                TextColor="{DynamicResource TextColor}"
+                                BackgroundColor="{DynamicResource SettingsInputBackgroundColor}">
+                            <Picker.ItemsSource>
+                                <x:Array Type="{x:Type x:String}">
+                                    <x:String>Easy</x:String>
+                                    <x:String>Medium</x:String>
+                                    <x:String>Hard</x:String>
+                                </x:Array>
+                            </Picker.ItemsSource>
+                        </Picker>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Show Hint Button" 
+                               VerticalOptions="Center" 
+                               FontSize="16" 
+                               HorizontalOptions="StartAndExpand"
+                               TextColor="{DynamicResource SecondaryTextColor}"/>
+                        <Switch x:Name="ShowHintSwitch" 
+                                Toggled="OnShowHintToggled" 
+                                VerticalOptions="Center"
+                                OnColor="{DynamicResource SwitchOnColor}"/>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="Show Check Button" 
+                               VerticalOptions="Center" 
+                               FontSize="16" 
+                               HorizontalOptions="StartAndExpand"
+                               TextColor="{DynamicResource SecondaryTextColor}"/>
+                        <Switch x:Name="ShowCheckSwitch" 
+                                Toggled="OnShowCheckToggled" 
+                                VerticalOptions="Center"
+                                OnColor="{DynamicResource SwitchOnColor}"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <Frame Padding="15" 
+                   CornerRadius="10" 
+                   HasShadow="True"
+                   BackgroundColor="{DynamicResource InfoBackgroundColor}"
+                   BorderColor="{DynamicResource InfoBorderColor}">
+                <VerticalStackLayout Spacing="5">
+                    <Label Text="About" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="{DynamicResource TextColor}"/>
+                    <Label Text="Settings are automatically saved." 
+                           FontSize="14"
+                           TextColor="{DynamicResource InfoTextColor}"/>
+                    <Label Text="Changes will take effect immediately or on next game start." 
+                           FontSize="14"
+                           TextColor="{DynamicResource InfoTextColor}"/>
+                </VerticalStackLayout>
+            </Frame>
+            
+            <Button Text="Back to Game" 
+                    Clicked="OnBackClicked" 
+                    HorizontalOptions="Center" 
+                    WidthRequest="200" 
+                    HeightRequest="50" 
+                    FontSize="16" 
+                    FontAttributes="Bold"
+                    CornerRadius="25" 
+                    Margin="0,10,0,0"
+                    BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                    TextColor="{DynamicResource ButtonTextColor}">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
+                </Button.Shadow>
+            </Button>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".github/copilot-instructions.md" />
+    <File Path="CONSTANTS_REFERENCE.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="Sudoku.Core/Sudoku.Core.csproj" />
+  <Project Path="Sudoku.Maui/Sudoku.Maui.csproj" />
+</Solution>

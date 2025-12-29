@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Sudoku.Maui"
+             xmlns:controls="clr-namespace:Sudoku.Maui.Controls"
+             x:Class="Sudoku.Maui.Pages.SudokuPage"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="WidthRequest" Value="80"/>
+            <Setter Property="HeightRequest" Value="80"/>
+            <Setter Property="CornerRadius" Value="40"/>
+            <Setter Property="FontSize" Value="36"/>
+            <Setter Property="FontFamily" Value="FontAwesome"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BackgroundColor" Value="{DynamicResource SuccessButtonColor}"/>
+            <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{DynamicResource SuccessButtonColor}"/>
+                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{DynamicResource SuccessButtonHoverColor}"/>
+                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{DynamicResource SuccessButtonPressedColor}"/>
+                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="NumberButtonStyle" TargetType="Button">
+            <Setter Property="WidthRequest" Value="80"/>
+            <Setter Property="HeightRequest" Value="80"/>
+            <Setter Property="CornerRadius" Value="40"/>
+            <Setter Property="FontSize" Value="32"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}"/>
+            <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Shadow">
+                <Shadow Brush="{DynamicResource ShadowColor}" 
+                        Opacity="{DynamicResource ShadowOpacity}" 
+                        Radius="6" 
+                        Offset="3,3"/>
+            </Setter>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}"/>
+                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}"/>
+                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonPressedColor}"/>
+                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        
+        <x:String x:Key="IconLightbulb">&#xf0eb;</x:String>
+        <x:String x:Key="IconCheck">&#xf00c;</x:String>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="0" BackgroundColor="{DynamicResource PageBackgroundColor}">
+        
+        <!-- Header Bar -->
+        <Grid Grid.Row="0" 
+              ColumnDefinitions="Auto,*,Auto" 
+              Padding="16,8" 
+              HeightRequest="56"
+              BackgroundColor="{DynamicResource PrimaryButtonColor}">
+            
+            <!-- Left: Difficulty Level -->
+            <Label Grid.Column="0" 
+                   x:Name="DifficultyLabel"
+                   Text="Difficulty: Easy"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   TextColor="{DynamicResource ButtonTextColor}"
+                   Margin="0,0,20,0"/>
+            
+            <!-- Center: Timer -->
+            <Label Grid.Column="1" 
+                   x:Name="TimerLabel"
+                   Text="Time: 00:00"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   TextColor="{DynamicResource ButtonTextColor}"/>
+            
+            <!-- Right: Action Buttons -->
+            <HorizontalStackLayout Grid.Column="2" 
+                                  Spacing="16"
+                                  HorizontalOptions="End">
+                <Button x:Name="NewGameButton"
+                        Text="&#xf067;"
+                        FontFamily="FontAwesome"
+                        FontSize="24"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        Padding="0"
+                        BorderWidth="0"
+                        BackgroundColor="Transparent"
+                        TextColor="{DynamicResource ButtonTextColor}"
+                        Clicked="OnNewGameClicked"
+                        ToolTipProperties.Text="New Game"/>
+                
+                <Button x:Name="SettingsButton"
+                        Text="&#xf013;"
+                        FontFamily="FontAwesome"
+                        FontSize="24"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        Padding="0"
+                        BorderWidth="0"
+                        BackgroundColor="Transparent"
+                        TextColor="{DynamicResource ButtonTextColor}"
+                        Clicked="OnSettingsClicked"
+                        ToolTipProperties.Text="Settings"/>
+            </HorizontalStackLayout>
+        </Grid>
+        
+        <!-- Game Area -->
+        <AbsoluteLayout Grid.Row="1">
+            
+            <!-- Centered grid -->
+            <Border StrokeThickness="0"
+                    BackgroundColor="{DynamicResource SurfaceColor}"
+                    Padding="0"
+                    x:Name="GridBorder"
+                    AbsoluteLayout.LayoutFlags="PositionProportional"
+                    AbsoluteLayout.LayoutBounds="0.5,0.5,AutoSize,AutoSize">
+                
+                <controls:SudokuGridView x:Name="SudokuGridView"
+                                         BackgroundColor="{DynamicResource SurfaceColor}" />
+            </Border>
+            
+            <!-- Action Buttons - positioned using code-behind with AbsoluteLayout.LayoutBounds -->
+            <VerticalStackLayout x:Name="ActionButtonStack"
+                                Spacing="12"
+                                AbsoluteLayout.LayoutFlags="None">
+                <Button x:Name="HintButton"
+                        Text="{StaticResource IconLightbulb}"
+                        Clicked="OnHintClicked"
+                        Style="{StaticResource ActionButtonStyle}"
+                        BorderWidth="0"
+                        ToolTipProperties.Text="Get a hint"/>
+                
+                <Button x:Name="CheckButton"
+                        Text="{StaticResource IconCheck}"
+                        Clicked="OnCheckClicked"
+                        Style="{StaticResource ActionButtonStyle}"
+                        BorderWidth="0"
+                        ToolTipProperties.Text="Check for errors"/>
+            </VerticalStackLayout>
+        </AbsoluteLayout>
+
+        <!-- Number Pad -->
+        <HorizontalStackLayout Grid.Row="2"
+                              Spacing="0" 
+                              HorizontalOptions="Center"
+                              Margin="0,0,0,60"
+                              x:Name="NumberPad">
+            <Button Text="1" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="2" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="3" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="4" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="5" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="6" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="7" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="8" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <Button Text="9" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+        </HorizontalStackLayout>
+    </Grid>
+
+</ContentPage>

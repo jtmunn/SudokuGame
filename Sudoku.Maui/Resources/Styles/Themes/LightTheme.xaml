@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="Sudoku.Maui.Resources.Styles.Themes.LightTheme">
+
+    <!-- Page Colors -->
+    <Color x:Key="PageBackgroundColor">#F5F5F5</Color>
+    <Color x:Key="SurfaceColor">White</Color>
+    <Color x:Key="TextColor">#2C3E50</Color>
+    <Color x:Key="SecondaryTextColor">#555555</Color>
+    <Color x:Key="BorderColor">#E0E0E0</Color>
+    
+    <!-- Button Colors -->
+    <Color x:Key="PrimaryButtonColor">#3498DB</Color>
+    <Color x:Key="PrimaryButtonHoverColor">#2980B9</Color>
+    <Color x:Key="PrimaryButtonPressedColor">#21618C</Color>
+    
+    <Color x:Key="SuccessButtonColor">#27AE60</Color>
+    <Color x:Key="SuccessButtonHoverColor">#229954</Color>
+    <Color x:Key="SuccessButtonPressedColor">#1E8449</Color>
+    
+    <Color x:Key="ButtonTextColor">White</Color>
+    
+    <!-- Shadow Colors -->
+    <Color x:Key="ShadowColor">#000000</Color>
+    <x:Double x:Key="ShadowOpacity">0.3</x:Double>
+    
+    <!-- Sudoku Grid Colors -->
+    <Color x:Key="CellDefaultColor">White</Color>
+    <Color x:Key="CellGivenColor">White</Color>
+    <Color x:Key="CellSelectedColor">#EEE2AA</Color>
+    <Color x:Key="CellErrorColor">#E74C3C</Color>
+    <Color x:Key="CellHighlightColor">#E8E8E8</Color>
+    <Color x:Key="CellLightHighlightColor">#F0F0F0</Color>
+    <Color x:Key="CellMatchingNumberColor">#D0D0D0</Color>
+    
+    <Color x:Key="CellUserTextColor">Black</Color>
+    <Color x:Key="CellGivenTextColor">Black</Color>
+    <Color x:Key="CellErrorTextColor">White</Color>
+    
+    <Color x:Key="GridBorderColor">#888888</Color>
+    <Color x:Key="GridThickBorderColor">#082B6B</Color>
+    
+    <!-- Settings Page Colors -->
+    <Color x:Key="SettingsFrameColor">White</Color>
+    <Color x:Key="SettingsFrameBorderColor">#E0E0E0</Color>
+    <Color x:Key="SettingsInputBackgroundColor">#F5F5F5</Color>
+    <Color x:Key="InfoBackgroundColor">#E8F5E9</Color>
+    <Color x:Key="InfoBorderColor">#C8E6C9</Color>
+    <Color x:Key="InfoTextColor">#555555</Color>
+    <Color x:Key="SwitchOnColor">#3498DB</Color>
+
+</ResourceDictionary>

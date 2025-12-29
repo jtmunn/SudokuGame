@@ -1,0 +1,296 @@
+# GitHub Copilot Instructions for Sudoku .NET MAUI Project
+
+## ?? CRITICAL: Think Before You Code
+
+**STOP AND THINK BEFORE SUGGESTING ANY SOLUTION**
+
+Before proposing any code changes:
+1. ? **Verify** the API/method actually exists in .NET MAUI
+2. ? **Check** that the approach is cross-platform compatible
+3. ? **Consider** if you're fighting the framework or working with it
+4. ? **Research** the correct lifecycle events/APIs if unsure
+5. ? **Ask yourself**: "Would this work the same way on Windows, macOS, iOS, and Android?"
+
+**Quality over quantity. Take time to think. It's okay to pause and verify.**
+
+If you're not 100% certain about a MAUI API or pattern:
+- Don't guess or assume
+- Don't suggest platform-specific solutions first
+- Don't propose workarounds without explaining why they're needed
+- **DO** suggest cross-platform MAUI solutions first
+- **DO** acknowledge when you need to verify something
+
+---
+
+## ?? Project Summary
+
+**Date:** 2025-01-XX  
+**Project:** Sudoku Game - .NET MAUI  
+**Target:** .NET 10, C# 14
+
+### Current Architecture
+
+**Strengths:**
+- ? `TreatWarningsAsErrors` enabled in both projects
+- ? Modern .NET MAUI APIs used (DisplayAlertAsync, Border, etc.)
+- ? Clean separation: Core (logic) + MAUI (UI)
+- ? Proper DI registration in MauiProgram.cs
+- ? Theme system using separate XAML files (LightTheme.xaml, DarkTheme.xaml)
+- ? Constants documented in CONSTANTS_REFERENCE.md
+
+---
+
+## ?? THEME SYSTEM
+
+### How Themes Work
+
+Themes are defined in separate XAML ResourceDictionary files with code-behind:
+- `Resources/Styles/Themes/LightTheme.xaml` + `.cs`
+- `Resources/Styles/Themes/DarkTheme.xaml` + `.cs`
+
+**Theme Loading Pattern:**
+1. Theme classes are instantiated in C#: `new LightTheme()` or `new DarkTheme()`
+2. Added to `Application.Current.Resources.MergedDictionaries`
+3. Controls access theme colors by searching through merged dictionaries
+
+**IMPORTANT:** Theme colors are NOT directly in `Application.Current.Resources`. They live in the merged dictionaries and must be accessed by iterating:
+
+```csharp
+// ? CORRECT way to get theme colors
+foreach (var dict in Application.Current.Resources.MergedDictionaries)
+{
+    if (dict.ContainsKey("CellDefaultColor"))
+        color = (Color)dict["CellDefaultColor"];
+}
+
+// ? WRONG - this will return False even if theme is loaded!
+Application.Current.Resources.ContainsKey("CellDefaultColor")
+```
+
+### Theme Switching
+
+**In App.xaml.cs:**
+```csharp
+public void LoadTheme(AppTheme theme)
+{
+    // Remove old theme
+    var oldTheme = Resources.MergedDictionaries.FirstOrDefault(d => 
+        d.GetType().Name == "LightTheme" || d.GetType().Name == "DarkTheme");
+    if (oldTheme != null)
+        Resources.MergedDictionaries.Remove(oldTheme);
+    
+    // Add new theme
+    if (theme == AppTheme.Dark)
+        Resources.MergedDictionaries.Add(new Resources.Styles.Themes.DarkTheme());
+    else
+        Resources.MergedDictionaries.Add(new Resources.Styles.Themes.LightTheme());
+}
+```
+
+**In Settings:**
+```csharp
+Application.Current!.UserAppTheme = AppTheme.Dark; // or AppTheme.Light
+if (Application.Current is App app)
+    app.LoadTheme(AppTheme.Dark);
+```
+
+### Adding New Theme Colors
+
+1. **Add to BOTH theme XAML files:**
+   ```xml
+   <!-- LightTheme.xaml -->
+   <Color x:Key="NewColorName">#FFFFFF</Color>
+   
+   <!-- DarkTheme.xaml -->
+   <Color x:Key="NewColorName">#000000</Color>
+   ```
+
+2. **Access in code** by searching merged dictionaries (see pattern above)
+
+3. **For XAML controls**, use `{DynamicResource}`:
+   ```xml
+   <Label BackgroundColor="{DynamicResource NewColorName}" />
+   ```
+
+### Why NOT `SetDynamicResource` in C# Constructors?
+
+`SetDynamicResource()` fails silently if the resource doesn't exist when called. Since themes are loaded dynamically after control construction, we manually apply colors in the `Loaded` event instead.
+
+---
+
+## ?? CRITICAL RULES - NEVER VIOLATE
+
+### 0. Color Creation Methods - CRITICAL
+
+**THE GOLDEN RULE: ALWAYS use `Color.FromArgb()` with hex strings for theme colors.**
+
+#### ? CORRECT Color Methods
+```csharp
+// ? ALWAYS use Color.FromArgb with hex string
+["CellDefaultColor"] = Color.FromArgb("#FFFFFF"),
+["TextColor"] = Color.FromArgb("#2C3E50"),
+
+// ? For predefined colors, use Colors.ColorName
+["ButtonTextColor"] = Colors.White,
+["ErrorTextColor"] = Colors.Red,
+```
+
+#### ? WRONG Color Methods - NEVER USE THESE
+```csharp
+// ? NEVER use Color.FromRgb - this breaks consistency
+["CellDefaultColor"] = Color.FromRgb(255, 255, 255), // WRONG!
+
+// ? NEVER use Color.FromRgba unless alpha is truly needed and different from FF
+["CellDefaultColor"] = Color.FromRgba(255, 255, 255, 255), // WRONG - use FromArgb
+
+// ? NEVER mix color creation methods in the same dictionary
+["Color1"] = Color.FromArgb("#FFFFFF"),  // Right
+["Color2"] = Color.FromRgb(0, 0, 0),     // WRONG - inconsistent!
+```
+
+### 1. Theme Color Management
+
+**THE GOLDEN RULE: Theme colors live in XAML files (LightTheme.xaml / DarkTheme.xaml).**
+
+#### ? CORRECT Approach
+```csharp
+// When user wants to change a color, update BOTH XAML files:
+// - Sudoku.Maui/Resources/Styles/Themes/LightTheme.xaml
+// - Sudoku.Maui/Resources/Styles/Themes/DarkTheme.xaml
+
+// Access them by searching merged dictionaries (see Theme System section above)
+```
+
+#### ? WRONG Approaches
+```csharp
+// ? DON'T inline hardcoded colors in code-behind
+button.TextColor = Colors.Black; // NEVER DO THIS
+
+// ? DON'T add colors only to App.xaml.cs
+// Always update the XAML theme files
+
+// ? DON'T use Application.Current.Resources.ContainsKey for theme colors
+// Must search through MergedDictionaries!
+```
+
+### 2. Layout & Positioning
+
+**THE GOLDEN RULE: Only the grid is centered. Action buttons are positioned AFTER.**
+
+#### ? CORRECT Layout Philosophy
+- **Sudoku Grid**: Centered independently on the page using `AbsoluteLayout.LayoutBounds="0.5,0.5"`
+- **Action Buttons**: Positioned to the RIGHT of the centered grid using calculated `AbsoluteLayout.LayoutBounds`
+- **Number Pad**: Centered independently at bottom
+
+#### ? WRONG Approaches
+```csharp
+// ? DON'T try to center grid + action buttons together as a group
+// ? DON'T use HorizontalStackLayout wrapping grid and buttons
+// ? DON'T calculate "combined width" for centering
+// ? DON'T suggest TranslationX for grid positioning
+```
+
+### 3. API Usage
+
+#### ? Always Use These:
+- `DisplayAlertAsync` (NOT `DisplayAlert` - it's obsolete)
+- `FadeToAsync`, `ScaleToAsync` (NOT `FadeTo`, `ScaleTo` - obsolete)
+- `Border` (NOT `Frame` - Frame is obsolete in .NET 9+)
+- `await` for all async operations
+- `Color.FromArgb("#RRGGBB")` for theme colors (NOT `Color.FromRgb()`)
+
+#### ? Never Use These:
+- `DisplayAlert` - obsolete
+- `FadeTo`, `ScaleTo` - obsolete  
+- `Frame` - obsolete in .NET 9+
+- `.Result` or `.Wait()` on async methods - causes deadlocks (except for settings save on app close)
+- `Color.FromRgb()` - use `Color.FromArgb()` for consistency
+
+### 4. Warnings = Errors
+
+```xml
+<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+```
+
+- **Zero warnings tolerated**
+- Fix ALL warnings before completing any code change
+- If you introduce a warning, you MUST fix it immediately
+
+---
+
+## ?? Layout & Sizing Rules
+
+### Constants - Never Hardcode
+
+**All sizing constants documented in:** `CONSTANTS_REFERENCE.md`
+
+**Key Constants:**
+```csharp
+// Grid
+MinGridSize = 360
+BaseGridSize = 450.0
+
+// Buttons  
+BaseButtonSize = 45.0
+BaseFontSize = 20.0
+
+// Spacing
+GameAreaPadding = 10
+ActionButtonMargin = 20
+NumberButtonMargin = 6
+
+// UI Regions
+HeaderHeight = 56
+NumberPadHeight = 120
+```
+
+### Scaling Formula
+
+Everything scales proportionally from the grid:
+
+```csharp
+scale = _currentGridSize / BaseGridSize;
+scaledButtonSize = Math.Round(BaseButtonSize * scale);
+scaledFontSize = Math.Round(BaseFontSize * scale);
+```
+
+### Action Button Positioning
+
+```csharp
+// Grid is centered independently
+GridBorder.LayoutFlags = AbsoluteLayoutFlags.PositionProportional;
+GridBorder.LayoutBounds = new Rect(0.5, 0.5, AutoSize, AutoSize);
+
+// Action buttons positioned AFTER centered grid
+double centerX = Width / 2;
+double buttonX = centerX + (_currentGridSize / 2) + ActionButtonMargin;
+double buttonY = (Height - HeaderHeight - scaledNumberPadHeight) / 2;
+
+AbsoluteLayout.SetLayoutBounds(ActionButtonStack, 
+    new Rect(buttonX, buttonY, actionButtonWidth, AbsoluteLayout.AutoSize));
+```
+
+### ? Common Layout Mistakes
+
+```csharp
+// ? DON'T calculate grid width by subtracting button space
+availableWidth = Width - actionButtonWidth - ActionButtonMargin; // WRONG
+
+// ? DO calculate grid from full available space
+availableWidth = Width - (GameAreaPadding * 2); // CORRECT
+
+// ? DON'T use TranslationX for grid
+GridBorder.TranslationX = offset; // WRONG - grid should be centered via LayoutBounds
+
+// ? DO use TranslationX only if absolutely needed for action buttons
+ActionButtonStack.TranslationX = offset; // OK for buttons
+
+// ? DON'T wrap grid and buttons in HorizontalStackLayout
+<HorizontalStackLayout>
+    <SudokuGrid />
+    <VerticalStackLayout>  <!-- WRONG -->
+
+// ? DO use AbsoluteLayout with independent positioning
+<AbsoluteLayout>
+    <Grid LayoutBounds="0.5,0.5,AutoSize,AutoSize" />  <!-- Centered -->
+    <VerticalStackLayout LayoutBounds="calculated" />   <!-- After grid -->
