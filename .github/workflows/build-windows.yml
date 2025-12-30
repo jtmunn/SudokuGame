@@ -100,8 +100,17 @@ jobs:
         
         Write-Host "Found MSIX: $msixPath"
         
-        # Sign the MSIX with SignTool
-        $signtool = "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe"
+        # Find SignTool (it's in Windows SDK)
+        $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "signtool.exe" |
+                    Where-Object { $_.FullName -match "x64" } |
+                    Select-Object -First 1 -ExpandProperty FullName
+        
+        if ([string]::IsNullOrEmpty($signtool)) {
+          Write-Error "SignTool.exe not found!"
+          exit 1
+        }
+        
+        Write-Host "Using SignTool: $signtool"
         Write-Host "Signing MSIX with certificate..."
         & $signtool sign /fd SHA256 /a /f "SudokuCert.pfx" /p "temp123" $msixPath
         
