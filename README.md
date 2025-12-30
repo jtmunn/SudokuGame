@@ -4,7 +4,7 @@
 
 A cross-platform Sudoku game built with .NET MAUI that works on Windows, Android, iOS, and macOS. Features responsive design, light/dark themes, and a clean interface that maximizes puzzle visibility.
 
-**✨ 100% Free Open Source  No Ads · No Tracking · Yours Forever**
+**✨ 100% Free Open Source · No Ads · No Tracking · Yours Forever**
 
 ---
 
