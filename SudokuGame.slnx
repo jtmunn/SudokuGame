@@ -9,5 +9,7 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="Sudoku.Core/Sudoku.Core.csproj" />
-  <Project Path="Sudoku.Maui/Sudoku.Maui.csproj" />
+  <Project Path="Sudoku.Maui/Sudoku.Maui.csproj">
+    <Deploy />
+  </Project>
 </Solution>

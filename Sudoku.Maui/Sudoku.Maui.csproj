@@ -20,16 +20,16 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
 		<!-- Display name -->
-		<ApplicationTitle>Sudoku.Maui</ApplicationTitle>
+		<ApplicationTitle>Sudoku</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.sudoku.maui</ApplicationId>
+		<ApplicationId>com.jtmunn.sudoku</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
+		<!-- For development debugging, use unpackaged mode -->
 		<WindowsPackageType>None</WindowsPackageType>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
@@ -39,6 +39,29 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<!-- Windows-specific properties for Release builds (MSIX packaging) -->
+	<PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Configuration)' == 'Release'">
+		<OutputType>WinExe</OutputType>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<PublishReadyToRun>false</PublishReadyToRun>
+		
+		<!-- Windows MSIX Packaging (Release only) -->
+		<WindowsPackageType>MSIX</WindowsPackageType>
+		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+		<GenerateTestArtifacts>False</GenerateTestArtifacts>
+		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+		
+		<!-- Package Identity - Used for MSIX packaging -->
+		<PackageIdentityName>Sudoku</PackageIdentityName>
+		<PackageIdentityPublisher>CN=jtmunn</PackageIdentityPublisher>
+		<PackageIdentityVersion>1.1.0.0</PackageIdentityVersion>
+	</PropertyGroup>
+								
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />

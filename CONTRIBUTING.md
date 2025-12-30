@@ -176,10 +176,10 @@ git commit -m "asdfghjkl"
 ### General Rules
 
 - **? Follow existing patterns** in the codebase
-- **? Use meaningful variable names**: `selectedCell`, not `sc`
-- **? Keep methods focused**: One responsibility per method
-- **? Add comments** when logic isn't obvious
-- **? Use constants** instead of magic numbers
+- **?? Use meaningful variable names**: `selectedCell`, not `sc`
+- **?? Keep methods focused**: One responsibility per method
+- **?? Add comments** when logic isn't obvious
+- **?? Use constants** instead of magic numbers
 
 ### C# Conventions
 

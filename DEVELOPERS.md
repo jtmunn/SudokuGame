@@ -100,7 +100,7 @@ Themes are defined in separate XAML ResourceDictionary files:
 - `Resources/Styles/Themes/DarkTheme.xaml` + `.cs`
 
 **Theme Loading Pattern:**
-1. Theme classes are instantiated: `new LightTheme()` or `new DarkTheme()``
+1. Theme classes are instantiated: `new LightTheme()` or `new DarkTheme()```
 2. Added to `Application.Current.Resources.MergedDictionaries`
 3. Controls access theme colors by searching through merged dictionaries
 
@@ -183,12 +183,12 @@ This project enforces **strict code quality**:
 
 ### ? Enabled Rules
 
-- **? TreatWarningsAsErrors**: Zero tolerance for warnings
-- **? Nullable Reference Types**: All nullability must be explicit
+- **?? TreatWarningsAsErrors**: Zero tolerance for warnings
+- **?? Nullable Reference Types**: All nullability must be explicit
 - **? Modern Async APIs**: Always use `DisplayAlertAsync`, `FadeToAsync`, etc.
-- **? No Obsolete APIs**: No `Frame`, `DisplayAlert`, `FadeTo`, etc.
+- **?? No Obsolete APIs**: No `Frame`, `DisplayAlert`, `FadeTo`, etc.
 
-### ?? Forbidden Patterns
+### ? Forbidden Patterns
 
 ```csharp
 // ? NEVER - Obsolete APIs
@@ -307,7 +307,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotent@v3
         with:
           dotnet-version: '10.0.x'
       - name: Restore dependencies
@@ -352,22 +352,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 ### Why Separate Core and MAUI Projects?
 
 - **? Testability**: Core logic can be unit tested without UI
-- **? Reusability**: Same Core can power Blazor, Console, or other UIs
-- **? Maintainability**: Clear separation of concerns
-- **? Platform Agnostic**: Core has zero UI dependencies
+- **?? Reusability**: Same Core can power Blazor, Console, or other UIs
+- **?? Maintainability**: Clear separation of concerns
+- **?? Platform Agnostic**: Core has zero UI dependencies
 
 ### Why MAUI Over Xamarin.Forms?
 
-- **? Modern**: .NET 10, C# 14, latest features
+- **?? Modern**: .NET 10, C# 14, latest features
 - **? Performance**: Better rendering and startup time
-- **? Single Project**: Simplified project structure
-- **? Future-Proof**: Microsoft's current focus
+- **?? Single Project**: Simplified project structure
+- **?? Future-Proof**: Microsoft's current focus
 
 ### Why JSON Over SQLite for Settings?
 
 - **? Simplicity**: Settings are small and infrequent
-- **? Portability**: Easy to backup/restore
-- **? No Dependencies**: No need for SQLite libraries
+- **?? Portability**: Easy to backup/restore
+- **?? No Dependencies**: No need for SQLite libraries
 - *(SQLite may be added for game history later)*
 
 ---
@@ -381,7 +381,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ---
 
-## ?? Technology Stack Details
+## ??? Technology Stack Details
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
