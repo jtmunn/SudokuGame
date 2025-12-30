@@ -61,12 +61,17 @@ jobs:
       id: find_msix
       shell: pwsh
       run: |
-        $msixPath = Get-ChildItem -Path "Sudoku.Maui/bin/${{ env.CONFIGURATION }}" -Recurse -Filter "*.msix" | 
-                    Where-Object { $_.FullName -notmatch 'Dependencies' } | 
+        $msixPath = Get-ChildItem -Path "Sudoku.Maui/bin" -Recurse -Filter "*.msix" | 
+                    Where-Object { 
+                        $_.FullName -notmatch 'Dependencies' -and 
+                        $_.FullName -match 'AppPackages' 
+                    } | 
                     Select-Object -First 1 -ExpandProperty FullName
         
         if ([string]::IsNullOrEmpty($msixPath)) {
-          Write-Error "MSIX package not found!"
+          Write-Error "MSIX package not found in Sudoku.Maui/bin/AppPackages!"
+          Write-Host "Searching for all MSIX files for debugging:"
+          Get-ChildItem -Path "Sudoku.Maui/bin" -Recurse -Filter "*.msix" | ForEach-Object { Write-Host "  Found: $($_.FullName)" }
           exit 1
         }
         
