@@ -131,7 +131,6 @@ namespace Sudoku.Core.Models
                 cell.Value = 0;
                 cell.IsGiven = false;
                 cell.HasError = false;
-                cell.Notes.Clear();
             }
         }
 
@@ -150,7 +149,6 @@ namespace Sudoku.Core.Models
                     destCell.Value = sourceCell.Value;
                     destCell.IsGiven = sourceCell.IsGiven;
                     destCell.HasError = sourceCell.HasError;
-                    destCell.Notes = new HashSet<int>(sourceCell.Notes);
                 }
             }
             return clone;

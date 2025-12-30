@@ -169,25 +169,5 @@ namespace Sudoku.Core.Services
                 }
             }
         }
-
-        /// <summary>
-        /// Gets the difficulty rating of a puzzle (0-100, higher is harder).
-        /// Based on number of givens and solving complexity.
-        /// </summary>
-        public int GetDifficultyRating(SudokuBoard board)
-        {
-            int givenCount = board.GetAllCells().Count(c => c.IsGiven);
-            
-            // Simple difficulty based on number of givens
-            // More sophisticated analysis could be added later
-            if (givenCount >= 40)
-                return 20; // Easy
-            else if (givenCount >= 32)
-                return 40; // Medium
-            else if (givenCount >= 25)
-                return 60; // Hard
-            else
-                return 80; // Expert
-        }
     }
 }

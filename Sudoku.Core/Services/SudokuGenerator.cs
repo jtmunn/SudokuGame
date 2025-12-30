@@ -62,14 +62,12 @@ namespace Sudoku.Core.Services
         /// </summary>
         private bool FillBoard(SudokuBoard board)
         {
-            // Find empty cell
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
                 for (int col = 0; col < SudokuBoard.Size; col++)
                 {
                     if (board.GetCell(row, col).Value == 0)
                     {
-                        // Try random numbers 1-9
                         var numbers = Enumerable.Range(1, 9).OrderBy(x => _random.Next()).ToList();
                         
                         foreach (int num in numbers)
@@ -100,21 +98,18 @@ namespace Sudoku.Core.Services
         /// </summary>
         private bool IsValidPlacement(SudokuBoard board, int row, int col, int num)
         {
-            // Check row
             foreach (var cell in board.GetRow(row))
             {
                 if (cell.Value == num)
                     return false;
             }
 
-            // Check column
             foreach (var cell in board.GetColumn(col))
             {
                 if (cell.Value == num)
                     return false;
             }
 
-            // Check 3x3 box
             int boxIndex = (row / 3) * 3 + (col / 3);
             foreach (var cell in board.GetBox(boxIndex))
             {
@@ -177,26 +172,23 @@ namespace Sudoku.Core.Services
                     board.SetCell(row, col, backup);
                 }
             }
-
-            // Note: Final removed count may be less than target if uniqueness cannot be maintained
-            // This is acceptable - puzzle quality is more important than exact difficulty
         }
 
         /// <summary>
         /// Determines how many cells to remove based on difficulty.
-        /// Total cells = 81, so cells to remove = 81 - desired clues
+        /// Total cells = 81, so cells to remove = 81 - desired clues.
         /// </summary>
         private int GetCellsToRemove(DifficultyLevel difficulty)
         {
             return difficulty switch
             {
-                DifficultyLevel.Easy => _random.Next(31, 36),         // Remove 31-35 cells ? Leave 46-50 clues
-                DifficultyLevel.Medium => _random.Next(36, 46),       // Remove 36-45 cells ? Leave 36-45 clues
-                DifficultyLevel.Hard => _random.Next(46, 50),         // Remove 46-49 cells ? Leave 32-35 clues
-                DifficultyLevel.Expert => _random.Next(50, 54),       // Remove 50-53 cells ? Leave 28-31 clues
-                DifficultyLevel.Master => _random.Next(54, 57),       // Remove 54-56 cells ? Leave 25-27 clues
-                DifficultyLevel.GrandMaster => _random.Next(57, 60),  // Remove 57-59 cells ? Leave 22-24 clues
-                _ => 31  // Default to Easy
+                DifficultyLevel.Easy => _random.Next(31, 36),
+                DifficultyLevel.Medium => _random.Next(36, 46),
+                DifficultyLevel.Hard => _random.Next(46, 50),
+                DifficultyLevel.Expert => _random.Next(50, 54),
+                DifficultyLevel.Master => _random.Next(54, 57),
+                DifficultyLevel.GrandMaster => _random.Next(57, 60),
+                _ => 31
             };
         }
 

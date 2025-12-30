@@ -26,11 +26,6 @@ namespace Sudoku.Core.Models
         public int Column { get; set; }
 
         /// <summary>
-        /// Optional notes/pencil marks for this cell (for future expansion).
-        /// </summary>
-        public HashSet<int> Notes { get; set; } = new HashSet<int>();
-
-        /// <summary>
         /// Indicates if this cell has a validation error (conflict with row/column/box).
         /// </summary>
         public bool HasError { get; set; }
@@ -58,8 +53,7 @@ namespace Sudoku.Core.Models
             {
                 Value = Value,
                 IsGiven = IsGiven,
-                HasError = HasError,
-                Notes = new HashSet<int>(Notes)
+                HasError = HasError
             };
         }
     }
