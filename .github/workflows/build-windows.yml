@@ -59,7 +59,12 @@ jobs:
           -KeyUsage DigitalSignature `
           -FriendlyName "Sudoku App Certificate" `
           -CertStoreLocation "Cert:\CurrentUser\My" `
-          -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+          -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}") `
+          -KeyExportPolicy Exportable `
+          -KeySpec Signature `
+          -KeyLength 2048 `
+          -KeyAlgorithm RSA `
+          -HashAlgorithm SHA256
         
         $password = ConvertTo-SecureString -String "temp123" -Force -AsPlainText
         Export-PfxCertificate -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" -FilePath "SudokuCert.pfx" -Password $password
