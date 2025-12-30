@@ -43,10 +43,7 @@ namespace Sudoku.Maui.Services
 
             try
             {
-                var json = JsonSerializer.Serialize(gameState, new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                });
+                var json = JsonSerializer.Serialize(gameState);
                 await File.WriteAllTextAsync(_gameStateFilePath, json);
             }
             catch (Exception ex)
