@@ -10,7 +10,6 @@ namespace Sudoku.Maui.Pages
         private readonly SudokuGenerator _generator;
         private readonly SudokuValidator _validator;
         private readonly SudokuSolver _solver;
-        private readonly SoundService _soundService;
         private readonly ISettingsService _settingsService;
 
         private SudokuBoard _currentBoard;
@@ -36,6 +35,7 @@ namespace Sudoku.Maui.Pages
         private System.Timers.Timer? _gameTimer;
         private int _elapsedSeconds = 0;
         private string _currentDifficulty = "Easy";
+        private bool _isPuzzleSolved = false;
 
         // Colors for visual feedback - use safe access with fallback
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor", Colors.White);
@@ -72,14 +72,13 @@ namespace Sudoku.Maui.Pages
         }
 
         public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
-                         SudokuSolver solver, SoundService soundService, ISettingsService settingsService)
+                         SudokuSolver solver, ISettingsService settingsService)
         {
             InitializeComponent();
             
             _generator = generator;
             _validator = validator;
             _solver = solver;
-            _soundService = soundService;
             _settingsService = settingsService;
             
             _currentBoard = new SudokuBoard();
@@ -257,6 +256,9 @@ namespace Sudoku.Maui.Pages
             ResetTimer();
             StartTimer();
             
+            // Reset solved state
+            _isPuzzleSolved = false;
+            
             // Update difficulty label
             var settings = _settingsService.LoadSettings();
             _currentDifficulty = settings.DefaultDifficulty.ToString();
@@ -302,11 +304,17 @@ namespace Sudoku.Maui.Pages
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
-            bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
-            if (answer)
+            // Skip prompt if puzzle is already solved
+            if (!_isPuzzleSolved)
             {
-                StartNewGame();
+                bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
+                if (!answer)
+                {
+                    return;
+                }
             }
+            
+            StartNewGame();
         }
         
         private async void OnSettingsClicked(object? sender, EventArgs e)
@@ -322,7 +330,6 @@ namespace Sudoku.Maui.Pages
             if (!_validator.IsValidState(_currentBoard))
             {
                 UpdateGrid();
-                await _soundService.PlayErrorSound();
                 await DisplayAlertAsync("Fix Conflicts First", "Resolve highlighted conflicts before requesting a hint.", "OK");
                 return;
             }
@@ -337,14 +344,14 @@ namespace Sudoku.Maui.Pages
 
             var (row, col, value) = hint.Value;
             _currentBoard.SetCell(row, col, value);
-            _validator.UpdateErrorFlags(_currentBoard);
 
             _selectedRow = row;
             _selectedCol = col;
             _selectedButton = _cellButtons[row, col];
 
+            // Update error flags AFTER setting the cell
+            _validator.UpdateErrorFlags(_currentBoard);
             UpdateGrid();
-            await _soundService.PlayHintSound();
 
             if (_selectedButton != null)
             {
@@ -352,10 +359,11 @@ namespace Sudoku.Maui.Pages
                 await _selectedButton.ScaleToAsync(1.0, 120, Easing.CubicIn);
             }
 
+            // Check if solved AFTER all animations and updates complete
             if (_validator.IsSolved(_currentBoard))
             {
+                _isPuzzleSolved = true;
                 StopTimer();
-                await _soundService.PlayCompleteSound();
                 await DisplayAlertAsync("Puzzle Solved", "You solved the puzzle!", "OK");
             }
         }
@@ -367,15 +375,14 @@ namespace Sudoku.Maui.Pages
 
             if (!_validator.IsValidState(_currentBoard))
             {
-                await _soundService.PlayErrorSound();
                 await DisplayAlertAsync("Conflicts Found", "There are conflicts highlighted in red. Please fix them.", "OK");
                 return;
             }
 
             if (_validator.IsSolved(_currentBoard))
             {
+                _isPuzzleSolved = true;
                 StopTimer();
-                await _soundService.PlayCompleteSound();
                 await DisplayAlertAsync("Puzzle Solved", "Great job! You solved the puzzle.", "OK");
                 return;
             }
@@ -433,7 +440,7 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Handles cell selection, including given cells.
         /// </summary>
-        private async void OnCellClicked(object? sender, CellClickedEventArgs e)
+        private void OnCellClicked(object? sender, CellClickedEventArgs e)
         {
             var cell = _currentBoard.GetCell(e.Row, e.Col);
             
@@ -442,8 +449,6 @@ namespace Sudoku.Maui.Pages
             _selectedButton = _cellButtons[e.Row, e.Col];
 
             HighlightSelection(e.Row, e.Col);
-
-            await _soundService.PlaySelectSound();
         }
 
         /// <summary>
@@ -542,17 +547,8 @@ namespace Sudoku.Maui.Pages
             if (cell.IsGiven)
                 return;
 
-            // Check if move is valid
-            if (_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
-            {
-                _currentBoard.SetCell(_selectedRow, _selectedCol, number);
-                await _soundService.PlayCorrectSound();
-            }
-            else
-            {
-                _currentBoard.SetCell(_selectedRow, _selectedCol, number);
-                await _soundService.PlayErrorSound();
-            }
+            // Set the cell value
+            _currentBoard.SetCell(_selectedRow, _selectedCol, number);
 
             // Update error flags
             _validator.UpdateErrorFlags(_currentBoard);
@@ -561,13 +557,13 @@ namespace Sudoku.Maui.Pages
             // Check if solved
             if (_validator.IsSolved(_currentBoard))
             {
+                _isPuzzleSolved = true;
                 StopTimer();
-                await _soundService.PlayCompleteSound();
                 await DisplayAlertAsync("Congratulations!", "You solved the puzzle!", "OK");
             }
         }
 
-        private async Task ClearSelectedCellAsync()
+        private void ClearSelectedCellAsync()
         {
             if (_selectedRow < 0 || _selectedCol < 0)
                 return;
@@ -580,7 +576,6 @@ namespace Sudoku.Maui.Pages
             cell.HasError = false;
             _validator.UpdateErrorFlags(_currentBoard);
             UpdateGrid();
-            await _soundService.PlaySelectSound();
         }
 
         private void AttachWindowKeyHandler()
@@ -615,7 +610,7 @@ namespace Sudoku.Maui.Pages
             {
                 if (e.Key == Windows.System.VirtualKey.Back || e.Key == Windows.System.VirtualKey.Delete)
                 {
-                    await ClearSelectedCellAsync();
+                    ClearSelectedCellAsync();
                     e.Handled = true;
                 }
                 return;

@@ -30,11 +30,6 @@ A cross-platform Sudoku game built with .NET MAUI and .NET 10, featuring a clean
   - Scale animation for hints
   - Color-coded cells (given, selected, error, matching, highlighted)
   - Smooth transitions and responsive feedback
-- **Sound Effects** (with Plugin.Maui.Audio):
-  - Correct/incorrect move sounds
-  - Puzzle completion sound
-  - Hint sound
-  - Cell selection sound
 - **Settings System**:
   - JSON-based persistence (automatically saves to app data directory)
   - Light/Dark theme toggle with instant switching
@@ -71,13 +66,11 @@ Solution Structure:
 ?   ?   ??? SudokuPage.xaml(.cs)  - Main game UI with responsive grid
 ?   ?   ??? SettingsPage.xaml(.cs) - Settings configuration UI
 ?   ??? Services/
-?   ?   ??? SoundService.cs       - Audio playback wrapper
 ?   ?   ??? ISettingsService.cs   - Settings interface
 ?   ?   ??? SettingsService.cs    - JSON-based settings persistence
 ?   ??? Models/
 ?   ?   ??? GameSettings.cs       - Settings data model
 ?   ??? Resources/
-?   ?   ??? Raw/Sounds/           - Sound effect files (placeholder)
 ?   ?   ??? Fonts/                - FontAwesome icons
 ?   ?   ??? Styles/               - Theme colors and styles
 ?   ??? FontAwesomeIcons.cs       - Icon constant definitions
@@ -107,18 +100,6 @@ FontAwesome is used for icon buttons:
    - https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.ttf
 2. Place in `Sudoku.Maui/Resources/Fonts/`
 3. Font is already registered in `MauiProgram.cs`
-
-### Adding Sound Files
-
-To enable sound effects:
-
-1. Place MP3 or WAV files in `Sudoku.Maui/Resources/Raw/Sounds/`
-2. Required files:
-   - `correct.mp3` - Played on correct input
-   - `error.mp3` - Played on invalid input
-   - `complete.mp3` - Played when puzzle is solved
-   - `hint.mp3` - Played when hint is shown
-   - `select.mp3` - Played on cell selection
 
 ## How to Play
 
@@ -266,11 +247,10 @@ The Core library is platform-agnostic and can be reused for web:
 This is a learning/demonstration project. Key areas for contribution:
 
 1. **FontAwesome Setup**: Download and add fa-solid-900.ttf font
-2. **Sound Effects**: Add free sound files to Resources/Raw/Sounds
-3. **Themes**: Design additional color themes
-4. **Algorithms**: Improve solver and generator efficiency
-5. **UI/UX**: Enhance visual design and user experience
-6. **Testing**: Add comprehensive test coverage
+2. **Themes**: Design additional color themes
+3. **Algorithms**: Improve solver and generator efficiency
+4. **UI/UX**: Enhance visual design and user experience
+5. **Testing**: Add comprehensive test coverage
 
 ## Technology Stack
 
@@ -278,7 +258,6 @@ This is a learning/demonstration project. Key areas for contribution:
 - **.NET MAUI**: Cross-platform UI framework
 - **C# 14**: Latest language features
 - **CommunityToolkit.Mvvm**: MVVM utilities
-- **Plugin.Maui.Audio**: Audio playback
 - **FontAwesome Free**: Icon font for UI buttons
 - **System.Text.Json**: Settings serialization
 
@@ -300,4 +279,3 @@ This project is provided as-is for educational and demonstration purposes.
 - Sudoku puzzle format and rules from classic Sudoku game
 - Backtracking algorithm implementation based on standard CS techniques
 - FontAwesome Free icons: https://fontawesome.com/
-- Free sound effects from freesound.org, zapsplat.com (when added)

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Plugin.Maui.Audio;
 using Sudoku.Core.Services;
 using Sudoku.Maui.Pages;
 using Sudoku.Maui.Services;
@@ -26,8 +25,6 @@ namespace Sudoku.Maui
             builder.Services.AddSingleton<SudokuGenerator>();
 
             // Register Maui services
-            builder.Services.AddSingleton(AudioManager.Current);
-            builder.Services.AddSingleton<SoundService>();
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
 
             // Register pages
