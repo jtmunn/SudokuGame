@@ -2,6 +2,10 @@
   <Folder Name="/Solution Items/">
     <File Path=".github/copilot-instructions.md" />
     <File Path="CONSTANTS_REFERENCE.md" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="DEVELOPERS.md" />
+    <File Path="DIFFICULTY_ALGORITHM_RESEARCH.md" />
+    <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
   <Project Path="Sudoku.Core/Sudoku.Core.csproj" />
