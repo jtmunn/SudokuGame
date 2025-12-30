@@ -5,16 +5,6 @@ namespace Sudoku.Maui
 {
     public partial class App : Microsoft.Maui.Controls.Application
     {
-        // Window sizing constants
-        private const int MinGridSize = 360; // Minimum size for the Sudoku grid
-        private const double BaseGridSize = 450.0; // Reference grid size for calculations
-        private const double BaseButtonSize = 45.0; // Base size for action buttons
-        private const int ActionButtonMargin = 20; // Left margin for action buttons
-        private const int GameAreaPadding = 10; // Padding around game area (per side)
-        private const int NumberButtonMargin = 6; // Margin around each number button
-        private const int MinSpacerWidth = 50; // Minimum width for centering spacers
-        private const int MinWindowHeight = 700; // Minimum window height
-        
         private Window? _mainWindow;
         private System.Timers.Timer? _saveWindowSizeTimer;
         private const int SaveWindowSizeDelayMs = 500; // Debounce delay for saving window size
@@ -43,8 +33,6 @@ namespace Sudoku.Maui
                 var settings = settingsService.LoadSettings();
                 UserAppTheme = settings.Theme;
                 LoadTheme(settings.Theme);
-                
-                System.Diagnostics.Debug.WriteLine($"Loaded settings - IsMaximized: {settings.IsMaximized}");
             }
             
             // NOW create the window - theme is already loaded
@@ -63,14 +51,12 @@ namespace Sudoku.Maui
                 // If window was maximized, use restored size (or fall back to saved size)
                 if (settings.IsMaximized == true)
                 {
-                    // Set to restored size first so Windows knows what size to restore to
                     if (settings.RestoredWidth.HasValue && settings.RestoredHeight.HasValue)
                     {
                         window.Width = settings.RestoredWidth.Value;
                         window.Height = settings.RestoredHeight.Value;
                         _lastRestoredWidth = settings.RestoredWidth.Value;
                         _lastRestoredHeight = settings.RestoredHeight.Value;
-                        System.Diagnostics.Debug.WriteLine($"Setting restored size: {window.Width}x{window.Height}");
                     }
                     else if (settings.WindowWidth.HasValue && settings.WindowHeight.HasValue)
                     {
@@ -110,10 +96,9 @@ namespace Sudoku.Maui
                 {
                     _shouldMaximizeOnCreated = true;
 #if WINDOWS
-                    _isMaximized = true; // Pre-set cached state
+                    _isMaximized = true;
 #endif
                     window.Created += OnWindowCreated;
-                    System.Diagnostics.Debug.WriteLine("Will maximize window after creation");
                 }
             }
             else
@@ -138,10 +123,8 @@ namespace Sudoku.Maui
         {
             if (_shouldMaximizeOnCreated && sender is Window window)
             {
-                System.Diagnostics.Debug.WriteLine("Window.Created event fired - attempting to maximize");
                 window.Created -= OnWindowCreated;
                 
-                // Use Dispatcher to ensure window is fully ready
                 window.Dispatcher.Dispatch(() =>
                 {
                     RestoreMaximizedState(window);
@@ -149,14 +132,12 @@ namespace Sudoku.Maui
             }
             
 #if WINDOWS
-            // Subscribe to window state changes to track maximized/restored
             if (sender is Window win && win.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
             {
                 var appWindow = GetAppWindow(nativeWindow);
                 if (appWindow != null)
                 {
                     appWindow.Changed += OnAppWindowChanged;
-                    System.Diagnostics.Debug.WriteLine("Subscribed to AppWindow.Changed event");
                 }
             }
 #endif
@@ -165,7 +146,6 @@ namespace Sudoku.Maui
 #if WINDOWS
         private void OnAppWindowChanged(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowChangedEventArgs args)
         {
-            // Check if the window size or presenter state changed
             if (args.DidPresenterChange || args.DidSizeChange)
             {
                 if (sender.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
@@ -173,15 +153,9 @@ namespace Sudoku.Maui
                     bool isMax = presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized;
                     bool stateChanged = _isMaximized != isMax;
                     
-                    System.Diagnostics.Debug.WriteLine($"OnAppWindowChanged: IsMaximized = {isMax}, StateChanged = {stateChanged}, DidPresenterChange = {args.DidPresenterChange}, DidSizeChange = {args.DidSizeChange}");
-                    
                     if (stateChanged)
                     {
-                        // Update cached state immediately
                         _isMaximized = isMax;
-                        System.Diagnostics.Debug.WriteLine($"OnAppWindowChanged: Updated _isMaximized to {_isMaximized}");
-                        
-                        // Trigger save after state change
                         SaveWindowSize();
                     }
                 }
@@ -189,27 +163,6 @@ namespace Sudoku.Maui
         }
 #endif
 
-        private Color? GetThemeColor(string key)
-        {
-            try
-            {
-                if (Application.Current?.Resources != null)
-                {
-                    // Search through merged dictionaries
-                    foreach (var dict in Application.Current.Resources.MergedDictionaries)
-                    {
-                        if (dict.ContainsKey(key))
-                            return (Color)dict[key];
-                    }
-                }
-            }
-            catch
-            {
-                // Resource not available
-            }
-            return null;
-        }
-        
         public void LoadTheme(AppTheme theme)
         {
             // Official Microsoft pattern from documentation
@@ -256,9 +209,8 @@ namespace Sudoku.Maui
                 window.X = Math.Max(0, x);
                 window.Y = Math.Max(0, y);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to center window: {ex.Message}");
                 // If centering fails, let the OS handle window placement
             }
         }
@@ -268,37 +220,14 @@ namespace Sudoku.Maui
 #if WINDOWS
             try
             {
-                System.Diagnostics.Debug.WriteLine("RestoreMaximizedState called");
-                
                 if (window.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow)
                 {
-                    System.Diagnostics.Debug.WriteLine("Got native window");
-                    
                     var appWindow = GetAppWindow(nativeWindow);
                     if (appWindow != null)
                     {
-                        System.Diagnostics.Debug.WriteLine("Got AppWindow");
-                        
                         var presenter = appWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
-                        if (presenter != null)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Current state: {presenter.State}");
-                            presenter.Maximize();
-                            System.Diagnostics.Debug.WriteLine($"After maximize: {presenter.State}");
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine("Presenter is null or not OverlappedPresenter");
-                        }
+                        presenter?.Maximize();
                     }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("AppWindow is null");
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("PlatformView is not Microsoft.UI.Xaml.Window");
                 }
             }
             catch (Exception ex)
@@ -317,9 +246,8 @@ namespace Sudoku.Maui
                 var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(windowHandle);
                 return Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine($"GetAppWindow exception: {ex.Message}");
                 return null;
             }
         }
@@ -357,42 +285,32 @@ namespace Sudoku.Maui
             {
                 var settings = settingsService.LoadSettings();
                 
-                // Always save current window size
                 settings.WindowWidth = _mainWindow.Width;
                 settings.WindowHeight = _mainWindow.Height;
                 
 #if WINDOWS
-                // Use cached maximized state (updated by OnAppWindowChanged)
                 settings.IsMaximized = _isMaximized;
-                System.Diagnostics.Debug.WriteLine($"SaveWindowSize: Saving IsMaximized = {settings.IsMaximized}");
                 
-                // Update restored size based on maximization state
                 if (!_isMaximized)
                 {
-                    // Window is not maximized - save current size as restored size
                     _lastRestoredWidth = _mainWindow.Width;
                     _lastRestoredHeight = _mainWindow.Height;
                     settings.RestoredWidth = _lastRestoredWidth;
                     settings.RestoredHeight = _lastRestoredHeight;
-                    System.Diagnostics.Debug.WriteLine($"Saved restored size: {_lastRestoredWidth}x{_lastRestoredHeight}");
                 }
                 else
                 {
-                    // Window is maximized - preserve the last known restored size
                     settings.RestoredWidth = _lastRestoredWidth;
                     settings.RestoredHeight = _lastRestoredHeight;
-                    System.Diagnostics.Debug.WriteLine($"Window maximized, preserving restored size: {_lastRestoredWidth}x{_lastRestoredHeight}");
                 }
 #else
                 settings.IsMaximized = false;
-                // On non-Windows platforms, always save as restored size
                 _lastRestoredWidth = _mainWindow.Width;
                 _lastRestoredHeight = _mainWindow.Height;
                 settings.RestoredWidth = _lastRestoredWidth;
                 settings.RestoredHeight = _lastRestoredHeight;
 #endif
                 
-                // Save asynchronously
                 _ = settingsService.SaveSettingsAsync(settings);
             }
             catch (Exception ex)

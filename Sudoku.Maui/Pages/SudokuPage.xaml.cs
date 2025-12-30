@@ -224,10 +224,6 @@ namespace Sudoku.Maui.Pages
             // Use a reasonable base font size that scales with the grid
             double fontSize = 30.0 * scale;
             
-            // Remove all constraints to test if clamping is the issue
-            
-            System.Diagnostics.Debug.WriteLine($"UpdateCellFontSizes: gridSize={_currentGridSize}, scale={scale:F2}, fontSize={fontSize:F1}");
-            
             // Apply to all cell buttons
             for (int row = 0; row < SudokuBoard.Size; row++)
             {

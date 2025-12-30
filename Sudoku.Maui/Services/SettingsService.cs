@@ -12,24 +12,19 @@ namespace Sudoku.Maui.Services
         public SettingsService()
         {
             _settingsFilePath = Path.Combine(FileSystem.AppDataDirectory, SettingsFileName);
-            System.Diagnostics.Debug.WriteLine($"SettingsService: Settings file path: {_settingsFilePath}");
         }
 
         public GameSettings LoadSettings()
         {
-            // ALWAYS reload from file to get latest saved state
-            // Don't use cache on load - only cache after loading
             try
             {
                 if (File.Exists(_settingsFilePath))
                 {
                     var json = File.ReadAllText(_settingsFilePath);
-                    System.Diagnostics.Debug.WriteLine($"SettingsService: Loaded settings from file: {json}");
                     _cachedSettings = JsonSerializer.Deserialize<GameSettings>(json) ?? CreateDefaultSettings();
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("SettingsService: No settings file found, creating defaults");
                     _cachedSettings = CreateDefaultSettings();
                     SaveSettingsAsync(_cachedSettings).Wait();
                 }
@@ -58,9 +53,7 @@ namespace Sudoku.Maui.Services
                 { 
                     WriteIndented = true 
                 });
-                System.Diagnostics.Debug.WriteLine($"SettingsService: Saving settings: {json}");
                 await File.WriteAllTextAsync(_settingsFilePath, json);
-                System.Diagnostics.Debug.WriteLine("SettingsService: Settings saved successfully");
             }
             catch (Exception ex)
             {
