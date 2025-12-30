@@ -19,6 +19,10 @@ jobs:
   build-windows:
     runs-on: windows-latest
     
+    # Required for creating releases on tag push
+    permissions:
+      contents: write
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -26,12 +30,12 @@ jobs:
         fetch-depth: 0
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotenv@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Install .NET MAUI workload
-      run: dotnet workload install maui
+    - name: Install .NET MAUI workload (Windows only)
+      run: dotnet workload install maui-windows --skip-manifest-update
 
     - name: Restore dependencies
       run: dotnet restore ${{ env.PROJECT_PATH }}
