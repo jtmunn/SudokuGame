@@ -20,6 +20,8 @@
     <Color x:Key="PrimaryButtonColor">#3498DB</Color>
     <Color x:Key="PrimaryButtonHoverColor">#2980B9</Color>
     <Color x:Key="PrimaryButtonPressedColor">#21618C</Color>
+    <Color x:Key="DisabledButtonColor">#BDC3C7</Color>
+    <Color x:Key="DisabledButtonTextColor">#7F8C8D</Color>
     
     <Color x:Key="SuccessButtonColor">#27AE60</Color>
     <Color x:Key="SuccessButtonHoverColor">#229954</Color>
@@ -35,7 +37,7 @@
     <Color x:Key="CellDefaultColor">#FFFFFF</Color>
     <Color x:Key="CellGivenColor">#F8F9FA</Color>
     <Color x:Key="CellSelectedColor">#EEE2AA</Color>
-    <Color x:Key="CellErrorColor">#E74C3C</Color>
+    <Color x:Key="CellErrorColor">#FF6B6B</Color>
     <Color x:Key="CellHighlightColor">#E8E8E8</Color>
     <Color x:Key="CellLightHighlightColor">#F0F0F0</Color>
     <Color x:Key="CellMatchingNumberColor">#D0D0D0</Color>

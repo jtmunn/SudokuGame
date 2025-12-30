@@ -185,6 +185,10 @@ namespace Sudoku.Maui.Pages
             // Number buttons - scale from base size
             double numberSize = Math.Round(BaseButtonSize * scale);
             double numberFont = Math.Round(BaseFontSize * scale);
+            double countFont = Math.Round((BaseFontSize * scale * 0.5) - 1); // Count is half the main font size, minus 1
+            
+            // Calculate scaled margin for count position (starts at 15% of button size from edges)
+            double countMargin = Math.Round(numberSize * 0.15);
             
             foreach (var child in NumberPad.Children)
             {
@@ -194,6 +198,14 @@ namespace Sudoku.Maui.Pages
                     btn.HeightRequest = numberSize;
                     btn.CornerRadius = (int)(numberSize / 2); // Keep circular
                     btn.FontSize = numberFont;
+                }
+                else if (child is Controls.NumPadButton numPadBtn)
+                {
+                    numPadBtn.WidthRequest = numberSize;
+                    numPadBtn.HeightRequest = numberSize;
+                    numPadBtn.MainFontSize = numberFont;
+                    numPadBtn.CountFontSize = countFont;
+                    numPadBtn.CountMargin = new Thickness(0, countMargin, countMargin, 0);
                 }
             }
             
@@ -554,6 +566,47 @@ namespace Sudoku.Maui.Pages
             {
                 HighlightSelection(_selectedRow, _selectedCol);
             }
+
+            // Update number pad remaining counts
+            UpdateNumberPadCounts();
+        }
+
+        /// <summary>
+        /// Calculates and updates the remaining count for each number (1-9) on the number pad.
+        /// </summary>
+        private void UpdateNumberPadCounts()
+        {
+            // Count how many of each number (1-9) still need to be placed
+            var remainingCounts = new int[10]; // Index 0 unused, 1-9 for numbers
+
+            // Each number should appear exactly 9 times in a solved puzzle
+            for (int i = 1; i <= 9; i++)
+            {
+                remainingCounts[i] = 9;
+            }
+
+            // Subtract the numbers already on the board
+            for (int row = 0; row < SudokuBoard.Size; row++)
+            {
+                for (int col = 0; col < SudokuBoard.Size; col++)
+                {
+                    var cell = _currentBoard.GetCell(row, col);
+                    if (cell.Value >= 1 && cell.Value <= 9)
+                    {
+                        remainingCounts[cell.Value]--;
+                    }
+                }
+            }
+
+            // Update each NumPadButton
+            foreach (var child in NumberPad.Children)
+            {
+                if (child is Controls.NumPadButton numPadBtn)
+                {
+                    numPadBtn.RemainingCount = remainingCounts[numPadBtn.Number];
+                    numPadBtn.IsEnabled = remainingCounts[numPadBtn.Number] > 0;
+                }
+            }
         }
 
         /// <summary>
@@ -593,16 +646,16 @@ namespace Sudoku.Maui.Pages
                     // Check if cell is in same 3x3 block
                     bool inSameBlock = (r / 3 == blockRow) && (c / 3 == blockCol);
 					
-                    // Determine background color based on priority
-					if (r == row && c == col)
+                    // Determine background color based on priority (ERROR takes precedence)
+					if (cell.HasError)
 					{
-						// Selected cell - most prominent
-						button.BackgroundColor = SelectedCellColor;
-					}
-					else if (cell.HasError)
-					{
-						// Error cells keep their error color
+						// Error cells ALWAYS show error color (highest priority)
 						button.BackgroundColor = ErrorCellColor;
+					}
+					else if (r == row && c == col)
+					{
+						// Selected cell - prominent highlight
+						button.BackgroundColor = SelectedCellColor;
 					}
 					else if (selectedValue > 0 && cell.Value == selectedValue)
 					{
@@ -656,15 +709,12 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Handles number button clicks from the number pad.
         /// </summary>
-        private async void OnNumberClicked(object? sender, EventArgs e)
+        private async void OnNumPadButtonTapped(object? sender, EventArgs e)
         {
-            if (sender is not Button button)
+            if (sender is not Controls.NumPadButton numPadButton)
                 return;
 
-            if (!int.TryParse(button.Text, out var number))
-                return;
-
-            await ApplyNumberInputAsync(number);
+            await ApplyNumberInputAsync(numPadButton.Number);
         }
 
         private async Task ApplyNumberInputAsync(int number)
@@ -679,11 +729,25 @@ namespace Sudoku.Maui.Pages
             if (cell.IsGiven)
                 return;
 
-            // Set the cell value
+            // Check if move conflicts with visible numbers
+            if (!_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
+            {
+                // Show conflict feedback - temporarily highlight cell as error
+                await ShowConflictFeedbackAsync();
+                return;
+            }
+
+            // Move is valid (no visible conflicts), place it
             _currentBoard.SetCell(_selectedRow, _selectedCol, number);
 
-            // Update error flags
-            _validator.UpdateErrorFlags(_currentBoard);
+            // Check if the placed number is actually correct against the solution
+            if (_solution != null)
+            {
+                var solutionCell = _solution.GetCell(_selectedRow, _selectedCol);
+                cell.HasError = (cell.Value != solutionCell.Value);
+            }
+
+            // Update grid display
             UpdateGrid();
 
             // Check if solved
@@ -696,6 +760,16 @@ namespace Sudoku.Maui.Pages
             }
         }
 
+        private async Task ShowConflictFeedbackAsync()
+        {
+            if (_selectedButton != null)
+            {
+                var originalColor = _selectedButton.BackgroundColor;
+                _selectedButton.BackgroundColor = ErrorCellColor;
+                await Task.Delay(300);
+                _selectedButton.BackgroundColor = originalColor;
+            }
+        }
         private void ClearSelectedCellAsync()
         {
             if (_selectedRow < 0 || _selectedCol < 0)

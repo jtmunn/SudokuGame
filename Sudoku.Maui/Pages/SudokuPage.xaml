@@ -190,15 +190,69 @@
                               HorizontalOptions="Center"
                               Margin="0,0,0,60"
                               x:Name="NumberPad">
-            <Button Text="1" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="2" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="3" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="4" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="5" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="6" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="7" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="8" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
-            <Button Text="9" Clicked="OnNumberClicked" Style="{StaticResource NumberButtonStyle}"/>
+            <controls:NumPadButton Number="1" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="2" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="3" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="4" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="5" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="6" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="7" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="8" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
+            <controls:NumPadButton Number="9" 
+                                  WidthRequest="80" 
+                                  HeightRequest="80"
+                                  Margin="6"
+                                  MainFontSize="32"
+                                  CountFontSize="10"
+                                  Tapped="OnNumPadButtonTapped"/>
         </HorizontalStackLayout>
     </Grid>
 
