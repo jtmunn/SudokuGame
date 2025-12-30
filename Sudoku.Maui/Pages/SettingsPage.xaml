@@ -13,11 +13,13 @@
                    Margin="0,0,0,20"
                    TextColor="{DynamicResource TextColor}"/>
             
-            <Frame Padding="15" 
-                   CornerRadius="10" 
-                   HasShadow="True"
-                   BackgroundColor="{DynamicResource SettingsFrameColor}"
-                   BorderColor="{DynamicResource SettingsFrameBorderColor}">
+            <Border Stroke="{DynamicResource SettingsFrameBorderColor}"
+                    StrokeThickness="1"
+                    Background="{DynamicResource SettingsFrameColor}"
+                    StrokeShape="RoundRectangle 10"
+                    Margin="0,0,0,0"
+                    Padding="15"
+                    Shadow="True">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Appearance" 
                            FontSize="20" 
@@ -43,13 +45,15 @@
                         </Picker>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
             
-            <Frame Padding="15" 
-                   CornerRadius="10" 
-                   HasShadow="True"
-                   BackgroundColor="{DynamicResource SettingsFrameColor}"
-                   BorderColor="{DynamicResource SettingsFrameBorderColor}">
+            <Border Stroke="{DynamicResource SettingsFrameBorderColor}"
+                    StrokeThickness="1"
+                    Background="{DynamicResource SettingsFrameColor}"
+                    StrokeShape="RoundRectangle 10"
+                    Margin="0,0,0,0"
+                    Padding="15"
+                    Shadow="True">
                 <VerticalStackLayout Spacing="15">
                     <Label Text="Game Settings" 
                            FontSize="20" 
@@ -98,13 +102,15 @@
                                 OnColor="{DynamicResource SwitchOnColor}"/>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
             
-            <Frame Padding="15" 
-                   CornerRadius="10" 
-                   HasShadow="True"
-                   BackgroundColor="{DynamicResource InfoBackgroundColor}"
-                   BorderColor="{DynamicResource InfoBorderColor}">
+            <Border Stroke="{DynamicResource InfoBorderColor}"
+                    StrokeThickness="1"
+                    Background="{DynamicResource InfoBackgroundColor}"
+                    StrokeShape="RoundRectangle 10"
+                    Margin="0,0,0,0"
+                    Padding="15"
+                    Shadow="True">
                 <VerticalStackLayout Spacing="5">
                     <Label Text="About" 
                            FontSize="18" 
@@ -117,7 +123,7 @@
                            FontSize="14"
                            TextColor="{DynamicResource InfoTextColor}"/>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
             
             <Button Text="Back to Game" 
                     Clicked="OnBackClicked" 

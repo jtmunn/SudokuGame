@@ -10,6 +10,12 @@
     <Color x:Key="SecondaryTextColor">#CCCCCC</Color>
     <Color x:Key="BorderColor">#404040</Color>
     
+    <!-- Shell/Navigation Colors -->
+    <Color x:Key="ShellBackgroundColor">#2D2D2D</Color>
+    <Color x:Key="ShellForegroundColor">#ECF0F1</Color>
+    <Color x:Key="ShellTitleColor">#ECF0F1</Color>
+    <Color x:Key="ShellUnselectedColor">#7F8C8D</Color>
+    
     <!-- Button Colors -->
     <Color x:Key="PrimaryButtonColor">#2980B9</Color>
     <Color x:Key="PrimaryButtonHoverColor">#21618C</Color>
@@ -49,5 +55,14 @@
     <Color x:Key="InfoBorderColor">#2E5C36</Color>
     <Color x:Key="InfoTextColor">#81C784</Color>
     <Color x:Key="SwitchOnColor">#2980B9</Color>
+
+    <!-- Shell Style -->
+    <Style TargetType="Shell" ApplyToDerivedTypes="True">
+        <Setter Property="Shell.BackgroundColor" Value="{DynamicResource ShellBackgroundColor}" />
+        <Setter Property="Shell.ForegroundColor" Value="{DynamicResource ShellForegroundColor}" />
+        <Setter Property="Shell.TitleColor" Value="{DynamicResource ShellTitleColor}" />
+        <Setter Property="Shell.DisabledColor" Value="{DynamicResource ShellUnselectedColor}" />
+        <Setter Property="Shell.UnselectedColor" Value="{DynamicResource ShellUnselectedColor}" />
+    </Style>
 
 </ResourceDictionary>

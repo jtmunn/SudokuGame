@@ -10,6 +10,11 @@ namespace Sudoku.Maui.Models
         // Window size persistence
         public double? WindowWidth { get; set; }
         public double? WindowHeight { get; set; }
+        public bool? IsMaximized { get; set; }
+        
+        // Restored (non-maximized) window size
+        public double? RestoredWidth { get; set; }
+        public double? RestoredHeight { get; set; }
     }
 
     public enum DifficultyLevel
