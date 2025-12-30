@@ -1,12 +1,12 @@
-# Contributing to Sudoku
+﻿# Contributing to Sudoku
 
-First off, **thank you** for considering contributing to this project! ?? Whether you're fixing a bug, adding a feature, or just improving documentation, every contribution helps make this game better for everyone.
+First off, **thank you** for considering contributing to this project! 👍 Whether you're fixing a bug, adding a feature, or just improving documentation, every contribution helps make this game better for everyone.
 
 ---
 
-## ?? Ways to Contribute
+## 🎯 Ways to Contribute
 
-### ?? Report Bugs
+### 🐛 Report Bugs
 Found a bug? [Open an issue](https://github.com/jtmunn/SudokuGame/issues/new) with:
 - Clear description of the problem
 - Steps to reproduce
@@ -14,36 +14,36 @@ Found a bug? [Open an issue](https://github.com/jtmunn/SudokuGame/issues/new) wi
 - Screenshots (if applicable)
 - Platform (Windows, Android, iOS, macOS)
 
-### ?? Suggest Features
+### 💡 Suggest Features
 Have an idea? We'd love to hear it! [Start a discussion](https://github.com/jtmunn/SudokuGame/discussions) with:
 - What problem does it solve?
 - How would it work?
 - Any mockups or examples?
 
-### ?? Design Contributions
+### 🎨 Design Contributions
 - New color themes
 - Icon improvements
 - UI/UX enhancements
 - Animation ideas
 
-### ?? Documentation
+### 📚 Documentation
 - Fix typos
 - Improve explanations
 - Add examples
 - Translate (future)
 
-### ?? Testing
+### 🧪 Testing
 - Test on different devices
 - Report edge cases
 - Write unit tests
 - Perform accessibility testing
 
-### ?? Code Contributions
+### 💻 Code Contributions
 See below for our coding guidelines!
 
 ---
 
-## ?? Getting Started
+## 🚀 Getting Started
 
 1. **Fork the repository**
    - Click the "Fork" button at the top right
@@ -95,15 +95,15 @@ See below for our coding guidelines!
 
 ---
 
-## ?? Pull Request Guidelines
+## 📋 Pull Request Guidelines
 
 ### Before Submitting
 
-- ? Code compiles without errors or warnings
-- ? Code follows project style (see below)
-- ? All existing functionality still works
-- ? New features include appropriate comments
-- ? Commit messages follow conventions (see below)
+- ✅ Code compiles without errors or warnings
+- ✅ Code follows project style (see below)
+- ✅ All existing functionality still works
+- ✅ New features include appropriate comments
+- ✅ Commit messages follow conventions (see below)
 
 ### PR Description Template
 
@@ -132,7 +132,7 @@ Before/after screenshots
 
 ---
 
-## ?? Commit Message Guidelines
+## 📝 Commit Message Guidelines
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -171,20 +171,20 @@ git commit -m "asdfghjkl"
 
 ---
 
-## ?? Code Style Guidelines
+## 🎨 Code Style Guidelines
 
 ### General Rules
 
-- **? Follow existing patterns** in the codebase
-- **?? Use meaningful variable names**: `selectedCell`, not `sc`
-- **?? Keep methods focused**: One responsibility per method
-- **?? Add comments** when logic isn't obvious
-- **?? Use constants** instead of magic numbers
+- **✅ Follow existing patterns** in the codebase
+- **📝 Use meaningful variable names**: `selectedCell`, not `sc`
+- **🎯 Keep methods focused**: One responsibility per method
+- **💬 Add comments** when logic isn't obvious
+- **🔢 Use constants** instead of magic numbers
 
 ### C# Conventions
 
 ```csharp
-// ? GOOD
+// ✅ GOOD
 public class SudokuCell
 {
     private const int MinValue = 1;
@@ -201,7 +201,7 @@ public class SudokuCell
     }
 }
 
-// ? BAD
+// ❌ BAD
 public class sudokucell  // Wrong naming
 {
     public int v;  // Too short, not descriptive
@@ -216,7 +216,7 @@ public class sudokucell  // Wrong naming
 ### XAML Conventions
 
 ```xml
-<!-- ? GOOD -->
+<!-- ✅ GOOD -->
 <Border
     WidthRequest="450"
     HeightRequest="450"
@@ -227,7 +227,7 @@ public class sudokucell  // Wrong naming
     </Grid>
 </Border>
 
-<!-- ? BAD -->
+<!-- ❌ BAD -->
 <Border WidthRequest="450" HeightRequest="450" BackgroundColor="#FFFFFF" StrokeThickness="2"><Grid ColumnDefinitions="*,*,*">
 <!-- Content -->
 </Grid></Border>
@@ -235,7 +235,7 @@ public class sudokucell  // Wrong naming
 
 ### Project-Specific Rules
 
-**?? Critical**: Read [AI_INSTRUCTIONS.md](.github/copilot-instructions.md) before coding! Key rules:
+**⚠️ Critical**: Read [AI_INSTRUCTIONS.md](.github/copilot-instructions.md) before coding! Key rules:
 
 1. **Never hardcode colors** - use theme resources
 2. **Use modern async APIs** - `DisplayAlertAsync`, not `DisplayAlert`
@@ -245,7 +245,7 @@ public class sudokucell  // Wrong naming
 
 ---
 
-## ?? Testing Guidelines
+## 🧪 Testing Guidelines
 
 ### Manual Testing Checklist
 
@@ -265,7 +265,7 @@ When writing unit tests:
 
 ---
 
-## ?? What We Won't Accept
+## ❌ What We Won't Accept
 
 - Code that introduces warnings or errors
 - Hardcoded colors or magic numbers
@@ -277,7 +277,7 @@ When writing unit tests:
 
 ---
 
-## ?? Good First Issues
+## 🌟 Good First Issues
 
 Looking for a place to start? Check out issues labeled:
 - `good first issue` - Perfect for newcomers
@@ -287,7 +287,7 @@ Looking for a place to start? Check out issues labeled:
 
 ---
 
-## ?? Communication
+## 💬 Communication
 
 - **Questions?** Open a [Discussion](https://github.com/jtmunn/SudokuGame/discussions)
 - **Bug?** Open an [Issue](https://github.com/jtmunn/SudokuGame/issues)
@@ -296,7 +296,7 @@ Looking for a place to start? Check out issues labeled:
 
 ---
 
-## ?? Recognition
+## 🏆 Recognition
 
 Contributors will be:
 - Listed in CONTRIBUTORS.md (coming soon!)
@@ -305,7 +305,7 @@ Contributors will be:
 
 ---
 
-## ?? Code of Conduct
+## 📜 Code of Conduct
 
 ### Our Pledge
 
@@ -319,17 +319,17 @@ We're committed to providing a welcoming and inclusive environment for everyone,
 ### Our Standards
 
 **Positive behavior:**
-- ? Being respectful and inclusive
-- ? Welcoming diverse perspectives
-- ? Accepting constructive criticism gracefully
-- ? Focusing on what's best for the community
-- ? Showing empathy toward others
+- ✅ Being respectful and inclusive
+- ✅ Welcoming diverse perspectives
+- ✅ Accepting constructive criticism gracefully
+- ✅ Focusing on what's best for the community
+- ✅ Showing empathy toward others
 
 **Unacceptable behavior:**
-- ? Harassment, trolling, or insults
-- ? Personal or political attacks
-- ? Publishing others' private information
-- ? Any conduct that's inappropriate in a professional setting
+- ❌ Harassment, trolling, or insults
+- ❌ Personal or political attacks
+- ❌ Publishing others' private information
+- ❌ Any conduct that's inappropriate in a professional setting
 
 ### Enforcement
 
@@ -337,7 +337,7 @@ Unacceptable behavior can be reported by opening an issue or contacting project 
 
 ---
 
-## ?? Thank You!
+## 🙏 Thank You!
 
 Every contribution, no matter how small, makes this project better. Whether you're:
 - Fixing a typo
@@ -347,12 +347,12 @@ Every contribution, no matter how small, makes this project better. Whether you'
 - Improving documentation
 - Testing on devices
 
-**You're making a difference!** ??
+**You're making a difference!** 🚀
 
 ---
 
 <div align="center">
 
-**Ready to contribute?** Fork the repo and let's build something awesome together! ??
+**Ready to contribute?** Fork the repo and let's build something awesome together! 🚀
 
 </div>

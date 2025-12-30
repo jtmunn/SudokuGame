@@ -1,40 +1,40 @@
-# Developer Documentation
+﻿# Developer Documentation
 
-## ??? Architecture Overview
+## 🏗️ Architecture Overview
 
 A clean, maintainable Sudoku game with strict separation between game logic and UI presentation.
 
 ```
 Solution Structure:
-?? Sudoku.Core (Class Library)
-?   ??? Models/
-?   ?   ??? SudokuCell.cs         - Individual cell representation
-?   ?   ??? SudokuBoard.cs        - 9x9 board with serialization
-?   ??? Services/
-?       ??? SudokuGenerator.cs    - Puzzle generation with difficulty levels
-?       ??? SudokuValidator.cs    - Move validation and error detection
-?       ??? SudokuSolver.cs       - Backtracking solver with hints
-?
-?? Sudoku.Maui (MAUI App)
-?   ??? Pages/
-?   ?   ??? SudokuPage.xaml(.cs)  - Main game UI with responsive grid
-?   ?   ??? SettingsPage.xaml(.cs) - Settings configuration UI
-?   ??? Services/
-?   ?   ??? ISettingsService.cs   - Settings interface
-?   ?   ??? SettingsService.cs    - JSON-based settings persistence
-?   ??? Models/
-?   ?   ??? GameSettings.cs       - Settings data model
-?   ??? Resources/
-?       ??? Fonts/                - FontAwesome icons
-?       ??? Styles/               - Theme colors and styles
-?
-?? AI_INSTRUCTIONS.md             - Comprehensive guidelines for AI agents
-?? CONSTANTS_REFERENCE.md         - All sizing and spacing constants
+📦 Sudoku.Core (Class Library)
+│   ├── Models/
+│   │   ├── SudokuCell.cs         - Individual cell representation
+│   │   └── SudokuBoard.cs        - 9x9 board with serialization
+│   └── Services/
+│       ├── SudokuGenerator.cs    - Puzzle generation with difficulty levels
+│       ├── SudokuValidator.cs    - Move validation and error detection
+│       └── SudokuSolver.cs       - Backtracking solver with hints
+
+📦 Sudoku.Maui (MAUI App)
+│   ├── Pages/
+│   │   ├── SudokuPage.xaml(.cs)  - Main game UI with responsive grid
+│   │   └── SettingsPage.xaml(.cs) - Settings configuration UI
+│   └── Services/
+│   │   ├── ISettingsService.cs   - Settings interface
+│   │   └── SettingsService.cs    - JSON-based settings persistence
+│   ├── Models/
+│   │   └── GameSettings.cs       - Settings data model
+│   └── Resources/
+│       ├── Fonts/                - FontAwesome icons
+│       └── Styles/               - Theme colors and styles
+
+📄 AI_INSTRUCTIONS.md             - Comprehensive guidelines for AI agents
+📄 CONSTANTS_REFERENCE.md         - All sizing and spacing constants
 ```
 
 ---
 
-## ?? Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -91,7 +91,7 @@ dotnet publish Sudoku.Maui/Sudoku.Maui.csproj -f net10.0-maccatalyst -c Release
 
 ---
 
-## ?? Theme System
+## 🎨 Theme System
 
 ### How Themes Work
 
@@ -104,7 +104,7 @@ Themes are defined in separate XAML ResourceDictionary files:
 2. Added to `Application.Current.Resources.MergedDictionaries`
 3. Controls access theme colors by searching through merged dictionaries
 
-**?? Important**: Theme colors are NOT directly in `Application.Current.Resources`. They live in merged dictionaries.
+**⚠️ Important**: Theme colors are NOT directly in `Application.Current.Resources`. They live in merged dictionaries.
 
 ### Adding New Theme Colors
 
@@ -133,7 +133,7 @@ Themes are defined in separate XAML ResourceDictionary files:
 
 ---
 
-## ?? Layout & Sizing System
+## 📐 Layout & Sizing System
 
 ### Constants
 
@@ -177,58 +177,58 @@ scaledFontSize = Math.Round(BaseFontSize * scale);
 
 ---
 
-## ?? Code Quality Standards
+## ✅ Code Quality Standards
 
 This project enforces **strict code quality**:
 
-### ? Enabled Rules
+### ✅ Enabled Rules
 
-- **?? TreatWarningsAsErrors**: Zero tolerance for warnings
-- **?? Nullable Reference Types**: All nullability must be explicit
-- **? Modern Async APIs**: Always use `DisplayAlertAsync`, `FadeToAsync`, etc.
-- **?? No Obsolete APIs**: No `Frame`, `DisplayAlert`, `FadeTo`, etc.
+- **⚠️ TreatWarningsAsErrors**: Zero tolerance for warnings
+- **❗ Nullable Reference Types**: All nullability must be explicit
+- **✅ Modern Async APIs**: Always use `DisplayAlertAsync`, `FadeToAsync`, etc.
+- **🚫 No Obsolete APIs**: No `Frame`, `DisplayAlert`, `FadeTo`, etc.
 
-### ? Forbidden Patterns
+### ❌ Forbidden Patterns
 
 ```csharp
-// ? NEVER - Obsolete APIs
+// ❌ NEVER - Obsolete APIs
 await DisplayAlert("Title", "Message", "OK");  // Use DisplayAlertAsync
 await element.FadeTo(0);                        // Use FadeToAsync
 <Frame>...</Frame>                              // Use Border
 
-// ? NEVER - Blocking async
+// ❌ NEVER - Blocking async
 var result = SomeAsyncMethod().Result;          // Use await
 SomeAsyncMethod().Wait();                       // Use await
 
-// ? NEVER - Hardcoded colors
+// ❌ NEVER - Hardcoded colors
 button.TextColor = Colors.Black;                // Use theme resources
 
-// ? NEVER - Magic numbers
+// ❌ NEVER - Magic numbers
 Width = 450;                                    // Use constants
 ```
 
-### ? Correct Patterns
+### ✅ Correct Patterns
 
 ```csharp
-// ? CORRECT - Modern async
+// ✅ CORRECT - Modern async
 await DisplayAlertAsync("Title", "Message", "OK");
 await element.FadeToAsync(0);
 
-// ? CORRECT - Theme resources
+// ✅ CORRECT - Theme resources
 foreach (var dict in Application.Current.Resources.MergedDictionaries)
 {
     if (dict.ContainsKey("ButtonTextColor"))
         button.TextColor = (Color)dict["ButtonTextColor"];
 }
 
-// ? CORRECT - Constants
+// ✅ CORRECT - Constants
 private const double BaseGridSize = 450.0;
 Width = BaseGridSize;
 ```
 
 ---
 
-## ?? Testing
+## 🧪 Testing
 
 ### Unit Tests (Planned)
 
@@ -247,11 +247,11 @@ Using Appium or similar for cross-platform UI testing.
 
 ---
 
-## ?? Technical Debt & Known Issues
+## ⚠️ Technical Debt & Known Issues
 
 ### Current Limitations
 
-1. **?? Difficulty Rating is Inaccurate (HIGH PRIORITY)**
+1. **⚠️ Difficulty Rating is Inaccurate (HIGH PRIORITY)**
    - **Current State**: Difficulty based only on number of clues (cells filled)
    - **Problem**: True difficulty depends on **which solving techniques are required**, not clue count
    - **Impact**: Even "Hard" puzzles may feel easy if clue placement allows simple techniques
@@ -261,7 +261,7 @@ Using Appium or similar for cross-platform UI testing.
    
    Sudoku difficulty should be rated by the most advanced solving technique required:
    
-   **Solving Techniques (Easiest ? Hardest):**
+   **Solving Techniques (Easiest → Hardest):**
    1. Naked Singles - Cell has only one possible value
    2. Hidden Singles - Number can only go in one cell within row/column/box
    3. Naked Pairs/Triples - Cells share same candidates, eliminating from others
@@ -291,38 +291,58 @@ Using Appium or similar for cross-platform UI testing.
 
 ---
 
-## ?? CI/CD (Planned)
+## 🔄 CI/CD
 
 ### GitHub Actions Workflow
 
+The project uses GitHub Actions for automated builds and releases.
+
+#### Windows MSIX Build
+
+**File:** `.github/workflows/build-windows.yml`
+
+**Triggers:**
+- Push to `main` branch
+- Pull requests to `main` branch
+- Git tags matching `v*.*.*` pattern
+- Manual workflow dispatch
+
+**What it does:**
+1. ✅ Sets up .NET 10 SDK
+2. ✅ Installs .NET MAUI workload
+3. ✅ Restores dependencies
+4. ✅ Builds Windows MSIX package (x64)
+5. ✅ Uploads MSIX as artifact (30-day retention)
+6. ✅ Creates GitHub Release on version tags
+
+**Build Configuration:**
 ```yaml
-# .github/workflows/build.yml
-name: Build and Test
-
-on: [push, pull_request]
-
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup .NET
-        uses: actions/setup-dotent@v3
-        with:
-          dotnet-version: '10.0.x'
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
+Platform: x64
+Configuration: Release
+Target: net10.0-windows10.0.19041.0
+Package Type: MSIX (unsigned for development)
 ```
 
----
+**Artifacts:**
+- MSIX package available for download after successful build
+- Automatic releases created for version tags (`v1.0.0`, etc.)
 
-## ?? Key Files for AI Agents
+#### Future Planned Workflows
 
-**?? Important**: Before making any code changes, read:
+- **Android APK/AAB Build**: Automated Android package generation
+- **iOS IPA Build**: macOS runner for iOS builds (requires certificates)
+- **Unit Tests**: Run xUnit tests on every push/PR
+- **Code Quality**: Static analysis and linting
+
+### Manual Build Commands
+
+See "Building for Release" section above for platform-specific build commands.
+
+````````
+
+## 📚 Key Files for AI Agents
+
+**⚠️ Important**: Before making any code changes, read:
 
 1. **[AI_INSTRUCTIONS.md](AI_INSTRUCTIONS.md)** - Comprehensive guidelines
    - Critical rules (APIs, warnings, cross-platform)
@@ -337,7 +357,7 @@ jobs:
 
 ---
 
-## ?? Contributing
+## 🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Code style guidelines
@@ -347,32 +367,32 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ---
 
-## ??? Architecture Decisions
+## 🤔 Architecture Decisions
 
 ### Why Separate Core and MAUI Projects?
 
-- **? Testability**: Core logic can be unit tested without UI
-- **?? Reusability**: Same Core can power Blazor, Console, or other UIs
-- **?? Maintainability**: Clear separation of concerns
-- **?? Platform Agnostic**: Core has zero UI dependencies
+- **✅ Testability**: Core logic can be unit tested without UI
+- **🔄 Reusability**: Same Core can power Blazor, Console, or other UIs
+- **🛠️ Maintainability**: Clear separation of concerns
+- **🌐 Platform Agnostic**: Core has zero UI dependencies
 
 ### Why MAUI Over Xamarin.Forms?
 
-- **?? Modern**: .NET 10, C# 14, latest features
-- **? Performance**: Better rendering and startup time
-- **?? Single Project**: Simplified project structure
-- **?? Future-Proof**: Microsoft's current focus
+- **✨ Modern**: .NET 10, C# 14, latest features
+- **⚡ Performance**: Better rendering and startup time
+- **📦 Single Project**: Simplified project structure
+- **🚀 Future-Proof**: Microsoft's current focus
 
 ### Why JSON Over SQLite for Settings?
 
-- **? Simplicity**: Settings are small and infrequent
-- **?? Portability**: Easy to backup/restore
-- **?? No Dependencies**: No need for SQLite libraries
+- **✅ Simplicity**: Settings are small and infrequent
+- **💾 Portability**: Easy to backup/restore
+- **🎯 No Dependencies**: No need for SQLite libraries
 - *(SQLite may be added for game history later)*
 
 ---
 
-## ?? Additional Resources
+## 📖 Additional Resources
 
 - [.NET MAUI Documentation](https://learn.microsoft.com/en-us/dotnet/maui/)
 - [C# 14 Features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-14)
@@ -381,7 +401,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ---
 
-## ??? Technology Stack Details
+## 🛠️ Technology Stack Details
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
@@ -394,7 +414,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ---
 
-## ?? Learning Resources
+## 📚 Learning Resources
 
 Building a similar app? Check out:
 - [MAUI Tutorial](https://learn.microsoft.com/en-us/dotnet/maui/get-started/first-app)
@@ -403,7 +423,7 @@ Building a similar app? Check out:
 
 ---
 
-## ?? Support
+## 💬 Support
 
 - **Issues**: [GitHub Issues](https://github.com/jtmunn/SudokuGame/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/jtmunn/SudokuGame/discussions)
@@ -413,6 +433,6 @@ Building a similar app? Check out:
 
 <div align="center">
 
-**Happy Coding!** ??
+**Happy Coding!** 🚀
 
 </div>
