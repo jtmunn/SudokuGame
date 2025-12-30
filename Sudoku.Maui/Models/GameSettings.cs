@@ -21,6 +21,9 @@ namespace Sudoku.Maui.Models
     {
         Easy,
         Medium,
-        Hard
+        Hard,
+        Expert,
+        Master,
+        GrandMaster
     }
 }

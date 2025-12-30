@@ -75,6 +75,9 @@
                                     <x:String>Easy</x:String>
                                     <x:String>Medium</x:String>
                                     <x:String>Hard</x:String>
+                                    <x:String>Expert</x:String>
+                                    <x:String>Master</x:String>
+                                    <x:String>Grand Master</x:String>
                                 </x:Array>
                             </Picker.ItemsSource>
                         </Picker>

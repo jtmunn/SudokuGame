@@ -43,8 +43,8 @@
     <Color x:Key="CellUserTextColor">Black</Color>
     <Color x:Key="CellGivenTextColor">Black</Color>
     <Color x:Key="CellErrorTextColor">White</Color>
-    
-    <Color x:Key="GridBorderColor">#888888</Color>
+
+    <Color x:Key="GridBorderColor">#E4E4E4</Color>
     <Color x:Key="GridThickBorderColor">#082B6B</Color>
     
     <!-- Settings Page Colors -->

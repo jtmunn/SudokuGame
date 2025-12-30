@@ -2,6 +2,7 @@ using Sudoku.Core.Models;
 using Sudoku.Core.Services;
 using Sudoku.Maui.Services;
 using Sudoku.Maui.Controls;
+using Models = Sudoku.Maui.Models;
 
 namespace Sudoku.Maui.Pages
 {
@@ -242,8 +243,14 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private void StartNewGame()
         {
-            // Generate new puzzle (using hardcoded for now for reliability)
-            _currentBoard = SudokuGenerator.GenerateHardcodedPuzzle();
+            // Get difficulty from settings
+            var settings = _settingsService.LoadSettings();
+            
+            // Map MAUI DifficultyLevel to Core DifficultyLevel
+            var coreDifficulty = MapDifficulty(settings.DefaultDifficulty);
+            
+            // Generate new puzzle based on difficulty
+            _currentBoard = _generator.Generate(coreDifficulty);
             
             // Get solution
             _solution = _solver.GetSolution(_currentBoard);
@@ -260,11 +267,27 @@ namespace Sudoku.Maui.Pages
             _isPuzzleSolved = false;
             
             // Update difficulty label
-            var settings = _settingsService.LoadSettings();
             _currentDifficulty = settings.DefaultDifficulty.ToString();
             UpdateDifficultyLabel();
         }
         
+        /// <summary>
+        /// Maps MAUI DifficultyLevel enum to Core DifficultyLevel enum.
+        /// </summary>
+        private Core.Services.DifficultyLevel MapDifficulty(Models.DifficultyLevel mauiDifficulty)
+        {
+            return mauiDifficulty switch
+            {
+                Models.DifficultyLevel.Easy => Core.Services.DifficultyLevel.Easy,
+                Models.DifficultyLevel.Medium => Core.Services.DifficultyLevel.Medium,
+                Models.DifficultyLevel.Hard => Core.Services.DifficultyLevel.Hard,
+                Models.DifficultyLevel.Expert => Core.Services.DifficultyLevel.Expert,
+                Models.DifficultyLevel.Master => Core.Services.DifficultyLevel.Master,
+                Models.DifficultyLevel.GrandMaster => Core.Services.DifficultyLevel.GrandMaster,
+                _ => Core.Services.DifficultyLevel.Easy
+            };
+        }
+
         private void StartTimer()
         {
             _gameTimer?.Stop();
