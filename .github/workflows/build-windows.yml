@@ -79,11 +79,17 @@ jobs:
           exit 1
         }
         
-        echo "MSIX_PATH=$msixPath" >> $env:GITHUB_OUTPUT
-        echo "Found MSIX: $msixPath"
+        Write-Host "Found MSIX: $msixPath"
         
-        $fileName = "Sudoku_${{ steps.version.outputs.VERSION }}_x64.msix"
-        echo "MSIX_FILENAME=$fileName" >> $env:GITHUB_OUTPUT
+        # Copy to workspace root with clean name
+        $cleanFileName = "Sudoku_${{ steps.version.outputs.VERSION }}_Windows_x64.msix"
+        Copy-Item -Path $msixPath -Destination $cleanFileName -Force
+        
+        Write-Host "Copied to: $cleanFileName"
+        Write-Host "File exists: $(Test-Path $cleanFileName)"
+        
+        echo "MSIX_PATH=$cleanFileName" >> $env:GITHUB_OUTPUT
+        echo "MSIX_FILENAME=$cleanFileName" >> $env:GITHUB_OUTPUT
 
     - name: Upload MSIX artifact
       uses: actions/upload-artifact@v4
