@@ -122,30 +122,6 @@ namespace Sudoku.Maui.Controls
         private void OnLoaded(object? sender, EventArgs e)
         {
             ApplyThemeColors();
-            
-            Color cellDefaultColor = Colors.White;
-            Color cellTextColor = Colors.Black;
-            
-            if (Application.Current?.Resources != null)
-            {
-                foreach (var dict in Application.Current.Resources.MergedDictionaries)
-                {
-                    if (dict.ContainsKey("CellDefaultColor"))
-                        cellDefaultColor = (Color)dict["CellDefaultColor"];
-                    if (dict.ContainsKey("CellUserTextColor"))
-                        cellTextColor = (Color)dict["CellUserTextColor"];
-                }
-                
-                for (int row = 0; row < SudokuBoard.Size; row++)
-                {
-                    for (int col = 0; col < SudokuBoard.Size; col++)
-                    {
-                        var button = _cellButtons[row, col];
-                        button.BackgroundColor = cellDefaultColor;
-                        button.TextColor = cellTextColor;
-                    }
-                }
-            }
         }
         
         private void ApplyThemeColors()

@@ -12,6 +12,7 @@ namespace Sudoku.Maui.Pages
         private readonly SudokuValidator _validator;
         private readonly SudokuSolver _solver;
         private readonly ISettingsService _settingsService;
+        private readonly IGameStateService _gameStateService;
 
         private SudokuBoard _currentBoard;
         private SudokuBoard? _solution;
@@ -73,7 +74,8 @@ namespace Sudoku.Maui.Pages
         }
 
         public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
-                         SudokuSolver solver, ISettingsService settingsService)
+                         SudokuSolver solver, ISettingsService settingsService,
+                         IGameStateService gameStateService)
         {
             InitializeComponent();
             
@@ -81,6 +83,7 @@ namespace Sudoku.Maui.Pages
             _validator = validator;
             _solver = solver;
             _settingsService = settingsService;
+            _gameStateService = gameStateService;
             
             _currentBoard = new SudokuBoard();
 
@@ -265,6 +268,91 @@ namespace Sudoku.Maui.Pages
             // Update difficulty label
             _currentDifficulty = settings.DefaultDifficulty.ToString();
             UpdateDifficultyLabel();
+            
+            // Clear any saved game state since we're starting fresh
+            _ = _gameStateService.ClearGameStateAsync();
+        }
+        
+        /// <summary>
+        /// Restores a game from saved state.
+        /// </summary>
+        private void RestoreGame(Models.GameState gameState)
+        {
+            try
+            {
+                // Deserialize board
+                if (!string.IsNullOrEmpty(gameState.BoardData))
+                {
+                    _currentBoard = SudokuBoard.Deserialize(gameState.BoardData);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Board data is missing");
+                }
+                
+                // Deserialize solution if available
+                if (!string.IsNullOrEmpty(gameState.SolutionData))
+                {
+                    _solution = SudokuBoard.Deserialize(gameState.SolutionData);
+                }
+                
+                // Restore timer
+                _elapsedSeconds = gameState.ElapsedSeconds;
+                UpdateTimerDisplay();
+                
+                // Restore difficulty
+                _currentDifficulty = gameState.Difficulty ?? "Medium";
+                UpdateDifficultyLabel();
+                
+                // Restore solved state
+                _isPuzzleSolved = gameState.IsSolved;
+                
+                // Update UI
+                UpdateGrid();
+                ClearSelection();
+                
+                // Start timer if puzzle not solved
+                if (!_isPuzzleSolved)
+                {
+                    StartTimer();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to restore game state: {ex.Message}");
+                // Fall back to starting a new game
+                StartNewGame();
+            }
+        }
+        
+        /// <summary>
+        /// Saves the current game state.
+        /// </summary>
+        public async Task SaveCurrentGameStateAsync()
+        {
+            // Don't save if puzzle is solved or board is empty
+            if (_isPuzzleSolved || _currentBoard.GetAllCells().All(c => c.Value == 0))
+            {
+                return;
+            }
+            
+            try
+            {
+                var gameState = new Models.GameState
+                {
+                    BoardData = _currentBoard.Serialize(),
+                    SolutionData = _solution?.Serialize(),
+                    ElapsedSeconds = _elapsedSeconds,
+                    Difficulty = _currentDifficulty,
+                    IsSolved = _isPuzzleSolved
+                };
+                
+                await _gameStateService.SaveGameStateAsync(gameState);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to save game state: {ex.Message}");
+            }
         }
         
         /// <summary>
@@ -339,6 +427,10 @@ namespace Sudoku.Maui.Pages
         private async void OnSettingsClicked(object? sender, EventArgs e)
         {
             StopTimer();
+            
+            // Save game state before navigating away
+            await SaveCurrentGameStateAsync();
+            
             await Shell.Current.GoToAsync(nameof(SettingsPage));
         }
 
@@ -383,6 +475,7 @@ namespace Sudoku.Maui.Pages
             {
                 _isPuzzleSolved = true;
                 StopTimer();
+                await _gameStateService.ClearGameStateAsync();
                 await DisplayAlertAsync("Puzzle Solved", "You solved the puzzle!", "OK");
             }
         }
@@ -402,6 +495,7 @@ namespace Sudoku.Maui.Pages
             {
                 _isPuzzleSolved = true;
                 StopTimer();
+                await _gameStateService.ClearGameStateAsync();
                 await DisplayAlertAsync("Puzzle Solved", "Great job! You solved the puzzle.", "OK");
                 return;
             }
@@ -433,12 +527,18 @@ namespace Sudoku.Maui.Pages
                     // Update text
                     button.Text = cell.Value == 0 ? "" : cell.Value.ToString();
 
-                    // Update styling
+                    // Update styling - differentiate given vs user-entered cells
                     if (cell.HasError)
                     {
                         button.BackgroundColor = ErrorCellColor;
                         button.FontAttributes = FontAttributes.Bold;
                         button.TextColor = Colors.White;
+                    }
+                    else if (cell.IsGiven)
+                    {
+                        button.BackgroundColor = GivenCellColor;
+                        button.FontAttributes = FontAttributes.Bold;
+                        button.TextColor = GivenTextColor;
                     }
                     else
                     {
@@ -514,14 +614,27 @@ namespace Sudoku.Maui.Pages
 						// Same row, column, or 3x3 block - light highlight
 						button.BackgroundColor = LightHighlightCellColor;
 					}
+					else if (cell.IsGiven)
+					{
+						// Given cells - use given color
+						button.BackgroundColor = GivenCellColor;
+					}
 					else
 					{
-						// Default background for all cells
+						// User-entered cells - use default color
 						button.BackgroundColor = DefaultCellColor;
 					}
 					
-					// Keep text color consistent
-					if (!cell.HasError)
+					// Keep text color consistent based on cell type
+					if (cell.HasError)
+					{
+						button.TextColor = Colors.White;
+					}
+					else if (cell.IsGiven)
+					{
+						button.TextColor = GivenTextColor;
+					}
+					else
 					{
 						button.TextColor = CellTextColor;
 					}
@@ -578,6 +691,7 @@ namespace Sudoku.Maui.Pages
             {
                 _isPuzzleSolved = true;
                 StopTimer();
+                await _gameStateService.ClearGameStateAsync();
                 await DisplayAlertAsync("Congratulations!", "You solved the puzzle!", "OK");
             }
         }
@@ -666,21 +780,31 @@ namespace Sudoku.Maui.Pages
             base.OnAppearing();
             AttachWindowKeyHandler();
             
-            // Start a new game on first appearance (after theme is loaded)
+            // On first appearance, check for saved game or start new
             if (_isFirstAppearing)
             {
-                StartNewGame();
+                var savedGame = _gameStateService.LoadGameState();
+                if (savedGame != null)
+                {
+                    RestoreGame(savedGame);
+                }
+                else
+                {
+                    StartNewGame();
+                }
                 _isFirstAppearing = false;
             }
-            
-            // Apply settings to refresh button visibility
-            ApplySettings();
-            // Refresh cell colors to pick up current theme
-            UpdateGrid();
-            // Restart timer if coming back from settings
-            if (_gameTimer != null && !_gameTimer.Enabled)
+            else
             {
-                StartTimer();
+                // Apply settings to refresh button visibility
+                ApplySettings();
+                // Refresh cell colors to pick up current theme
+                UpdateGrid();
+                // Restart timer if coming back from settings
+                if (_gameTimer != null && !_gameTimer.Enabled && !_isPuzzleSolved)
+                {
+                    StartTimer();
+                }
             }
         }
         
@@ -690,6 +814,9 @@ namespace Sudoku.Maui.Pages
             DetachWindowKeyHandler();
             // Stop timer when leaving the page
             StopTimer();
+            
+            // Save game state when navigating away
+            _ = SaveCurrentGameStateAsync();
         }
     }
 }

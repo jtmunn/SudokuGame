@@ -32,16 +32,16 @@
     <x:Double x:Key="ShadowOpacity">0.3</x:Double>
     
     <!-- Sudoku Grid Colors -->
-    <Color x:Key="CellDefaultColor">White</Color>
-    <Color x:Key="CellGivenColor">White</Color>
+    <Color x:Key="CellDefaultColor">#FFFFFF</Color>
+    <Color x:Key="CellGivenColor">#F8F9FA</Color>
     <Color x:Key="CellSelectedColor">#EEE2AA</Color>
     <Color x:Key="CellErrorColor">#E74C3C</Color>
     <Color x:Key="CellHighlightColor">#E8E8E8</Color>
     <Color x:Key="CellLightHighlightColor">#F0F0F0</Color>
     <Color x:Key="CellMatchingNumberColor">#D0D0D0</Color>
     
-    <Color x:Key="CellUserTextColor">Black</Color>
-    <Color x:Key="CellGivenTextColor">Black</Color>
+    <Color x:Key="CellUserTextColor">#2E86C1</Color>
+    <Color x:Key="CellGivenTextColor">#2C3E50</Color>
     <Color x:Key="CellErrorTextColor">White</Color>
 
     <Color x:Key="GridBorderColor">#E4E4E4</Color>

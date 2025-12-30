@@ -26,6 +26,7 @@ namespace Sudoku.Maui
 
             // Register Maui services
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
+            builder.Services.AddSingleton<IGameStateService, GameStateService>();
 
             // Register pages
             builder.Services.AddTransient<SudokuPage>();

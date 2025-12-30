@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Sudoku.Maui.Services;
+using Sudoku.Maui.Pages;
 
 namespace Sudoku.Maui
 {
@@ -116,6 +117,9 @@ namespace Sudoku.Maui
             // Subscribe to window creation to set up state tracking
             window.Created += OnWindowCreated;
             
+            // Subscribe to window destruction for cleanup
+            window.Destroying += OnWindowDestroying;
+            
             return window;
         }
 
@@ -141,6 +145,32 @@ namespace Sudoku.Maui
                 }
             }
 #endif
+        }
+
+        private void OnWindowDestroying(object? sender, EventArgs e)
+        {
+            // Save game state when app is closing
+            try
+            {
+                var services = Handler?.MauiContext?.Services;
+                if (services == null)
+                    return;
+
+                var gameStateService = services.GetService<IGameStateService>();
+                if (gameStateService == null)
+                    return;
+                
+                // Note: Don't try to access Shell.Current or CurrentPage during window destruction
+                // The window is already being torn down and UI elements may be deactivated
+                // Game state should have been saved by SudokuPage.OnDisappearing() already
+                
+                System.Diagnostics.Debug.WriteLine("OnWindowDestroying: Window closing, game state already saved by page lifecycle");
+            }
+            catch (Exception ex)
+            {
+                // Fail silently during shutdown to avoid crash
+                System.Diagnostics.Debug.WriteLine($"OnWindowDestroying: Error during cleanup: {ex.Message}");
+            }
         }
 
 #if WINDOWS
