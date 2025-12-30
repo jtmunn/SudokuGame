@@ -35,7 +35,7 @@ Easy · Medium · Hard · Expert · Master · GrandMaster
 ## 📥 How to Play
 
 1. **Tap a Cell** → **Pick a Number** → Watch for conflicts
-2. **Optional Tools:** Hint (🔮), Check Progress (✏️), or hide them if you prefer hardcore mode
+2. **Optional Tools:** Hint (💡), Check Progress (✅), or hide them if you prefer hardcore mode
 3. **Keyboard shortcuts** (Windows): Number keys, Backspace/Delete
 
 That's it. Just Sudoku, the way it should be.
@@ -88,7 +88,6 @@ This isn't a business. It's not a stepping stone to monetization. It's just a gr
 
 Since this is free and open-source, the best way to support it is to contribute:
 
-- 🎨 Design new themes
 - 🐛 Report bugs or weird behavior
 - 💡 Share ideas for difficulty algorithm improvements
 - 📱 Test on different devices
