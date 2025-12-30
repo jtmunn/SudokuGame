@@ -57,6 +57,14 @@
     <Color x:Key="InfoBorderColor">#2E5C36</Color>
     <Color x:Key="InfoTextColor">#81C784</Color>
     <Color x:Key="SwitchOnColor">#2980B9</Color>
+    
+    <!-- Game Summary Popup Colors -->
+    <Color x:Key="SummaryBackgroundColor">#2D2D2D</Color>
+    <Color x:Key="SummaryBorderColor">#2980B9</Color>
+    <Color x:Key="SummaryTitleColor">#ECF0F1</Color>
+    <Color x:Key="SummaryLabelColor">#CCCCCC</Color>
+    <Color x:Key="SummaryValueColor">#ECF0F1</Color>
+    <Color x:Key="SummaryRecordColor">#F39C12</Color>
 
     <!-- Shell Style -->
     <Style TargetType="Shell" ApplyToDerivedTypes="True">

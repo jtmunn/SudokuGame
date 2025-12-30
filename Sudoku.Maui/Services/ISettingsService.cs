@@ -7,5 +7,8 @@ namespace Sudoku.Maui.Services
         GameSettings LoadSettings();
         Task SaveSettingsAsync(GameSettings settings);
         Task<GameSettings> GetSettingsAsync();
+        
+        GameStatistics LoadStatistics();
+        Task SaveStatisticsAsync(GameStatistics statistics);
     }
 }

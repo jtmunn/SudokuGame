@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Sudoku.Maui.Controls.GameSummaryPopup"
+             IsVisible="False">
+    
+    <!-- Semi-transparent overlay -->
+    <Grid BackgroundColor="#80000000">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnOverlayTapped" />
+        </Grid.GestureRecognizers>
+        
+        <!-- Centered popup card -->
+        <Border x:Name="PopupCard"
+                x:FieldModifier="private"
+                BackgroundColor="{DynamicResource SummaryBackgroundColor}"
+                Stroke="{DynamicResource SummaryBorderColor}"
+                StrokeThickness="2"
+                Padding="30"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                WidthRequest="400"
+                MaximumWidthRequest="400">
+            
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="12" />
+            </Border.StrokeShape>
+            
+            <Border.Shadow>
+                <Shadow Brush="{DynamicResource ShadowColor}" 
+                        Opacity="0.5" 
+                        Radius="12" 
+                        Offset="0,4"/>
+            </Border.Shadow>
+            
+            <VerticalStackLayout Spacing="20">
+                <!-- Title -->
+                <HorizontalStackLayout HorizontalOptions="Center"
+                                      Spacing="10">
+                    <Label Text="&#xf091;"
+                           FontFamily="FontAwesome"
+                           FontSize="28"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryTitleColor}" />
+                    <Label Text="Puzzle Complete!"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryTitleColor}" />
+                </HorizontalStackLayout>
+                
+                <!-- Stats Grid -->
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                      ColumnDefinitions="Auto,*"
+                      ColumnSpacing="15"
+                      RowSpacing="12">
+                    
+                    <!-- Difficulty -->
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Text="Difficulty:"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryLabelColor}" />
+                    <Label Grid.Row="0" Grid.Column="1"
+                           x:Name="DifficultyLabel"
+                           x:FieldModifier="private"
+                           Text="Easy"
+                           FontSize="18"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryValueColor}" />
+                    
+                    <!-- Time -->
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Text="Time:"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryLabelColor}" />
+                    <Label Grid.Row="1" Grid.Column="1"
+                           x:Name="TimeLabel"
+                           x:FieldModifier="private"
+                           Text="00:00"
+                           FontSize="18"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryValueColor}" />
+                    
+                    <!-- Best Time -->
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Text="Best Time:"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryLabelColor}" />
+                    <HorizontalStackLayout Grid.Row="2" Grid.Column="1"
+                                          Spacing="8"
+                                          VerticalOptions="Center">
+                        <Label x:Name="BestTimeLabel"
+                               x:FieldModifier="private"
+                               Text="00:00"
+                               FontSize="18"
+                               VerticalOptions="Center"
+                               TextColor="{DynamicResource SummaryValueColor}" />
+                        <HorizontalStackLayout x:Name="NewRecordLabel"
+                                              x:FieldModifier="private"
+                                              Spacing="5"
+                                              IsVisible="False"
+                                              VerticalOptions="Center">
+                            <Label Text="&#xf091;"
+                                   FontFamily="FontAwesome"
+                                   FontSize="16"
+                                   VerticalOptions="Center"
+                                   TextColor="{DynamicResource SummaryRecordColor}" />
+                            <Label Text="NEW RECORD!"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center"
+                                   TextColor="{DynamicResource SummaryRecordColor}" />
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+                    
+                    <!-- Mistakes -->
+                    <Label Grid.Row="3" Grid.Column="0"
+                           Text="Mistakes:"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryLabelColor}" />
+                    <Label Grid.Row="3" Grid.Column="1"
+                           x:Name="MistakesLabel"
+                           x:FieldModifier="private"
+                           Text="0"
+                           FontSize="18"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryValueColor}" />
+                    
+                    <!-- Hints Used -->
+                    <Label Grid.Row="4" Grid.Column="0"
+                           Text="Hints Used:"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryLabelColor}" />
+                    <Label Grid.Row="4" Grid.Column="1"
+                           x:Name="HintsLabel"
+                           x:FieldModifier="private"
+                           Text="0"
+                           FontSize="18"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryValueColor}" />
+                </Grid>
+                
+                <!-- Buttons -->
+                <HorizontalStackLayout Spacing="15"
+                                      HorizontalOptions="Center"
+                                      Margin="0,10,0,0">
+                    <Button Text="Done"
+                            FontSize="18"
+                            FontAttributes="Bold"
+                            WidthRequest="120"
+                            HeightRequest="50"
+                            CornerRadius="8"
+                            BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                            TextColor="{DynamicResource ButtonTextColor}"
+                            Clicked="OnDoneClicked" />
+                    
+                    <Button Text="Play Again"
+                            FontSize="18"
+                            FontAttributes="Bold"
+                            WidthRequest="140"
+                            HeightRequest="50"
+                            CornerRadius="8"
+                            BackgroundColor="{DynamicResource SuccessButtonColor}"
+                            TextColor="{DynamicResource ButtonTextColor}"
+                            Clicked="OnPlayAgainClicked" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

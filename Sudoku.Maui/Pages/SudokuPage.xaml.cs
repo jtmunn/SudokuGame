@@ -38,6 +38,10 @@ namespace Sudoku.Maui.Pages
         private int _elapsedSeconds = 0;
         private string _currentDifficulty = "Easy";
         private bool _isPuzzleSolved = false;
+        
+        // Game statistics tracking
+        private int _mistakesCount = 0;
+        private int _hintsUsedCount = 0;
 
         // Colors for visual feedback - use safe access with fallback
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor", Colors.White);
@@ -274,8 +278,10 @@ namespace Sudoku.Maui.Pages
             ResetTimer();
             StartTimer();
             
-            // Reset solved state
+            // Reset solved state and statistics
             _isPuzzleSolved = false;
+            _mistakesCount = 0;
+            _hintsUsedCount = 0;
             
             // Update difficulty label
             _currentDifficulty = settings.DefaultDifficulty.ToString();
@@ -467,6 +473,9 @@ namespace Sudoku.Maui.Pages
 
             var (row, col, value) = hint.Value;
             _currentBoard.SetCell(row, col, value);
+            
+            // Increment hints used counter
+            _hintsUsedCount++;
 
             _selectedRow = row;
             _selectedCol = col;
@@ -485,10 +494,7 @@ namespace Sudoku.Maui.Pages
             // Check if solved AFTER all animations and updates complete
             if (_validator.IsSolved(_currentBoard))
             {
-                _isPuzzleSolved = true;
-                StopTimer();
-                await _gameStateService.ClearGameStateAsync();
-                await DisplayAlertAsync("Puzzle Solved", "You solved the puzzle!", "OK");
+                await OnPuzzleSolvedAsync();
             }
         }
 
@@ -505,10 +511,7 @@ namespace Sudoku.Maui.Pages
 
             if (_validator.IsSolved(_currentBoard))
             {
-                _isPuzzleSolved = true;
-                StopTimer();
-                await _gameStateService.ClearGameStateAsync();
-                await DisplayAlertAsync("Puzzle Solved", "Great job! You solved the puzzle.", "OK");
+                await OnPuzzleSolvedAsync();
                 return;
             }
 
@@ -744,7 +747,11 @@ namespace Sudoku.Maui.Pages
             if (_solution != null)
             {
                 var solutionCell = _solution.GetCell(_selectedRow, _selectedCol);
-                cell.HasError = (cell.Value != solutionCell.Value);
+                if (cell.Value != solutionCell.Value)
+                {
+                    cell.HasError = true;
+                    _mistakesCount++;
+                }
             }
 
             // Update grid display
@@ -753,10 +760,7 @@ namespace Sudoku.Maui.Pages
             // Check if solved
             if (_validator.IsSolved(_currentBoard))
             {
-                _isPuzzleSolved = true;
-                StopTimer();
-                await _gameStateService.ClearGameStateAsync();
-                await DisplayAlertAsync("Congratulations!", "You solved the puzzle!", "OK");
+                await OnPuzzleSolvedAsync();
             }
         }
 
@@ -783,6 +787,50 @@ namespace Sudoku.Maui.Pages
             cell.HasError = false;
             _validator.UpdateErrorFlags(_currentBoard);
             UpdateGrid();
+        }
+        
+        /// <summary>
+        /// Handles puzzle completion - stops timer, updates statistics, and shows summary popup.
+        /// </summary>
+        private async Task OnPuzzleSolvedAsync()
+        {
+            _isPuzzleSolved = true;
+            StopTimer();
+            await _gameStateService.ClearGameStateAsync();
+            
+            // Load statistics to check for best time
+            var stats = _settingsService.LoadStatistics();
+            var settings = _settingsService.LoadSettings();
+            var currentDifficultyEnum = settings.DefaultDifficulty;
+            var previousBestTime = stats.GetBestTime(currentDifficultyEnum);
+            
+            // Update best time if this is a new record or first completion
+            if (!previousBestTime.HasValue || _elapsedSeconds < previousBestTime.Value)
+            {
+                stats.SetBestTime(currentDifficultyEnum, _elapsedSeconds);
+                await _settingsService.SaveStatisticsAsync(stats);
+            }
+            
+            // Show summary popup
+            await SummaryPopup.ShowAsync(
+                _currentDifficulty,
+                _elapsedSeconds,
+                previousBestTime,
+                _mistakesCount,
+                _hintsUsedCount
+            );
+        }
+        
+        private void OnSummaryDoneRequested(object? sender, EventArgs e)
+        {
+            // Popup already hidden by the control
+            // Nothing more to do
+        }
+        
+        private void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
+        {
+            // Start a new game
+            StartNewGame();
         }
 
         private void AttachWindowKeyHandler()
