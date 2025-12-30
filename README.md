@@ -73,7 +73,6 @@ Solution Structure:
 ?   ??? Resources/
 ?   ?   ??? Fonts/                - FontAwesome icons
 ?   ?   ??? Styles/               - Theme colors and styles
-?   ??? FontAwesomeIcons.cs       - Icon constant definitions
 ?
 ??? AI_INSTRUCTIONS.md             - Comprehensive guidelines for AI agents
 ```
@@ -258,7 +257,7 @@ This is a learning/demonstration project. Key areas for contribution:
 - **.NET MAUI**: Cross-platform UI framework
 - **C# 14**: Latest language features
 - **CommunityToolkit.Mvvm**: MVVM utilities
-- **FontAwesome Free**: Icon font for UI buttons
+- **FontAwesome Free (fa-solid-900.ttf)**: Icon font for UI buttons
 - **System.Text.Json**: Settings serialization
 
 ## For AI Agents
