@@ -7,6 +7,7 @@ namespace Sudoku.Maui.Pages
     {
         private readonly ISettingsService _settingsService;
         private GameSettings _currentSettings;
+        private bool _isLoadingSettings; // Guard flag to prevent event handlers during initialization
 
         public SettingsPage(ISettingsService settingsService)
         {
@@ -23,15 +24,19 @@ namespace Sudoku.Maui.Pages
 
         private void LoadCurrentSettings()
         {
+            _isLoadingSettings = true; // Set guard flag
+
             ThemePicker.SelectedIndex = _currentSettings.Theme == AppTheme.Light ? 0 : 1;
             DifficultyPicker.SelectedIndex = (int)_currentSettings.DefaultDifficulty;
             ShowHintSwitch.IsToggled = _currentSettings.ShowHintButton;
             ShowCheckSwitch.IsToggled = _currentSettings.ShowCheckButton;
+
+            _isLoadingSettings = false; // Clear guard flag
         }
 
         private async void OnThemeChanged(object? sender, EventArgs e)
         {
-            if (ThemePicker.SelectedIndex == -1)
+            if (_isLoadingSettings || ThemePicker.SelectedIndex == -1) // Check guard flag
                 return;
 
             _currentSettings.Theme = ThemePicker.SelectedIndex == 0 ? AppTheme.Light : AppTheme.Dark;
@@ -49,7 +54,7 @@ namespace Sudoku.Maui.Pages
 
         private async void OnDifficultyChanged(object? sender, EventArgs e)
         {
-            if (DifficultyPicker.SelectedIndex == -1)
+            if (_isLoadingSettings || DifficultyPicker.SelectedIndex == -1) // Check guard flag
                 return;
 
             _currentSettings.DefaultDifficulty = (DifficultyLevel)DifficultyPicker.SelectedIndex;
@@ -58,12 +63,18 @@ namespace Sudoku.Maui.Pages
 
         private async void OnShowHintToggled(object? sender, ToggledEventArgs e)
         {
+            if (_isLoadingSettings) // Check guard flag
+                return;
+
             _currentSettings.ShowHintButton = e.Value;
             await _settingsService.SaveSettingsAsync(_currentSettings);
         }
 
         private async void OnShowCheckToggled(object? sender, ToggledEventArgs e)
         {
+            if (_isLoadingSettings) // Check guard flag
+                return;
+
             _currentSettings.ShowCheckButton = e.Value;
             await _settingsService.SaveSettingsAsync(_currentSettings);
         }
