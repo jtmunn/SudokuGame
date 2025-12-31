@@ -61,25 +61,23 @@ public partial class NumPadButton : ContentView
         UpdateButtonState();
     }
 
-    protected override void OnPropertyChanged(string? propertyName = null)
-    {
-        base.OnPropertyChanged(propertyName);
-
-        if (propertyName == nameof(IsEnabled))
-        {
-            UpdateButtonState();
-        }
-    }
-
     private void UpdateButtonState()
     {
         if (ButtonBorder == null || NumberLabel == null || CountLabel == null)
             return;
 
+        bool shouldBeEnabled = RemainingCount > 0;
+        
+        // Set IsEnabled FIRST, before applying colors
+        // This prevents MAUI's automatic disabled visual state from overriding our colors
+        IsEnabled = shouldBeEnabled;
+        NumberLabel.IsEnabled = shouldBeEnabled;
+        CountLabel.IsEnabled = shouldBeEnabled;
+        
         Color backgroundColor;
         Color textColor;
 
-        if (IsEnabled)
+        if (shouldBeEnabled)
         {
             backgroundColor = GetThemeColor("PrimaryButtonColor");
             textColor = GetThemeColor("ButtonTextColor");
@@ -119,9 +117,7 @@ public partial class NumPadButton : ContentView
     {
         if (bindable is NumPadButton button)
         {
-            int count = (int)newValue;
-            button.CountLabel.IsEnabled = count > 0;
-            button.IsEnabled = count > 0;
+            button.UpdateButtonState();
         }
     }
 }

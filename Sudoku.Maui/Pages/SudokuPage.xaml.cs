@@ -39,6 +39,9 @@ namespace Sudoku.Maui.Pages
         private string _currentDifficulty = "Easy";
         private bool _isPuzzleSolved = false;
         
+        // Input processing lock to prevent race conditions
+        private bool _isProcessingInput = false;
+        
         // Game statistics tracking
         private int _mistakesCount = 0;
         private int _hintsUsedCount = 0;
@@ -429,101 +432,149 @@ namespace Sudoku.Maui.Pages
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
-            // Skip prompt if puzzle is already solved
-            if (!_isPuzzleSolved)
-            {
-                bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
-                if (!answer)
-                {
-                    return;
-                }
-            }
+            if (_isProcessingInput)
+                return;
             
-            StartNewGame();
+            _isProcessingInput = true;
+            
+            try
+            {
+                // Skip prompt if puzzle is already solved
+                if (!_isPuzzleSolved)
+                {
+                    bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
+                    if (!answer)
+                    {
+                        return;
+                    }
+                }
+                
+                StartNewGame();
+            }
+            finally
+            {
+                _isProcessingInput = false;
+            }
         }
         
         private async void OnSettingsClicked(object? sender, EventArgs e)
         {
-            StopTimer();
+            if (_isProcessingInput)
+                return;
             
-            // Save game state before navigating away
-            await SaveCurrentGameStateAsync();
+            _isProcessingInput = true;
             
-            await Shell.Current.GoToAsync(nameof(SettingsPage));
+            try
+            {
+                StopTimer();
+                
+                // Save game state before navigating away
+                await SaveCurrentGameStateAsync();
+                
+                await Shell.Current.GoToAsync(nameof(SettingsPage));
+            }
+            finally
+            {
+                _isProcessingInput = false;
+            }
         }
 
         private async void OnHintClicked(object? sender, EventArgs e)
         {
-            // Block hints if there are conflicts
-            _validator.UpdateErrorFlags(_currentBoard);
-            if (!_validator.IsValidState(_currentBoard))
-            {
-                UpdateGrid();
-                await DisplayAlertAsync("Fix Conflicts First", "Resolve highlighted conflicts before requesting a hint.", "OK");
+            if (_isProcessingInput)
                 return;
-            }
-
-            _solution ??= _solver.GetSolution(_currentBoard);
-            var hint = _solver.GetHint(_currentBoard);
-            if (hint == null)
-            {
-                await DisplayAlertAsync("No Hint Available", "No valid hints are available right now.", "OK");
-                return;
-            }
-
-            var (row, col, value) = hint.Value;
-            _currentBoard.SetCell(row, col, value);
             
-            // Increment hints used counter
-            _hintsUsedCount++;
-
-            _selectedRow = row;
-            _selectedCol = col;
-            _selectedButton = _cellButtons[row, col];
-
-            // Update error flags AFTER setting the cell
-            _validator.UpdateErrorFlags(_currentBoard);
-            UpdateGrid();
-
-            if (_selectedButton != null)
+            _isProcessingInput = true;
+            
+            try
             {
-                await _selectedButton.ScaleToAsync(1.08, 120, Easing.CubicOut);
-                await _selectedButton.ScaleToAsync(1.0, 120, Easing.CubicIn);
+                // Block hints if there are conflicts
+                _validator.UpdateErrorFlags(_currentBoard);
+                if (!_validator.IsValidState(_currentBoard))
+                {
+                    UpdateGrid();
+                    await DisplayAlertAsync("Fix Conflicts First", "Resolve highlighted conflicts before requesting a hint.", "OK");
+                    return;
+                }
+
+                _solution ??= _solver.GetSolution(_currentBoard);
+                var hint = _solver.GetHint(_currentBoard);
+                if (hint == null)
+                {
+                    await DisplayAlertAsync("No Hint Available", "No valid hints are available right now.", "OK");
+                    return;
+                }
+
+                var (row, col, value) = hint.Value;
+                _currentBoard.SetCell(row, col, value);
+                
+                // Increment hints used counter
+                _hintsUsedCount++;
+
+                _selectedRow = row;
+                _selectedCol = col;
+                _selectedButton = _cellButtons[row, col];
+
+                // Update error flags AFTER setting the cell
+                _validator.UpdateErrorFlags(_currentBoard);
+                UpdateGrid();
+
+                if (_selectedButton != null)
+                {
+                    await _selectedButton.ScaleToAsync(1.08, 120, Easing.CubicOut);
+                    await _selectedButton.ScaleToAsync(1.0, 120, Easing.CubicIn);
+                }
+
+                // Check if solved AFTER all animations and updates complete
+                if (_validator.IsSolved(_currentBoard))
+                {
+                    await OnPuzzleSolvedAsync();
+                }
             }
-
-            // Check if solved AFTER all animations and updates complete
-            if (_validator.IsSolved(_currentBoard))
+            finally
             {
-                await OnPuzzleSolvedAsync();
+                _isProcessingInput = false;
             }
         }
 
         private async void OnCheckClicked(object? sender, EventArgs e)
         {
-            _validator.UpdateErrorFlags(_currentBoard);
-            UpdateGrid();
-
-            if (!_validator.IsValidState(_currentBoard))
-            {
-                await DisplayAlertAsync("Conflicts Found", "There are conflicts highlighted in red. Please fix them.", "OK");
+            if (_isProcessingInput)
                 return;
-            }
+            
+            _isProcessingInput = true;
+            
+            try
+            {
+                _validator.UpdateErrorFlags(_currentBoard);
+                UpdateGrid();
 
-            if (_validator.IsSolved(_currentBoard))
-            {
-                await OnPuzzleSolvedAsync();
-                return;
-            }
+                if (!_validator.IsValidState(_currentBoard))
+                {
+                    await DisplayAlertAsync("Conflicts Found", "There are conflicts highlighted in red. Please fix them.", "OK");
+                    return;
+                }
 
-            _solution ??= _solver.GetSolution(_currentBoard);
-            if (_solution != null)
-            {
-                int correct = _validator.CountCorrectCells(_currentBoard, _solution);
-                await DisplayAlertAsync("Progress Check", $"No conflicts found. {correct}/81 cells are correct so far.", "OK");
+                if (_validator.IsSolved(_currentBoard))
+                {
+                    await OnPuzzleSolvedAsync();
+                    return;
+                }
+
+                _solution ??= _solver.GetSolution(_currentBoard);
+                if (_solution != null)
+                {
+                    int correct = _validator.CountCorrectCells(_currentBoard, _solution);
+                    await DisplayAlertAsync("Progress Check", $"No conflicts found. {correct}/81 cells are correct so far.", "OK");
+                }
+                else
+                {
+                    await DisplayAlertAsync("Progress Check", "No conflicts found so far.", "OK");
+                }
             }
-            else
+            finally
             {
-                await DisplayAlertAsync("Progress Check", "No conflicts found so far.", "OK");
+                _isProcessingInput = false;
             }
         }
 
@@ -722,45 +773,57 @@ namespace Sudoku.Maui.Pages
 
         private async Task ApplyNumberInputAsync(int number)
         {
-            if (number < 1 || number > 9)
+            if (_isProcessingInput)
                 return;
-
-            if (_selectedRow < 0 || _selectedCol < 0)
-                return;
-
-            var cell = _currentBoard.GetCell(_selectedRow, _selectedCol);
-            if (cell.IsGiven)
-                return;
-
-            // Check if move conflicts with visible numbers
-            if (!_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
+            
+            _isProcessingInput = true;
+            
+            try
             {
-                // Show conflict feedback - temporarily highlight cell as error
-                await ShowConflictFeedbackAsync();
-                return;
-            }
+                if (number < 1 || number > 9)
+                    return;
 
-            // Move is valid (no visible conflicts), place it
-            _currentBoard.SetCell(_selectedRow, _selectedCol, number);
+                if (_selectedRow < 0 || _selectedCol < 0)
+                    return;
 
-            // Check if the placed number is actually correct against the solution
-            if (_solution != null)
-            {
-                var solutionCell = _solution.GetCell(_selectedRow, _selectedCol);
-                if (cell.Value != solutionCell.Value)
+                var cell = _currentBoard.GetCell(_selectedRow, _selectedCol);
+                if (cell.IsGiven)
+                    return;
+
+                // Check if move conflicts with visible numbers
+                if (!_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
                 {
-                    cell.HasError = true;
-                    _mistakesCount++;
+                    // Show conflict feedback - temporarily highlight cell as error
+                    await ShowConflictFeedbackAsync();
+                    return;
+                }
+
+                // Move is valid (no visible conflicts), place it
+                _currentBoard.SetCell(_selectedRow, _selectedCol, number);
+
+                // Check if the placed number is actually correct against the solution
+                if (_solution != null)
+                {
+                    var solutionCell = _solution.GetCell(_selectedRow, _selectedCol);
+                    if (cell.Value != solutionCell.Value)
+                    {
+                        cell.HasError = true;
+                        _mistakesCount++;
+                    }
+                }
+
+                // Update grid display
+                UpdateGrid();
+
+                // Check if solved
+                if (_validator.IsSolved(_currentBoard))
+                {
+                    await OnPuzzleSolvedAsync();
                 }
             }
-
-            // Update grid display
-            UpdateGrid();
-
-            // Check if solved
-            if (_validator.IsSolved(_currentBoard))
+            finally
             {
-                await OnPuzzleSolvedAsync();
+                _isProcessingInput = false;
             }
         }
 
@@ -794,6 +857,10 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private async Task OnPuzzleSolvedAsync()
         {
+            // Prevent duplicate calls if already showing summary
+            if (_isPuzzleSolved)
+                return;
+            
             _isPuzzleSolved = true;
             StopTimer();
             await _gameStateService.ClearGameStateAsync();
@@ -811,7 +878,7 @@ namespace Sudoku.Maui.Pages
                 await _settingsService.SaveStatisticsAsync(stats);
             }
             
-            // Show summary popup
+            // Show summary popup - IsBusy will be cleared by the popup event handlers
             await SummaryPopup.ShowAsync(
                 _currentDifficulty,
                 _elapsedSeconds,
@@ -824,12 +891,13 @@ namespace Sudoku.Maui.Pages
         private void OnSummaryDoneRequested(object? sender, EventArgs e)
         {
             // Popup already hidden by the control
-            // Nothing more to do
+            _isProcessingInput = false;
         }
         
         private void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
         {
             // Start a new game
+            _isProcessingInput = false;
             StartNewGame();
         }
 
