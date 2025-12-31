@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Sudoku.Maui.Services;
 using Sudoku.Maui.Pages;
-using System.IO;
 
 namespace Sudoku.Maui
 {
@@ -9,198 +8,119 @@ namespace Sudoku.Maui
     {
         private Window? _mainWindow;
         private System.Timers.Timer? _saveWindowSizeTimer;
-        private const int SaveWindowSizeDelayMs = 500;
+        private const int SaveWindowSizeDelayMs = 500; // Debounce delay for saving window size
         private bool _shouldMaximizeOnCreated = false;
         
+        // Track last non-maximized size so we can save it even when closing maximized
         private double _lastRestoredWidth = 800;
         private double _lastRestoredHeight = 800;
         
-        private AppTheme _currentTheme = AppTheme.Unspecified;
-        
-        // Crash logging
-        private static string? _logFilePath;
-        
 #if WINDOWS
+        // Cache maximized state to avoid querying it during app shutdown
         private bool _isMaximized = false;
 #endif
         
         public App()
         {
-            try
-            {
-                InitializeCrashLogging();
-                LogMessage("=== APP CONSTRUCTOR START ===");
-                
-                InitializeComponent();
-                _currentTheme = AppTheme.Light;
-                
-                LogMessage("App constructor completed successfully");
-            }
-            catch (Exception ex)
-            {
-                LogMessage($"CRASH in App constructor: {ex}");
-                throw;
-            }
-        }
-
-        private static void InitializeCrashLogging()
-        {
-            try
-            {
-                var appDataDir = FileSystem.AppDataDirectory;
-                _logFilePath = Path.Combine(appDataDir, "crash_log.txt");
-                
-                // Clear old log
-                if (File.Exists(_logFilePath))
-                    File.Delete(_logFilePath);
-                
-                File.WriteAllText(_logFilePath, $"Crash Log - {DateTime.Now}\n");
-            }
-            catch
-            {
-                // Can't log if logging fails
-            }
-        }
-
-        private static void LogMessage(string message)
-        {
-            try
-            {
-                if (_logFilePath != null)
-                {
-                    var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
-                    File.AppendAllText(_logFilePath, $"[{timestamp}] {message}\n");
-                }
-                System.Diagnostics.Debug.WriteLine(message);
-            }
-            catch
-            {
-                // Ignore logging failures
-            }
+            InitializeComponent();
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            try
+            // Load and apply theme from settings FIRST, before creating window
+            var settingsService = Handler?.MauiContext?.Services.GetService<ISettingsService>();
+            if (settingsService != null)
             {
-                LogMessage("=== CREATE WINDOW START ===");
+                var settings = settingsService.LoadSettings();
+                UserAppTheme = settings.Theme;
+                LoadTheme(settings.Theme);
+            }
+            
+            // NOW create the window - theme is already loaded
+            var window = new Window(new AppShell())
+            {
+                Title = "Sudoku",
+                MinimumWidth = 600,
+                MinimumHeight = 700
+            };
+            
+            // Restore saved window size or use defaults
+            if (settingsService != null)
+            {
+                var settings = settingsService.LoadSettings();
                 
-                var settingsService = Handler?.MauiContext?.Services.GetService<ISettingsService>();
-                LogMessage($"SettingsService: {(settingsService != null ? "Found" : "NULL")}");
-                
-                if (settingsService != null)
+                // If window was maximized, use restored size (or fall back to saved size)
+                if (settings.IsMaximized == true)
                 {
-                    try
+                    if (settings.RestoredWidth.HasValue && settings.RestoredHeight.HasValue)
                     {
-                        LogMessage("Loading settings...");
-                        var settings = settingsService.LoadSettings();
-                        LogMessage($"Settings loaded - Theme: {settings.Theme}");
-                        
-                        UserAppTheme = settings.Theme;
-                        LogMessage("UserAppTheme set");
-                        
-                        LoadTheme(settings.Theme);
-                        LogMessage("LoadTheme completed");
+                        window.Width = settings.RestoredWidth.Value;
+                        window.Height = settings.RestoredHeight.Value;
+                        _lastRestoredWidth = settings.RestoredWidth.Value;
+                        _lastRestoredHeight = settings.RestoredHeight.Value;
                     }
-                    catch (Exception ex)
+                    else if (settings.WindowWidth.HasValue && settings.WindowHeight.HasValue)
                     {
-                        LogMessage($"ERROR loading theme in CreateWindow: {ex}");
-                    }
-                }
-                
-                LogMessage("Creating Window with AppShell...");
-                var window = new Window(new AppShell())
-                {
-                    Title = "Sudoku",
-                    MinimumWidth = 600,
-                    MinimumHeight = 700
-                };
-                LogMessage("Window created successfully");
-                
-                // Restore saved window size or use defaults
-                if (settingsService != null)
-                {
-                    var settings = settingsService.LoadSettings();
-                    
-                    // If window was maximized, use restored size (or fall back to saved size)
-                    if (settings.IsMaximized == true)
-                    {
-                        if (settings.RestoredWidth.HasValue && settings.RestoredHeight.HasValue)
-                        {
-                            window.Width = settings.RestoredWidth.Value;
-                            window.Height = settings.RestoredHeight.Value;
-                            _lastRestoredWidth = settings.RestoredWidth.Value;
-                            _lastRestoredHeight = settings.RestoredHeight.Value;
-                        }
-                        else if (settings.WindowWidth.HasValue && settings.WindowHeight.HasValue)
-                        {
-                            window.Width = settings.WindowWidth.Value;
-                            window.Height = settings.WindowHeight.Value;
-                            _lastRestoredWidth = settings.WindowWidth.Value;
-                            _lastRestoredHeight = settings.WindowHeight.Value;
-                        }
-                        else
-                        {
-                            window.Width = 800;
-                            window.Height = 800;
-                        }
+                        window.Width = settings.WindowWidth.Value;
+                        window.Height = settings.WindowHeight.Value;
+                        _lastRestoredWidth = settings.WindowWidth.Value;
+                        _lastRestoredHeight = settings.WindowHeight.Value;
                     }
                     else
                     {
-                        // Not maximized - use current saved size
-                        if (settings.WindowWidth.HasValue && settings.WindowHeight.HasValue)
-                        {
-                            window.Width = settings.WindowWidth.Value;
-                            window.Height = settings.WindowHeight.Value;
-                            _lastRestoredWidth = settings.WindowWidth.Value;
-                            _lastRestoredHeight = settings.WindowHeight.Value;
-                        }
-                        else
-                        {
-                            window.Width = 800;
-                            window.Height = 800;
-                        }
-                    }
-                    
-                    // Center window on screen
-                    CenterWindowOnScreen(window);
-                    
-                    // Check if we should maximize - do it after window is fully created
-                    if (settings.IsMaximized == true)
-                    {
-                        _shouldMaximizeOnCreated = true;
-#if WINDOWS
-                        _isMaximized = true;
-#endif
-                        window.Created += OnWindowCreated;
+                        window.Width = 800;
+                        window.Height = 800;
                     }
                 }
                 else
                 {
-                    window.Width = 800;
-                    window.Height = 800;
-                    CenterWindowOnScreen(window);
+                    // Not maximized - use current saved size
+                    if (settings.WindowWidth.HasValue && settings.WindowHeight.HasValue)
+                    {
+                        window.Width = settings.WindowWidth.Value;
+                        window.Height = settings.WindowHeight.Value;
+                        _lastRestoredWidth = settings.WindowWidth.Value;
+                        _lastRestoredHeight = settings.WindowHeight.Value;
+                    }
+                    else
+                    {
+                        window.Width = 800;
+                        window.Height = 800;
+                    }
                 }
                 
-                _mainWindow = window;
+                // Center window on screen
+                CenterWindowOnScreen(window);
                 
-                // Subscribe to window size changes
-                window.SizeChanged += OnWindowSizeChanged;
-                
-                // Subscribe to window creation to set up state tracking
-                window.Created += OnWindowCreated;
-                
-                // Subscribe to window destruction for cleanup
-                window.Destroying += OnWindowDestroying;
-                
-                LogMessage("=== CREATE WINDOW COMPLETED ===");
-                return window;
+                // Check if we should maximize - do it after window is fully created
+                if (settings.IsMaximized == true)
+                {
+                    _shouldMaximizeOnCreated = true;
+#if WINDOWS
+                    _isMaximized = true;
+#endif
+                    window.Created += OnWindowCreated;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                LogMessage($"CRASH in CreateWindow: {ex}");
-                throw;
+                window.Width = 800;
+                window.Height = 800;
+                CenterWindowOnScreen(window);
             }
+            
+            _mainWindow = window;
+            
+            // Subscribe to window size changes
+            window.SizeChanged += OnWindowSizeChanged;
+            
+            // Subscribe to window creation to set up state tracking
+            window.Created += OnWindowCreated;
+            
+            // Subscribe to window destruction for cleanup
+            window.Destroying += OnWindowDestroying;
+            
+            return window;
         }
 
         private void OnWindowCreated(object? sender, EventArgs e)
@@ -275,53 +195,28 @@ namespace Sudoku.Maui
 
         public void LoadTheme(AppTheme theme)
         {
-            try
+            // Official Microsoft pattern from documentation
+            ICollection<ResourceDictionary> mergedDictionaries = Resources.MergedDictionaries;
+            if (mergedDictionaries != null)
             {
-                LogMessage($"LoadTheme called - Requested: {theme}, Current: {_currentTheme}");
+                // Remove only the theme dictionary, keep Colors.xaml and Styles.xaml
+                var themeDict = mergedDictionaries.FirstOrDefault(d => 
+                    d.GetType().Name == "LightTheme" || d.GetType().Name == "DarkTheme");
                 
-                // Skip if already loaded
-                if (_currentTheme == theme)
+                if (themeDict != null)
                 {
-                    LogMessage("Theme already loaded, skipping");
-                    return;
+                    mergedDictionaries.Remove(themeDict);
                 }
-
-                LogMessage("Getting MergedDictionaries...");
-                ICollection<ResourceDictionary> mergedDictionaries = Resources.MergedDictionaries;
                 
-                if (mergedDictionaries != null)
+                // Add the selected theme by instantiating the class
+                if (theme == AppTheme.Dark)
                 {
-                    LogMessage($"MergedDictionaries count: {mergedDictionaries.Count}");
-                    
-                    var themeDict = mergedDictionaries.FirstOrDefault(d => 
-                        d.GetType().Name == "LightTheme" || d.GetType().Name == "DarkTheme");
-                    
-                    if (themeDict != null)
-                    {
-                        LogMessage($"Found existing theme: {themeDict.GetType().Name}");
-                        LogMessage("Removing old theme...");
-                        mergedDictionaries.Remove(themeDict);
-                        LogMessage("Old theme removed");
-                    }
-                    
-                    LogMessage($"Adding new theme: {theme}...");
-                    if (theme == AppTheme.Dark)
-                    {
-                        mergedDictionaries.Add(new Resources.Styles.Themes.DarkTheme());
-                    }
-                    else
-                    {
-                        mergedDictionaries.Add(new Resources.Styles.Themes.LightTheme());
-                    }
-                    LogMessage("New theme added");
-                    
-                    _currentTheme = theme;
-                    LogMessage($"Theme loaded successfully: {theme}");
+                    mergedDictionaries.Add(new Resources.Styles.Themes.DarkTheme());
                 }
-            }
-            catch (Exception ex)
-            {
-                LogMessage($"CRASH in LoadTheme: {ex}");
+                else
+                {
+                    mergedDictionaries.Add(new Resources.Styles.Themes.LightTheme());
+                }
             }
         }
         
