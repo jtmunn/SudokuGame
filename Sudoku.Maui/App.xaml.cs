@@ -15,6 +15,9 @@ namespace Sudoku.Maui
         private double _lastRestoredWidth = 800;
         private double _lastRestoredHeight = 800;
         
+        // Track currently loaded theme to avoid unnecessary reloads
+        private AppTheme _currentTheme = AppTheme.Unspecified;
+        
 #if WINDOWS
         // Cache maximized state to avoid querying it during app shutdown
         private bool _isMaximized = false;
@@ -23,6 +26,8 @@ namespace Sudoku.Maui
         public App()
         {
             InitializeComponent();
+            // App.xaml has default LightTheme loaded
+            _currentTheme = AppTheme.Light;
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
@@ -31,9 +36,17 @@ namespace Sudoku.Maui
             var settingsService = Handler?.MauiContext?.Services.GetService<ISettingsService>();
             if (settingsService != null)
             {
-                var settings = settingsService.LoadSettings();
-                UserAppTheme = settings.Theme;
-                LoadTheme(settings.Theme);
+                try
+                {
+                    var settings = settingsService.LoadSettings();
+                    UserAppTheme = settings.Theme;
+                    LoadTheme(settings.Theme);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to load theme in CreateWindow: {ex.Message}");
+                    // Continue with default theme from App.xaml
+                }
             }
             
             // NOW create the window - theme is already loaded
@@ -195,28 +208,47 @@ namespace Sudoku.Maui
 
         public void LoadTheme(AppTheme theme)
         {
-            // Official Microsoft pattern from documentation
-            ICollection<ResourceDictionary> mergedDictionaries = Resources.MergedDictionaries;
-            if (mergedDictionaries != null)
+            // Skip if already loaded
+            if (_currentTheme == theme)
             {
-                // Remove only the theme dictionary, keep Colors.xaml and Styles.xaml
-                var themeDict = mergedDictionaries.FirstOrDefault(d => 
-                    d.GetType().Name == "LightTheme" || d.GetType().Name == "DarkTheme");
-                
-                if (themeDict != null)
+                System.Diagnostics.Debug.WriteLine($"Theme {theme} already loaded, skipping reload");
+                return;
+            }
+
+            try
+            {
+                // Official Microsoft pattern from documentation
+                ICollection<ResourceDictionary> mergedDictionaries = Resources.MergedDictionaries;
+                if (mergedDictionaries != null)
                 {
-                    mergedDictionaries.Remove(themeDict);
+                    // Remove only the theme dictionary, keep Colors.xaml and Styles.xaml
+                    var themeDict = mergedDictionaries.FirstOrDefault(d => 
+                        d.GetType().Name == "LightTheme" || d.GetType().Name == "DarkTheme");
+                    
+                    if (themeDict != null)
+                    {
+                        mergedDictionaries.Remove(themeDict);
+                    }
+                    
+                    // Add the selected theme by instantiating the class
+                    if (theme == AppTheme.Dark)
+                    {
+                        mergedDictionaries.Add(new Resources.Styles.Themes.DarkTheme());
+                    }
+                    else
+                    {
+                        mergedDictionaries.Add(new Resources.Styles.Themes.LightTheme());
+                    }
+                    
+                    _currentTheme = theme;
+                    System.Diagnostics.Debug.WriteLine($"Successfully loaded theme: {theme}");
                 }
-                
-                // Add the selected theme by instantiating the class
-                if (theme == AppTheme.Dark)
-                {
-                    mergedDictionaries.Add(new Resources.Styles.Themes.DarkTheme());
-                }
-                else
-                {
-                    mergedDictionaries.Add(new Resources.Styles.Themes.LightTheme());
-                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to load theme {theme}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                // Don't crash - keep current theme
             }
         }
         
