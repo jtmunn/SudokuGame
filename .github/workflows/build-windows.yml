@@ -101,6 +101,6 @@ jobs:
           
           **No installation required!** Just extract and run.
           
-          To create a desktop shortcut, right-click `Sudoku.Maui.exe` ? Send to ? Desktop (create shortcut)
+          To create a desktop shortcut, right-click `Sudoku.Maui.exe` > Send to > Desktop (create shortcut)
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
