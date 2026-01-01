@@ -65,7 +65,7 @@ jobs:
       id: create_zip
       shell: pwsh
       run: |
-        $publishDir = "Sudoku.Maui\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish"
+        $publishDir = "Sudoku.Maui\bin\x64\Release\net10.0-windows10.0.19041.0\win-x64\publish"
         $zipName = "Sudoku_${{ steps.version.outputs.VERSION }}_Windows_x64_Portable.zip"
         
         Write-Host "Creating ZIP from: $publishDir"
