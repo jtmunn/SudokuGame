@@ -18,8 +18,10 @@
                     Background="{DynamicResource SettingsFrameColor}"
                     StrokeShape="RoundRectangle 10"
                     Margin="0,0,0,0"
-                    Padding="15"
-                    Shadow="True">
+                    Padding="15">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
+                </Border.Shadow>
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Appearance" 
                            FontSize="20" 
@@ -52,8 +54,10 @@
                     Background="{DynamicResource SettingsFrameColor}"
                     StrokeShape="RoundRectangle 10"
                     Margin="0,0,0,0"
-                    Padding="15"
-                    Shadow="True">
+                    Padding="15">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
+                </Border.Shadow>
                 <VerticalStackLayout Spacing="15">
                     <Label Text="Game Settings" 
                            FontSize="20" 
@@ -112,8 +116,10 @@
                     Background="{DynamicResource InfoBackgroundColor}"
                     StrokeShape="RoundRectangle 10"
                     Margin="0,0,0,0"
-                    Padding="15"
-                    Shadow="True">
+                    Padding="15">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
+                </Border.Shadow>
                 <VerticalStackLayout Spacing="5">
                     <Label Text="About" 
                            FontSize="18" 

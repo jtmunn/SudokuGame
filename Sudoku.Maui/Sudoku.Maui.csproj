@@ -7,13 +7,6 @@
 		<!-- Fallback for non-Windows development machines (won't build, but allows project to load) -->
 		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('windows'))">net10.0</TargetFrameworks>
 
-		<!-- Note for MacCatalyst:
-		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
-		When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
-		The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
-		either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
-		<!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
-
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Sudoku.Maui</RootNamespace>
 		<UseMaui>true</UseMaui>
@@ -32,34 +25,29 @@
 		<ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<!-- For development debugging, use unpackaged mode -->
+		<!-- PORTABLE MODE - No packaging for all configurations -->
 		<WindowsPackageType>None</WindowsPackageType>
+		
+		<!-- Ensure XAML resources are embedded in portable builds -->
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		<UseInterpreter>false</UseInterpreter>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
-	<!-- Windows-specific properties for Release builds (MSIX packaging) -->
+	<!-- Windows-specific properties for Release builds (PORTABLE, not MSIX) -->
 	<PropertyGroup Condition="$(TargetFramework.Contains('-windows')) and '$(Configuration)' == 'Release'">
 		<OutputType>WinExe</OutputType>
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<PublishSingleFile>false</PublishSingleFile>
 		<SelfContained>true</SelfContained>
 		<PublishReadyToRun>false</PublishReadyToRun>
-		
-		<!-- Windows MSIX Packaging (Release only) -->
-		<WindowsPackageType>MSIX</WindowsPackageType>
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
-		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-		<GenerateTestArtifacts>False</GenerateTestArtifacts>
-		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		
-		<!-- Package Identity - Used for MSIX packaging -->
-		<PackageIdentityName>Sudoku</PackageIdentityName>
-		<PackageIdentityPublisher>CN=jtmunn</PackageIdentityPublisher>
-		<PackageIdentityVersion>1.1.0.0</PackageIdentityVersion>
+		<!-- Ensure resources are properly embedded for portable -->
+		<PublishTrimmed>false</PublishTrimmed>
+		<EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
 	</PropertyGroup>
 								
 	<ItemGroup>
@@ -75,6 +63,12 @@
 		
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
+		
+		<!-- Explicitly copy font file to output for portable builds -->
+		<None Include="Resources\Fonts\fa-solid-900.ttf">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
@@ -94,10 +88,22 @@
 	  <MauiXaml Update="Controls\GameSummaryPopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Controls\NumPadButton.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Controls\SudokuGridView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Pages\SettingsPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\SudokuPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Colors.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Styles.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Resources\Styles\Themes\DarkTheme.xaml">
