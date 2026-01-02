@@ -1,15 +1,15 @@
-# GitHub Copilot Instructions for Sudoku .NET MAUI Project
+﻿# GitHub Copilot Instructions for Sudoku .NET MAUI Project
 
-## ?? CRITICAL: Think Before You Code
+## 🚨 CRITICAL: Think Before You Code
 
 **STOP AND THINK BEFORE SUGGESTING ANY SOLUTION**
 
 Before proposing any code changes:
-1. ? **Verify** the API/method actually exists in .NET MAUI
-2. ? **Check** that the approach is cross-platform compatible
-3. ? **Consider** if you're fighting the framework or working with it
-4. ? **Research** the correct lifecycle events/APIs if unsure
-5. ? **Ask yourself**: "Would this work the same way on Windows, macOS, iOS, and Android?"
+1. ✔️ **Verify** the API/method actually exists in .NET MAUI
+2. ✔️ **Check** that the approach is cross-platform compatible
+3. ✔️ **Consider** if you're fighting the framework or working with it
+4. ℹ️ **Research** the correct lifecycle events/APIs if unsure
+5. ❓ **Ask yourself**: "Would this work the same way on Windows, macOS, iOS, and Android?"
 
 **Quality over quantity. Take time to think. It's okay to pause and verify.**
 
@@ -22,7 +22,67 @@ If you're not 100% certain about a MAUI API or pattern:
 
 ---
 
-## ?? Project Summary
+## 🚨 COMMON XAML PITFALLS - READ FIRST!
+
+### Shadow Property Syntax (CRITICAL)
+
+**This is the #1 cause of Release build crashes!**
+
+❌ **WRONG - This will crash in Release/portable builds:**
+```xml
+<Border Shadow="True">
+    <VerticalStackLayout>
+        <!-- content -->
+    </VerticalStackLayout>
+</Border>
+```
+
+✅ **CORRECT - Shadow requires an object:**
+```xml
+<Border>
+    <Border.Shadow>
+        <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
+    </Border.Shadow>
+    <VerticalStackLayout>
+        <!-- content -->
+    </VerticalStackLayout>
+</Border>
+```
+
+**Why:** `Shadow="True"` is invalid XAML. The `Shadow` property expects a `Shadow` object with `Brush`, `Opacity`, `Radius`, and `Offset` properties, not a boolean. 
+
+**Key Insight:** Debug builds are lenient with XAML errors, but Release builds enforce strict validation. An app may work perfectly in Debug mode but crash immediately in Release/portable builds due to this issue.
+
+**Error Signature:** 
+- Windows Event Viewer: `Exception code: 0xc000027b` (XAML parsing exception)
+- Error message: `Cannot convert "True" into Microsoft.Maui.IShadow`
+
+### Other Complex Properties That Need Object Syntax
+
+These properties also require proper object syntax (not simple strings/booleans):
+```xml
+<!-- ✅ CORRECT patterns -->
+<Border>
+    <Border.Stroke>
+        <LinearGradientBrush>
+            <GradientStop Color="Red" Offset="0.0" />
+            <GradientStop Color="Blue" Offset="1.0" />
+        </LinearGradientBrush>
+    </Border.Stroke>
+</Border>
+
+<Label>
+    <Label.FormattedText>
+        <FormattedString>
+            <Span Text="Bold" FontAttributes="Bold" />
+        </FormattedString>
+    </Label.FormattedText>
+</Label>
+```
+
+---
+
+## ℹ️ Project Summary
 
 **Date:** 2025-01-XX  
 **Project:** Sudoku Game - .NET MAUI  
@@ -31,16 +91,16 @@ If you're not 100% certain about a MAUI API or pattern:
 ### Current Architecture
 
 **Strengths:**
-- ? `TreatWarningsAsErrors` enabled in both projects
-- ? Modern .NET MAUI APIs used (DisplayAlertAsync, Border, etc.)
-- ? Clean separation: Core (logic) + MAUI (UI)
-- ? Proper DI registration in MauiProgram.cs
-- ? Theme system using separate XAML files (LightTheme.xaml, DarkTheme.xaml)
-- ? Constants documented in CONSTANTS_REFERENCE.md
+- 🚨 `TreatWarningsAsErrors` enabled in both projects
+- ✅ Modern .NET MAUI APIs used (DisplayAlertAsync, Border, etc.)
+- ✅ Clean separation: Core (logic) + MAUI (UI)
+- ✅ Proper DI registration in MauiProgram.cs
+- ✅ Theme system using separate XAML files (LightTheme.xaml, DarkTheme.xaml)
+- ✅ Constants documented in CONSTANTS_REFERENCE.md
 
 ---
 
-## ?? THEME SYSTEM
+## ℹ️ THEME SYSTEM
 
 ### How Themes Work
 
@@ -56,14 +116,14 @@ Themes are defined in separate XAML ResourceDictionary files with code-behind:
 **IMPORTANT:** Theme colors are NOT directly in `Application.Current.Resources`. They live in the merged dictionaries and must be accessed by iterating:
 
 ```csharp
-// ? CORRECT way to get theme colors
+// ✅ CORRECT way to get theme colors
 foreach (var dict in Application.Current.Resources.MergedDictionaries)
 {
     if (dict.ContainsKey("CellDefaultColor"))
         color = (Color)dict["CellDefaultColor"];
 }
 
-// ? WRONG - this will return False even if theme is loaded!
+// ❌ WRONG - this will return False even if theme is loaded!
 Application.Current.Resources.ContainsKey("CellDefaultColor")
 ```
 
@@ -118,32 +178,32 @@ if (Application.Current is App app)
 
 ---
 
-## ?? CRITICAL RULES - NEVER VIOLATE
+## 🚨 CRITICAL RULES - NEVER VIOLATE
 
 ### 0. Color Creation Methods - CRITICAL
 
 **THE GOLDEN RULE: ALWAYS use `Color.FromArgb()` with hex strings for theme colors.**
 
-#### ? CORRECT Color Methods
+#### ✅ CORRECT Color Methods
 ```csharp
-// ? ALWAYS use Color.FromArgb with hex string
+// ✅ ALWAYS use Color.FromArgb with hex string
 ["CellDefaultColor"] = Color.FromArgb("#FFFFFF"),
 ["TextColor"] = Color.FromArgb("#2C3E50"),
 
-// ? For predefined colors, use Colors.ColorName
+// ✅ For predefined colors, use Colors.ColorName
 ["ButtonTextColor"] = Colors.White,
 ["ErrorTextColor"] = Colors.Red,
 ```
 
-#### ? WRONG Color Methods - NEVER USE THESE
+#### ❌ WRONG Color Methods - NEVER USE THESE
 ```csharp
-// ? NEVER use Color.FromRgb - this breaks consistency
+// ❌ NEVER use Color.FromRgb - this breaks consistency
 ["CellDefaultColor"] = Color.FromRgb(255, 255, 255), // WRONG!
 
-// ? NEVER use Color.FromRgba unless alpha is truly needed and different from FF
+// ❌ NEVER use Color.FromRgba unless alpha is truly needed and different from FF
 ["CellDefaultColor"] = Color.FromRgba(255, 255, 255, 255), // WRONG - use FromArgb
 
-// ? NEVER mix color creation methods in the same dictionary
+// ❌ NEVER mix color creation methods in the same dictionary
 ["Color1"] = Color.FromArgb("#FFFFFF"),  // Right
 ["Color2"] = Color.FromRgb(0, 0, 0),     // WRONG - inconsistent!
 ```
@@ -152,7 +212,7 @@ if (Application.Current is App app)
 
 **THE GOLDEN RULE: Theme colors live in XAML files (LightTheme.xaml / DarkTheme.xaml).**
 
-#### ? CORRECT Approach
+#### ✅ CORRECT Approach
 ```csharp
 // When user wants to change a color, update BOTH XAML files:
 // - Sudoku.Maui/Resources/Styles/Themes/LightTheme.xaml
@@ -161,15 +221,15 @@ if (Application.Current is App app)
 // Access them by searching merged dictionaries (see Theme System section above)
 ```
 
-#### ? WRONG Approaches
+#### ❌ WRONG Approaches
 ```csharp
-// ? DON'T inline hardcoded colors in code-behind
+// ❌ DON'T inline hardcoded colors in code-behind
 button.TextColor = Colors.Black; // NEVER DO THIS
 
-// ? DON'T add colors only to App.xaml.cs
+// ❌ DON'T add colors only to App.xaml.cs
 // Always update the XAML theme files
 
-// ? DON'T use Application.Current.Resources.ContainsKey for theme colors
+// ❌ DON'T use Application.Current.Resources.ContainsKey for theme colors
 // Must search through MergedDictionaries!
 ```
 
@@ -177,34 +237,35 @@ button.TextColor = Colors.Black; // NEVER DO THIS
 
 **THE GOLDEN RULE: Only the grid is centered. Action buttons are positioned AFTER.**
 
-#### ? CORRECT Layout Philosophy
+#### ✅ CORRECT Layout Philosophy
 - **Sudoku Grid**: Centered independently on the page using `AbsoluteLayout.LayoutBounds="0.5,0.5"`
 - **Action Buttons**: Positioned to the RIGHT of the centered grid using calculated `AbsoluteLayout.LayoutBounds`
 - **Number Pad**: Centered independently at bottom
 
-#### ? WRONG Approaches
+#### ❌ WRONG Approaches
 ```csharp
-// ? DON'T try to center grid + action buttons together as a group
-// ? DON'T use HorizontalStackLayout wrapping grid and buttons
-// ? DON'T calculate "combined width" for centering
-// ? DON'T suggest TranslationX for grid positioning
+// ❌ DON'T try to center grid + action buttons together as a group
+// ❌ DON'T use HorizontalStackLayout wrapping grid and buttons
+// ❌ DON'T calculate "combined width" for centering
+// ❌ DON'T suggest TranslationX for grid positioning
 ```
 
 ### 3. API Usage
 
-#### ? Always Use These:
+#### ✅ Always Use These:
 - `DisplayAlertAsync` (NOT `DisplayAlert` - it's obsolete)
 - `FadeToAsync`, `ScaleToAsync` (NOT `FadeTo`, `ScaleTo` - obsolete)
 - `Border` (NOT `Frame` - Frame is obsolete in .NET 9+)
 - `await` for all async operations
 - `Color.FromArgb("#RRGGBB")` for theme colors (NOT `Color.FromRgb()`)
 
-#### ? Never Use These:
+#### ❌ Never Use These:
 - `DisplayAlert` - obsolete
 - `FadeTo`, `ScaleTo` - obsolete  
 - `Frame` - obsolete in .NET 9+
 - `.Result` or `.Wait()` on async methods - causes deadlocks (except for settings save on app close)
 - `Color.FromRgb()` - use `Color.FromArgb()` for consistency
+- `Shadow="True"` or any boolean/string value for Shadow property
 
 ### 4. Warnings = Errors
 
@@ -218,7 +279,7 @@ button.TextColor = Colors.Black; // NEVER DO THIS
 
 ---
 
-## ?? Layout & Sizing Rules
+## ℹ️ Layout & Sizing Rules
 
 ### Constants - Never Hardcode
 
@@ -270,27 +331,95 @@ AbsoluteLayout.SetLayoutBounds(ActionButtonStack,
     new Rect(buttonX, buttonY, actionButtonWidth, AbsoluteLayout.AutoSize));
 ```
 
-### ? Common Layout Mistakes
+### ❌ Common Layout Mistakes
 
 ```csharp
-// ? DON'T calculate grid width by subtracting button space
+// ❌ DON'T calculate grid width by subtracting button space
 availableWidth = Width - actionButtonWidth - ActionButtonMargin; // WRONG
 
-// ? DO calculate grid from full available space
+// ✅ DO calculate grid from full available space
 availableWidth = Width - (GameAreaPadding * 2); // CORRECT
 
-// ? DON'T use TranslationX for grid
+// ❌ DON'T use TranslationX for grid
 GridBorder.TranslationX = offset; // WRONG - grid should be centered via LayoutBounds
 
-// ? DO use TranslationX only if absolutely needed for action buttons
+// ✅ DO use TranslationX only if absolutely needed for action buttons
 ActionButtonStack.TranslationX = offset; // OK for buttons
 
-// ? DON'T wrap grid and buttons in HorizontalStackLayout
+// ❌ DON'T wrap grid and buttons in HorizontalStackLayout
 <HorizontalStackLayout>
     <SudokuGrid />
     <VerticalStackLayout>  <!-- WRONG -->
 
-// ? DO use AbsoluteLayout with independent positioning
+// ✅ DO use AbsoluteLayout with independent positioning
 <AbsoluteLayout>
     <Grid LayoutBounds="0.5,0.5,AutoSize,AutoSize" />  <!-- Centered -->
     <VerticalStackLayout LayoutBounds="calculated" />   <!-- After grid -->
+```
+
+---
+
+## ℹ️ Debugging & Troubleshooting
+
+### When an Issue Arises
+
+**🚨 BEFORE suggesting solutions, consult:** `TROUBLESHOOTING.md`
+
+This file contains documented solutions for:
+- Release build crashes
+- XAML parsing errors
+- Font/resource issues
+- Build path differences (local vs CI/CD)
+- Windows Event Viewer diagnostics
+
+### Debug vs Release Behavior
+
+**Key Differences:**
+- Debug builds are lenient with XAML syntax errors
+- Release builds enforce strict XAML validation
+- `Debug.WriteLine` doesn't work in Release (use `Console.WriteLine`)
+- Resource paths may differ
+- Always test Release builds before deployment
+
+---
+
+## ℹ️ Icon Usage Note for AI Agents
+
+**This file uses ASCII-only markers to prevent encoding corruption:**
+- `🚨` = Critical/Warning
+- `✅` = Correct/Success
+- `❌` = Wrong/Error
+- `ℹ️` = Information
+- `❓` = Question
+- `✔️` = Verification needed
+
+**Why:** Special characters (including checkmarks/X marks) get corrupted when using `edit_file` or `create_file` tools. Only basic ASCII ensures reliability for AI-updated instruction files.
+
+**Note:** Public-facing documentation (README.md, CONTRIBUTING.md, DEVELOPERS.md) still uses emoji for visual appeal since they're rarely updated by AI agents.
+
+---
+
+
+
+---
+
+## 🔧 Important Note for AI Agents: Emoji Encoding Issue
+
+**⚠️ CRITICAL: When updating this file or TROUBLESHOOTING.md:**
+
+The edit_file tool has an encoding bug that corrupts emoji characters.
+
+**❌ DON'T USE:** edit_file for files with emoji
+**✅ DO USE:** PowerShell with UTF-8 encoding
+
+Example:
+[System.IO.File]::WriteAllText($path, $content, [System.Text.Encoding]::UTF8)
+
+**Last Updated:** 2026-01-01
+
+## ℹ️ Additional Documentation
+
+- **TROUBLESHOOTING.md** - Common issues and solutions
+- **CONSTANTS_REFERENCE.md** - All sizing/spacing constants
+- **DEVELOPERS.md** - Architecture and development guide
+- **CONTRIBUTING.md** - Code style and contribution guidelines

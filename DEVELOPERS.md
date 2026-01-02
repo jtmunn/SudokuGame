@@ -50,12 +50,7 @@ Solution Structure:
    cd SudokuGame
    ```
 
-2. **Add FontAwesome Font** (Required for icon buttons)
-   - Download `fa-solid-900.ttf` from [here](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-solid-900.ttf)
-   - Place in `Sudoku.Maui/Resources/Fonts/`
-   - Font is already registered in `MauiProgram.cs`
-
-3. **Open Solution**
+2. **Open Solution**
    ```bash
    # Visual Studio
    start SudokuGame.sln
@@ -64,13 +59,13 @@ Solution Structure:
    code .
    ```
 
-4. **Select Target Platform**
+3. **Select Target Platform**
    - Windows
    - Android
    - iOS
    - macCatalyst
 
-5. **Run**
+4. **Run**
    - Press **F5** or click **Run**
 
 ### Building for Release
@@ -100,7 +95,7 @@ Themes are defined in separate XAML ResourceDictionary files:
 - `Resources/Styles/Themes/DarkTheme.xaml` + `.cs`
 
 **Theme Loading Pattern:**
-1. Theme classes are instantiated: `new LightTheme()` or `new DarkTheme()```
+1. Theme classes are instantiated: `new LightTheme()` or `new DarkTheme()`
 2. Added to `Application.Current.Resources.MergedDictionaries`
 3. Controls access theme colors by searching through merged dictionaries
 
@@ -338,8 +333,7 @@ Package Type: MSIX (unsigned for development)
 
 See "Building for Release" section above for platform-specific build commands.
 
-````````
-
+````````markdown
 ## 📚 Key Files for AI Agents
 
 **⚠️ Important**: Before making any code changes, read:

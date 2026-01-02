@@ -114,4 +114,18 @@
 	  </MauiXaml>
 	</ItemGroup>
 
+	<!-- Documentation files from root directory -->
+	<ItemGroup>
+	  <None Include="..\*.md">
+	    <Link>Documentation\%(Filename)%(Extension)</Link>
+	  </None>
+	</ItemGroup>
+
+	<!-- Documentation files from .github folder -->
+	<ItemGroup>
+	  <None Include="..\.github\*.md">
+	    <Link>Documentation\.github\%(Filename)%(Extension)</Link>
+	  </None>
+	</ItemGroup>
+
 </Project>
