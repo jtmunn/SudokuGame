@@ -1,4 +1,4 @@
-﻿# 📦 Installing Sudoku on Windows
+# 📦 Installing Sudoku on Windows
 
 ## Quick Start
 
@@ -28,7 +28,7 @@ After the first run, Windows will remember your choice.
 
 ---
 
-## �� Updating to a New Version
+## 🔄 Updating to a New Version
 
 **Portable apps don't auto-update.** To upgrade:
 
