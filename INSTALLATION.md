@@ -78,14 +78,11 @@ Clean and simple - no registry entries or system files left behind.
 ### App won't start (crashes immediately)
 - Make sure you extracted **all files** from the zip, not just the EXE
 - Check Windows Event Viewer (Win + X ? Event Viewer ? Windows Logs ? Application) for error details
-- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
-
-### Missing fonts or weird icons
-- Verify `fa-solid-900.ttf` is in the same folder as the EXE
-- This font file is required for icons to display
+- See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed diagnostics
 
 ### Performance issues
 - Minimum requirements: Windows 10 version 1809 or later, 64-bit
+- The app is self-contained and includes all required .NET runtime files
 
 ### Still having issues?
 [Open an issue on GitHub](https://github.com/jtmunn/SudokuGame/issues) with:
