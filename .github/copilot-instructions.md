@@ -383,71 +383,81 @@ This file contains documented solutions for:
 
 ---
 
-## 🔧 CRITICAL: Emoji Encoding Workaround for AI Agents
+## 🔧 CRITICAL: Emoji & Unicode Encoding for AI Agents
 
-**⚠️ THE PROBLEM:** The `edit_file` and `create_file` tools have an encoding bug that corrupts emoji and special Unicode characters (turning them into `?` or `??`).
+### 🚨 THE PROBLEM (AFFECTS ALL AI ASSISTANTS)
 
-### ❌ DO NOT Use edit_file/create_file For:
-- Files containing emoji (🎮, ✅, ❌, 🚨, 📦, etc.)
-- Files containing special symbols (→, •, ℹ️, etc.)
-- Public-facing documentation (README.md, CONTRIBUTING.md, DEVELOPERS.md, INSTALLATION.md, TROUBLESHOOTING.md)
+**This affects GitHub Copilot in BOTH Visual Studio AND VS Code!**
 
-### ✅ CORRECT Workaround - Use PowerShell with UTF-8 Encoding
+AI tools (including GitHub Copilot) have an encoding bug when editing files that contain emoji or special Unicode characters. The bug manifests differently depending on which tools are used:
 
-**Always use this pattern when files contain emoji:**
+**❌ BROKEN TOOLS (corrupt emoji → `?` or `??`):**
+- `edit_file` tool
+- `create_file` tool  
+- `replace_string_in_file` tool
+- `multi_replace_string_in_file` tool
+- Any direct file editing via AI assistant
+
+**✅ WORKING WORKAROUND:**
+- PowerShell `[System.IO.File]::WriteAllText()` with explicit UTF-8 encoding
+
+### 🎯 WHEN THIS HAPPENS
+
+**You'll see emoji corruption like this:**
+```
+❌ BAD:  "Download Latest Release ??"    (should be 📦)
+❌ BAD:  "# ?? Installing Sudoku"        (should be 📦)
+❌ BAD:  "Right-click ? Properties"      (should be →)
+❌ BAD:  "These events are unreliable ?" (should be ❌)
+
+✅ GOOD: "Download Latest Release 📦"
+✅ GOOD: "# 📦 Installing Sudoku"
+✅ GOOD: "Right-click → Properties"
+✅ GOOD: "These events are unreliable ❌"
+```
+
+### 🛠️ THE SOLUTION (STEP-BY-STEP)
+
+#### Step 1: Identify Files with Emoji BEFORE Editing
+
+**MANDATORY PRE-FLIGHT CHECK:**
+
+Before editing ANY file, check if it contains emoji:
+
+1. Read the file first using `read_file` tool
+2. Visually scan for ANY emoji: 🎮, ✅, ❌, 🚨, 📦, 💡, 🔧, etc.
+3. Also check for special symbols: →, •, ℹ️
+4. If emoji/symbols found → Use PowerShell method (see Step 2)
+5. If no emoji → Safe to use normal editing tools
+
+**Known Files with Emoji in This Project:**
+- ✅ `README.md` - Has emoji, use PowerShell
+- ✅ `INSTALLATION.md` - Has emoji, use PowerShell
+- ✅ `CONTRIBUTING.md` - Has emoji, use PowerShell
+- ✅ `DEVELOPERS.md` - Has emoji, use PowerShell
+- ✅ `TROUBLESHOOTING.md` - Has emoji, use PowerShell
+- ✅ `WINDOW_SIZE_PERSISTENCE.md` - Has emoji, use PowerShell
+- ✅ `.github/copilot-instructions.md` - Has emoji, use PowerShell
+- ❌ `CONSTANTS_REFERENCE.md` - NO emoji, safe to edit normally
+- ❌ `.csproj` files - NO emoji, safe to edit normally
+- ❌ `.cs` code files - NO emoji, safe to edit normally
+- ❌ `.json` files - NO emoji, safe to edit normally
+
+#### Step 2: Use PowerShell with UTF-8 Encoding
+
+**THE CORRECT PATTERN (use single quotes for here-string):**
 
 ```powershell
-$content = @"
-# Your markdown content here with emoji 🎮
-Your full file content goes here...
-"@
+$content = @'
+# 📦 Installing Sudoku on Windows
 
-$path = "C:\Projects\SudokuGame\README.md"
-[System.IO.File]::WriteAllText($path, $content, [System.Text.Encoding]::UTF8)
-```
+Your complete file content here with all emoji intact.
+Use single quotes for the here-string delimiter!
 
-### ✅ Files Safe to Use edit_file (No Emoji):
-- `.csproj` files
-- `.cs` code files  
-- `.json` configuration files
-- `CONSTANTS_REFERENCE.md` (confirmed no emoji)
+✅ Checkmarks work
+❌ X marks work
+🎮 Game controller works
+→ Arrows work
+💡 Light bulbs work
 
-### ⚠️ Pre-Flight Checklist Before Editing ANY File:
-
-1. **Read the file first** with `get_file` 
-2. **Scan for emoji** - Look for 🎮, ✅, ❌, 📦, 🚨, etc.
-3. **If emoji found** → Use PowerShell UTF-8 pattern above
-4. **If no emoji** → Safe to use `edit_file`
-
-### 🔍 Post-Edit Verification (MANDATORY):
-
-After writing ANY documentation file, immediately verify:
-
-```
-1. Call get_file on the file you just wrote
-2. Check for corruption:
-   ✅ Good: "Download Latest Release 📦"
-   ❌ Bad:  "Download Latest Release ??"
-3. If you see ? or ?? → File is corrupted, rewrite with PowerShell
-```
-
-### 📋 Known Emoji in This Project:
-
-**README.md:** 🎮, 📱, 🌓, 📊, ⌨️, 🔒, 🎯, 📥, 📦, 🔮, ✏️, 💡, 🎁, 🤝, 👨‍💻, ❤️, ☕, ✨  
-**INSTALLATION.md:** 📦, 🎉, ⚠️, 🔄, 📁, ❌, 🔧, 💡, 🔐, 📋  
-**CONTRIBUTING.md:** 👍, 🎯, 🐛, 💡, 🎨, 📚, 🧪, 💻, 🚀, 📋, 📝, ✅, ❌, 🌟, 💬, 🏆, 📜, 🙏  
-**DEVELOPERS.md:** 🏗️, 📦, 🚀, 🎨, 📐, ✅, ⚠️, ❗, 🚫, 🎯, 🔢, 🧪, ⚠️, 🔄, 🤔, ✨, ⚡, 🌐, 💾, 📖, 🛠️, 📚, 💬  
-**TROUBLESHOOTING.md:** 🚨, ℹ️, ⚠️, 📜, 📋, 📚
-
-**This file (copilot-instructions.md):** Uses emoji extensively - must use PowerShell for updates
-
----
-
-## ℹ️ Additional Documentation
-
-- **TROUBLESHOOTING.md** - Common issues and solutions
-- **CONSTANTS_REFERENCE.md** - All sizing/spacing constants  
-- **DEVELOPERS.md** - Architecture and development guide
-- **CONTRIBUTING.md** - Code style and contribution guidelines
-
-**Last Updated:** 2025-01-12
+Make sure to include the ENTIRE file content, not just the part you're changing!

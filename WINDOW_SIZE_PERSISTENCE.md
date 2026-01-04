@@ -1,4 +1,4 @@
-# Window Size Persistence
+﻿# Window Size Persistence
 
 ## Overview
 
@@ -40,12 +40,12 @@ The following window state is persisted in the `sudoku_settings.json` file:
 
 ```csharp
 // User resizes window multiple times rapidly
-Resize 1 ? Timer starts (500ms)
-Resize 2 ? Timer resets (500ms)  
-Resize 3 ? Timer resets (500ms)
+Resize 1 → Timer starts (500ms)
+Resize 2 → Timer resets (500ms)  
+Resize 3 → Timer resets (500ms)
 User stops resizing
 ...wait 500ms...
-Timer fires ? Save size to disk ?
+Timer fires → Save size to disk ✅
 ```
 
 ### Platform Behavior
@@ -118,12 +118,12 @@ This implementation follows MAUI's philosophy of "write once, run anywhere":
 ### Why Not Save on Close?
 
 We initially tried using window lifecycle events (`Stopped`, `Destroying`, etc.) but:
-- ? These events are unreliable across platforms
-- ? Some events fire too late (after window is destroyed)
-- ? Some events fire too early (when switching apps, not closing)
-- ? **Debounced resize saves** work reliably on all platforms
-- ? User never loses their window size preference
-- ? No complex platform-specific code needed
+- ❌ These events are unreliable across platforms
+- ❌ Some events fire too late (after window is destroyed)
+- ❌ Some events fire too early (when switching apps, not closing)
+- ✅ **Debounced resize saves** work reliably on all platforms
+- ✅ User never loses their window size preference
+- ✅ No complex platform-specific code needed
 
 ### Null Checks
 
@@ -169,9 +169,9 @@ To verify the feature works:
 
 ## Compatibility
 
-- ? Windows 10/11 (full support)
-- ? macOS (full support)
-- ?? iOS (size may not apply - mobile platform)
-- ?? Android (size may not apply - mobile platform)
+- ✅ Windows 10/11 (full support)
+- ✅ macOS (full support)
+- ⚠️ iOS (size may not apply - mobile platform)
+- ⚠️ Android (size may not apply - mobile platform)
 
 All platforms use the same code path - no special cases!

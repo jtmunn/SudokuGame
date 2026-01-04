@@ -1,4 +1,4 @@
-# ?? Installing Sudoku on Windows
+﻿# 📦 Installing Sudoku on Windows
 
 ## Quick Start
 
@@ -7,11 +7,11 @@
 3. **Run** `Sudoku.Maui.exe`
 4. **(Optional)** Create a desktop shortcut for easy access
 
-That's it! No installation required. ??
+That's it! No installation required. 🎉
 
 ---
 
-## ?? Security Warning (First Time)
+## ⚠️ Security Warning (First Time)
 
 When you first run the app, Windows may show a security warning:
 
@@ -28,7 +28,7 @@ After the first run, Windows will remember your choice.
 
 ---
 
-## ?? Updating to a New Version
+## �� Updating to a New Version
 
 **Portable apps don't auto-update.** To upgrade:
 
@@ -41,7 +41,7 @@ Your settings and statistics are stored separately, so they'll carry over automa
 
 ---
 
-## ?? Data Location
+## 📁 Data Location
 
 Your game data is stored in:
 ```
@@ -57,7 +57,7 @@ You can back up these files or transfer them to another PC.
 
 ---
 
-## ? Uninstalling
+## ❌ Uninstalling
 
 **Portable apps have no installer, so there's nothing to uninstall.**
 
@@ -69,15 +69,15 @@ Clean and simple - no registry entries or system files left behind.
 
 ---
 
-## ?? Troubleshooting
+## 🔧 Troubleshooting
 
 ### "Windows protected your PC" every time I run it
-- Right-click `Sudoku.Maui.exe` ? **Properties** ? **Unblock** ? **OK**
+- Right-click `Sudoku.Maui.exe` → **Properties** → **Unblock** → **OK**
 - Run the app again - Windows will remember your choice
 
 ### App won't start (crashes immediately)
 - Make sure you extracted **all files** from the zip, not just the EXE
-- Check Windows Event Viewer (Win + X ? Event Viewer ? Windows Logs ? Application) for error details
+- Check Windows Event Viewer (Win + X → Event Viewer → Windows Logs → Application) for error details
 - See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed diagnostics
 
 ### Performance issues
@@ -92,26 +92,26 @@ Clean and simple - no registry entries or system files left behind.
 
 ---
 
-## ?? Why Portable Instead of Installer?
+## 💡 Why Portable Instead of Installer?
 
 **Portable builds have advantages:**
-- ? No installation required - extract and run
-- ? No admin rights needed
-- ? Easy to try without "committing"
-- ? Clean uninstall (just delete the folder)
-- ? Can run from USB drive
-- ? Multiple versions can coexist
+- ✅ No installation required - extract and run
+- ✅ No admin rights needed
+- ✅ Easy to try without "committing"
+- ✅ Clean uninstall (just delete the folder)
+- ✅ Can run from USB drive
+- ✅ Multiple versions can coexist
 
 **Disadvantages:**
-- ? No automatic updates
-- ? No Start Menu integration (unless you manually pin it)
-- ? Windows security warnings on first run
+- ❌ No automatic updates
+- ❌ No Start Menu integration (unless you manually pin it)
+- ❌ Windows security warnings on first run
 
 For a personal/hobby project, portable distribution keeps things simple and free (no expensive code-signing certificates required).
 
 ---
 
-## ?? About Code Signing
+## 🔐 About Code Signing
 
 This app is **not code-signed** because:
 - Code-signing certificates cost $100-300/year
@@ -127,7 +127,7 @@ In the future, if the project gains traction, we may explore proper code signing
 
 ---
 
-## ?? System Requirements
+## 📋 System Requirements
 
 - **OS:** Windows 10 (version 1809 or later) or Windows 11
 - **Architecture:** x64 (64-bit)
