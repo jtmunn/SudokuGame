@@ -127,5 +127,8 @@
 	    <Link>Documentation\.github\%(Filename)%(Extension)</Link>
 	  </None>
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="..\README_BACKUP.md" />
+	</ItemGroup>
 
 </Project>
