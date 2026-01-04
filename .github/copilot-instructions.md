@@ -383,43 +383,71 @@ This file contains documented solutions for:
 
 ---
 
-## ℹ️ Icon Usage Note for AI Agents
+## 🔧 CRITICAL: Emoji Encoding Workaround for AI Agents
 
-**This file uses ASCII-only markers to prevent encoding corruption:**
-- `🚨` = Critical/Warning
-- `✅` = Correct/Success
-- `❌` = Wrong/Error
-- `ℹ️` = Information
-- `❓` = Question
-- `✔️` = Verification needed
+**⚠️ THE PROBLEM:** The `edit_file` and `create_file` tools have an encoding bug that corrupts emoji and special Unicode characters (turning them into `?` or `??`).
 
-**Why:** Special characters (including checkmarks/X marks) get corrupted when using `edit_file` or `create_file` tools. Only basic ASCII ensures reliability for AI-updated instruction files.
+### ❌ DO NOT Use edit_file/create_file For:
+- Files containing emoji (🎮, ✅, ❌, 🚨, 📦, etc.)
+- Files containing special symbols (→, •, ℹ️, etc.)
+- Public-facing documentation (README.md, CONTRIBUTING.md, DEVELOPERS.md, INSTALLATION.md, TROUBLESHOOTING.md)
 
-**Note:** Public-facing documentation (README.md, CONTRIBUTING.md, DEVELOPERS.md) still uses emoji for visual appeal since they're rarely updated by AI agents.
+### ✅ CORRECT Workaround - Use PowerShell with UTF-8 Encoding
 
----
+**Always use this pattern when files contain emoji:**
 
+```powershell
+$content = @"
+# Your markdown content here with emoji 🎮
+Your full file content goes here...
+"@
 
-
----
-
-## 🔧 Important Note for AI Agents: Emoji Encoding Issue
-
-**⚠️ CRITICAL: When updating this file or TROUBLESHOOTING.md:**
-
-The edit_file tool has an encoding bug that corrupts emoji characters.
-
-**❌ DON'T USE:** edit_file for files with emoji
-**✅ DO USE:** PowerShell with UTF-8 encoding
-
-Example:
+$path = "C:\Projects\SudokuGame\README.md"
 [System.IO.File]::WriteAllText($path, $content, [System.Text.Encoding]::UTF8)
+```
 
-**Last Updated:** 2026-01-01
+### ✅ Files Safe to Use edit_file (No Emoji):
+- `.csproj` files
+- `.cs` code files  
+- `.json` configuration files
+- `CONSTANTS_REFERENCE.md` (confirmed no emoji)
+
+### ⚠️ Pre-Flight Checklist Before Editing ANY File:
+
+1. **Read the file first** with `get_file` 
+2. **Scan for emoji** - Look for 🎮, ✅, ❌, 📦, 🚨, etc.
+3. **If emoji found** → Use PowerShell UTF-8 pattern above
+4. **If no emoji** → Safe to use `edit_file`
+
+### 🔍 Post-Edit Verification (MANDATORY):
+
+After writing ANY documentation file, immediately verify:
+
+```
+1. Call get_file on the file you just wrote
+2. Check for corruption:
+   ✅ Good: "Download Latest Release 📦"
+   ❌ Bad:  "Download Latest Release ??"
+3. If you see ? or ?? → File is corrupted, rewrite with PowerShell
+```
+
+### 📋 Known Emoji in This Project:
+
+**README.md:** 🎮, 📱, 🌓, 📊, ⌨️, 🔒, 🎯, 📥, 📦, 🔮, ✏️, 💡, 🎁, 🤝, 👨‍💻, ❤️, ☕, ✨  
+**INSTALLATION.md:** 📦, 🎉, ⚠️, 🔄, 📁, ❌, 🔧, 💡, 🔐, 📋  
+**CONTRIBUTING.md:** 👍, 🎯, 🐛, 💡, 🎨, 📚, 🧪, 💻, 🚀, 📋, 📝, ✅, ❌, 🌟, 💬, 🏆, 📜, 🙏  
+**DEVELOPERS.md:** 🏗️, 📦, 🚀, 🎨, 📐, ✅, ⚠️, ❗, 🚫, 🎯, 🔢, 🧪, ⚠️, 🔄, 🤔, ✨, ⚡, 🌐, 💾, 📖, 🛠️, 📚, 💬  
+**TROUBLESHOOTING.md:** 🚨, ℹ️, ⚠️, 📜, 📋, 📚
+
+**This file (copilot-instructions.md):** Uses emoji extensively - must use PowerShell for updates
+
+---
 
 ## ℹ️ Additional Documentation
 
 - **TROUBLESHOOTING.md** - Common issues and solutions
-- **CONSTANTS_REFERENCE.md** - All sizing/spacing constants
+- **CONSTANTS_REFERENCE.md** - All sizing/spacing constants  
 - **DEVELOPERS.md** - Architecture and development guide
 - **CONTRIBUTING.md** - Code style and contribution guidelines
+
+**Last Updated:** 2025-01-12

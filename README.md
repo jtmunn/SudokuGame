@@ -47,9 +47,12 @@ That's it. Just Sudoku, the way it should be.
 ### Windows
 **[📦 Download Latest Release](https://github.com/jtmunn/SudokuGame/releases/latest)**
 
-1. Download the .msix file
-2. Double-click to install
-3. Find **Sudoku** in your Start Menu
+**Portable Build (No Installation Required):**
+1. Download the latest `.zip` file from the Releases page
+2. Extract the zip to any folder
+3. Run `Sudoku.Maui.exe`
+
+> **Note:** Windows may show a security warning for unrecognized apps. This is normal for unsigned portable apps. Click "More info" → "Run anyway" to proceed.
 
 **First time?** See [INSTALLATION.md](INSTALLATION.md) for setup help and troubleshooting.
 
