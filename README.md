@@ -1,102 +1,89 @@
-# 🎮 Sudoku - Your Cross-Platform Puzzle Companion
+# 🎮 Sudoku
 
-> **The classic logic puzzle that scales from your pocket to your TV screen!**
+> **A cross-platform puzzle game built with .NET MAUI—because I love Sudoku, and I love building things.**
 
-A cross-platform Sudoku game built with .NET MAUI that works on Windows, Android, iOS, and macOS. Features responsive design, light/dark themes, and a clean interface that maximizes puzzle visibility.
+Clean interface. Light & dark themes. Responsive design that works from phone screens to 4K displays. Six difficulty levels. No ads, no accounts, no tracking. Just Sudoku.
 
-**✨ 100% Free Open Source · No Ads · No Tracking · Yours Forever**
-
----
-
-## What Makes This Special?
-
-### 📱 **Truly Responsive**
-Scales beautifully from phone screens to 4K displays. The grid automatically adjusts and remains perfectly readable whether you're playing on your phone during a commute or on a massive TV from across the room.
-
-### 🌓 **Light & Dark Themes**
-Full theme support with your preference saved between sessions. Easy on the eyes, day or night.
-
-### 📊 **Game Statistics**
-Tracks your best solve times per difficulty level. Game state auto-saves when you navigate away�pick up exactly where you left off.
-
-### ⌨️ **Keyboard Support**
-Windows users can use number keys (1-9) and Backspace/Delete for quick input. No need to touch the mouse.
-
-### 🔒 **Local & Private**
-All your games, settings, and statistics stay on your device. No accounts, no cloud sync, no data collection.
-
-### 🎯 **Six Difficulty Levels**
-Easy · Medium · Hard · Expert · Master · GrandMaster
-
-> **Note:** Difficulty ratings are currently based on the number of clues provided. True Sudoku difficulty depends on which solving techniques are required (naked singles, hidden pairs, X-wing, etc.). This is actively being researched and improved. For now, puzzles may feel easier than their difficulty label suggests.
+**Available for Windows** · Android/iOS/macOS coming soon
 
 ---
 
-## 📥 How to Play
+## 💡 Why This Exists
 
-1. **Tap a Cell** → **Pick a Number** → Watch for conflicts
-2. **Optional Tools:** Hint (💡), Check Progress (✅), or hide them if you prefer hardcore mode
-3. **Keyboard shortcuts** (Windows): Number keys, Backspace/Delete
+I wanted to build a Sudoku game that:
+- **Respects your privacy** - No ads, no tracking, no accounts. Your games stay on your device.
+- **Works everywhere** - Same experience on Windows, Android, iOS, and macOS (when ready).
+- **Stays focused** - It's Sudoku. Not a notification factory or a data harvester.
 
-That's it. Just Sudoku, the way it should be.
+But honestly? This project has been a **wonderful learning experience**. As a software engineer, I've explored .NET MAUI, cross-platform design, and responsive UI scaling. As a Sudoku lover, I've dived deep into puzzle generation algorithms, difficulty rating systems, and solving techniques like naked singles, hidden pairs, and X-wings.
+
+It's been equal parts challenging and rewarding. And now it's yours to use, modify, or learn from.
 
 ---
 
-## 📦 Download & Run
+## 📥 Getting Started
 
 ### Windows
 **[📦 Download Latest Release](https://github.com/jtmunn/SudokuGame/releases/latest)**
 
-**Portable Build (No Installation Required):**
-1. Download the latest `.zip` file from the Releases page
-2. Extract the zip to any folder
+**Portable Build (No Installation):**
+1. Download the `.zip` file
+2. Extract anywhere
 3. Run `Sudoku.Maui.exe`
 
-> **Note:** Windows may show a security warning for unrecognized apps. This is normal for unsigned portable apps. Click "More info" → "Run anyway" to proceed.
+> **Note:** Windows may show a security warning for unsigned apps. Click "More info" → "Run anyway" to proceed.
 
-**First time?** See [INSTALLATION.md](INSTALLATION.md) for setup help and troubleshooting.
+**First time?** See [INSTALLATION.md](INSTALLATION.md) for help.
 
-**Want to build from source?** See [DEVELOPERS.md](DEVELOPERS.md)
+**Building from source?** See [DEVELOPERS.md](DEVELOPERS.md)
 
 ### Android / iOS / macOS
 - *Coming soon*
 
 ---
 
-## 🔮 Possible Future Features
-- ✏️ **Pencil Marks** - Note candidate numbers in cells (maybe)
-- 📊 **Improved Difficulty Algorithm** - Technique-based rating (actively researching)
+## 🎯 Features
 
-Everything else? Not planned. Keeping it focused and simple.
+- **Six difficulty levels** - Easy through GrandMaster
+- **Light & dark themes** - Preference saved between sessions
+- **Game statistics** - Track your best solve times
+- **Auto-save** - Pick up exactly where you left off
+- **Keyboard support** (Windows) - Number keys, Backspace/Delete
+- **Optional hints** - Or hide them for hardcore mode
 
----
-
-## 💡 Why This Project Exists
-
-This is a **personal project** built for the love of Sudoku and clean software design.
-
-### 🎁 Free Forever Promise
-
-- **No Ads** - Never. Ever. Not now, not later.
-- **No In-App Purchases** - All features are free, always
-- **No Data Collection** - Your games stay on your device
-- **No Accounts Required** - Just download and play
-- **Open Source** - Code is public, auditable, and yours to modify ([MIT License](LICENSE))
-
-This isn't a business. It's not a stepping stone to monetization. It's just a great Sudoku game, made by someone who loves Sudoku, shared freely with anyone who wants it.
+> **Note on Difficulty:** Ratings are currently based on the number of clues provided. True Sudoku difficulty depends on which solving techniques are required (naked singles, hidden pairs, X-wing, etc.). This is actively being researched and improved. For now, puzzles may feel easier than their difficulty label suggests.
 
 ---
 
-## 🤝 Want to Help?
+## 🔮 What's Next?
 
-Since this is free and open-source, the best way to support it is to contribute:
+- ✏️ **Pencil marks** - Note candidate numbers in cells (maybe)
+- 📊 **Improved difficulty algorithm** - Technique-based rating (actively researching)
 
-- 🐛 Report bugs or weird behavior
+Everything else? Not planned. Keeping it focused.
+
+---
+
+## 🎁 Free Forever
+
+- **No Ads** - Never. Not now, not later.
+- **No In-App Purchases** - All features are free, always.
+- **No Data Collection** - Your games stay on your device.
+- **No Accounts Required** - Just download and play.
+- **Open Source** - [MIT License](LICENSE) - Use it, modify it, learn from it.
+
+This isn't a business. It's not monetization bait. It's just a Sudoku game I wanted to build and share.
+
+---
+
+## 🤝 Want to Contribute?
+
+- 🐛 Report bugs or unexpected behavior
 - 💡 Share ideas for difficulty algorithm improvements
 - 📱 Test on different devices
-- ⭐ Star this repo if you enjoy it!
+- ⭐ Star this repo if you enjoy it
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
@@ -104,28 +91,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 **Tech Stack:** .NET 10, .NET MAUI, C# 14
 
-Full technical docs, architecture, and build instructions: [DEVELOPERS.md](DEVELOPERS.md)
-
-Contributing guidelines: [CONTRIBUTING.md](CONTRIBUTING.md)
-
-**License:** [MIT License](LICENSE) - Free to use, modify, and distribute
+- Architecture & build instructions: [DEVELOPERS.md](DEVELOPERS.md)
+- Contributing guidelines: [CONTRIBUTING.md](CONTRIBUTING.md)
+- License: [MIT License](LICENSE)
 
 **Repository:** [github.com/jtmunn/SudokuGame](https://github.com/jtmunn/SudokuGame)
 
 ---
 
-## 🤝 Acknowledgments
+## 🙏 Acknowledgments
 
-- **You** - for trying this project! 🙏
-- **FontAwesome** - for the beautiful icons
-- **The Sudoku Community** - for keeping logic puzzles alive
-- **Open Source Contributors** - for making this better
+- **FontAwesome** - Beautiful icons
+- **The Sudoku Community** - For keeping logic puzzles alive
+- **You** - For trying this project
 
 ---
 
 <div align="center">
 
-**Ready to play?** Clone, build, and start solving! 🎉
+**Ready to play?** Download, build, and start solving! 🎉
 
 Made with ❤️ and ☕ for puzzle lovers everywhere
 
