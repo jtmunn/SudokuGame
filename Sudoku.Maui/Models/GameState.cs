@@ -26,6 +26,12 @@ namespace Sudoku.Maui.Models
         public string? Difficulty { get; set; }
         
         /// <summary>
+        /// Numeric difficulty score calculated by the logical solver.
+        /// Used to determine actual puzzle difficulty based on solving techniques required.
+        /// </summary>
+        public int DifficultyScore { get; set; }
+        
+        /// <summary>
         /// Whether the puzzle is solved.
         /// </summary>
         public bool IsSolved { get; set; }

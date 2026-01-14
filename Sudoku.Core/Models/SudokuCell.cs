@@ -30,6 +30,13 @@ namespace Sudoku.Core.Models
         /// </summary>
         public bool HasError { get; set; }
 
+        /// <summary>
+        /// Set of possible candidate values for this cell (1-9).
+        /// Used by logical solving strategies to track which numbers are still possible.
+        /// Empty when the cell has a value.
+        /// </summary>
+        public HashSet<int> Candidates { get; set; } = new HashSet<int>();
+
         public SudokuCell(int row, int column)
         {
             Row = row;
@@ -38,6 +45,48 @@ namespace Sudoku.Core.Models
             IsGiven = false;
             HasError = false;
         }
+
+        /// <summary>
+        /// Initializes candidates for an empty cell with all possible values (1-9).
+        /// Clears candidates if the cell has a value.
+        /// </summary>
+        public void InitializeCandidates()
+        {
+            if (Value == 0)
+                Candidates = new HashSet<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            else
+                Candidates.Clear();
+        }
+
+        /// <summary>
+        /// Removes a candidate from this cell's possible values.
+        /// </summary>
+        public void RemoveCandidate(int candidate)
+        {
+            Candidates.Remove(candidate);
+        }
+
+        /// <summary>
+        /// Adds a candidate to this cell's possible values.
+        /// </summary>
+        public void AddCandidate(int candidate)
+        {
+            if (candidate >= 1 && candidate <= 9)
+                Candidates.Add(candidate);
+        }
+
+        /// <summary>
+        /// Checks if this cell has a specific candidate.
+        /// </summary>
+        public bool HasCandidate(int candidate)
+        {
+            return Candidates.Contains(candidate);
+        }
+
+        /// <summary>
+        /// Gets the number of remaining candidates in this cell.
+        /// </summary>
+        public int CandidateCount => Candidates.Count;
 
         /// <summary>
         /// Determines which 3x3 box this cell belongs to (0-8).
@@ -53,7 +102,8 @@ namespace Sudoku.Core.Models
             {
                 Value = Value,
                 IsGiven = IsGiven,
-                HasError = HasError
+                HasError = HasError,
+                Candidates = new HashSet<int>(Candidates) // Deep copy candidates
             };
         }
     }

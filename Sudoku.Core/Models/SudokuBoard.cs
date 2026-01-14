@@ -149,9 +149,89 @@ namespace Sudoku.Core.Models
                     destCell.Value = sourceCell.Value;
                     destCell.IsGiven = sourceCell.IsGiven;
                     destCell.HasError = sourceCell.HasError;
+                    destCell.Candidates = new HashSet<int>(sourceCell.Candidates); // Deep copy candidates
                 }
             }
             return clone;
+        }
+
+        /// <summary>
+        /// Initializes candidate values for all empty cells on the board.
+        /// Each empty cell starts with candidates {1,2,3,4,5,6,7,8,9},
+        /// then invalid candidates are removed based on current board state.
+        /// </summary>
+        public void InitializeCandidates()
+        {
+            // First, initialize all cells with full candidate sets
+            foreach (var cell in GetAllCells())
+            {
+                cell.InitializeCandidates();
+            }
+
+            // Then remove invalid candidates based on current board state
+            UpdateAllCandidates();
+        }
+
+        /// <summary>
+        /// Updates candidate values for all empty cells based on current board state.
+        /// Removes candidates that conflict with filled cells in the same row, column, or box.
+        /// </summary>
+        public void UpdateAllCandidates()
+        {
+            foreach (var cell in GetAllCells())
+            {
+                if (cell.Value == 0)
+                {
+                    // Remove candidates that already exist in the same row, column, or box
+                    for (int num = 1; num <= 9; num++)
+                    {
+                        if (!IsValidCandidate(cell.Row, cell.Column, num))
+                        {
+                            cell.RemoveCandidate(num);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a number is a valid candidate for a cell position.
+        /// Returns false if the number already exists in the same row, column, or box.
+        /// </summary>
+        private bool IsValidCandidate(int row, int col, int num)
+        {
+            // Check row
+            foreach (var cell in GetRow(row))
+            {
+                if (cell.Value == num)
+                    return false;
+            }
+
+            // Check column
+            foreach (var cell in GetColumn(col))
+            {
+                if (cell.Value == num)
+                    return false;
+            }
+
+            // Check box
+            int boxIndex = (row / 3) * 3 + (col / 3);
+            foreach (var cell in GetBox(boxIndex))
+            {
+                if (cell.Value == num)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets all empty cells that have exactly N candidates.
+        /// Useful for finding naked pairs (N=2), naked triples (N=3), etc.
+        /// </summary>
+        public IEnumerable<SudokuCell> GetCellsWithNCandidates(int n)
+        {
+            return GetAllCells().Where(c => c.Value == 0 && c.CandidateCount == n);
         }
 
         /// <summary>
