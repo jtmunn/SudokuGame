@@ -8,11 +8,11 @@ namespace Sudoku.Core.Services
     /// </summary>
     public enum DifficultyLevel
     {
-        Easy,      // Score: 0-100 (Basic strategies only)
-        Medium,    // Score: 101-300 (Up to Tough strategies)
-        Hard,      // Score: 301-600 (Requires Diabolical strategies)
-        Expert,    // Score: 601-1000 (Requires Extreme strategies)
-        Evil       // Score: 1000+ (Multiple Extreme strategies)
+        Easy,      // Score: 0-100 (Basic strategies)
+        Medium,    // Score: 101-300 (Basic + X-Wing/Y-Wing)
+        Hard,      // Score: 301-450 (Add Swordfish)
+        Expert,    // Score: 451-600 (Add XY-Chain)
+        Evil       // Score: 600+ (Multiple advanced strategies)
     }
 
     /// <summary>
@@ -196,17 +196,17 @@ namespace Sudoku.Core.Services
 
         /// <summary>
         /// Gets the target difficulty score based on desired difficulty level.
-        /// Based on SudokuWiki.org difficulty tiers.
+        /// Adjusted to match currently implemented strategies.
         /// </summary>
         private int GetTargetDifficultyScore(DifficultyLevel difficulty)
         {
             return difficulty switch
             {
                 DifficultyLevel.Easy => 50,       // Basic strategies only
-                DifficultyLevel.Medium => 200,    // Up to Tough strategies
-                DifficultyLevel.Hard => 450,      // Requires Diabolical strategies  
-                DifficultyLevel.Expert => 800,    // Requires Extreme strategies
-                DifficultyLevel.Evil => 1200,     // Multiple Extreme strategies
+                DifficultyLevel.Medium => 200,    // Basic + X-Wing/Y-Wing
+                DifficultyLevel.Hard => 350,      // Add Swordfish
+                DifficultyLevel.Expert => 500,    // Add XY-Chain
+                DifficultyLevel.Evil => 700,      // Multiple advanced strategies
                 _ => 50
             };
         }

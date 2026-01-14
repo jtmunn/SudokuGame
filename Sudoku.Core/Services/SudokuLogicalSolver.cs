@@ -2,6 +2,7 @@ using Sudoku.Core.Models;
 using Sudoku.Core.Strategies;
 using Sudoku.Core.Strategies.Basic;
 using Sudoku.Core.Strategies.Tough;
+using Sudoku.Core.Strategies.Diabolical;
 
 namespace Sudoku.Core.Services
 {
@@ -28,15 +29,15 @@ namespace Sudoku.Core.Services
                 new BoxLineReductionStrategy(),      // 25
                 new NakedPairStrategy(),             // 30
                 new HiddenPairStrategy(),            // 35
+                new NakedTripleStrategy(),           // 40
                 
                 // Tough strategies (Score: 100-150)
                 new XWingStrategy(),                 // 100
                 new YWingStrategy(),                 // 130
+                new SwordfishStrategy(),             // 140
                 
-                // Future: Add more strategies here as implemented
-                // new SwordfishStrategy(),          // 140
-                // new SimpleColouringStrategy(),    // 120
-                // new XYChainStrategy(),            // 240
+                // Diabolical strategies (Score: 240+)
+                new XYChainStrategy(),               // 240
             };
         }
 
@@ -194,17 +195,17 @@ namespace Sudoku.Core.Services
 
         /// <summary>
         /// Converts a numeric difficulty score to a difficulty level.
-        /// Based on SudokuWiki.org difficulty tiers.
+        /// Adjusted to match currently implemented strategies.
         /// </summary>
         private DifficultyLevel ScoreToDifficultyLevel(int score)
         {
             return score switch
             {
-                <= 100 => DifficultyLevel.Easy,      // Basic strategies only
-                <= 300 => DifficultyLevel.Medium,    // Up to Tough strategies
-                <= 600 => DifficultyLevel.Hard,      // Requires Diabolical strategies
-                <= 1000 => DifficultyLevel.Expert,   // Requires Extreme strategies
-                _ => DifficultyLevel.Evil            // Multiple Extreme strategies
+                <= 100 => DifficultyLevel.Easy,      // Basic strategies
+                <= 300 => DifficultyLevel.Medium,    // Basic + X-Wing/Y-Wing
+                <= 450 => DifficultyLevel.Hard,      // Add Swordfish
+                <= 600 => DifficultyLevel.Expert,    // Add XY-Chain
+                _ => DifficultyLevel.Evil            // Multiple advanced
             };
         }
 
