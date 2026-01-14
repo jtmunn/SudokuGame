@@ -1,0 +1,18 @@
+<Project>
+  <!-- 
+    This file is automatically imported by ALL .csproj files in this directory and subdirectories.
+    Put shared properties here to avoid duplication.
+  -->
+  
+  <PropertyGroup>
+    <!-- Application Version (update this ONE place for all projects) -->
+    <ApplicationDisplayVersion>1.2.0</ApplicationDisplayVersion>
+    <ApplicationVersion>2</ApplicationVersion>
+    
+    <!-- Common Build Settings -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  
+</Project>
