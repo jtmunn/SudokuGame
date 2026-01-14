@@ -14,6 +14,10 @@
             <RoundRectangle CornerRadius="999" />
         </Border.StrokeShape>
         
+        <Border.Shadow>
+            <Shadow Brush="Black" Opacity="0.2" Radius="4" Offset="2,2"/>
+        </Border.Shadow>
+        
         <Grid>
             <!-- Main Number - Centered -->
             <Label x:Name="NumberLabel"

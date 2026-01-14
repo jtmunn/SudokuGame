@@ -16,6 +16,9 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="BackgroundColor" Value="{DynamicResource SuccessButtonColor}"/>
             <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+            <Setter Property="Shadow">
+                <Shadow Brush="Black" Opacity="0.2" Radius="4" Offset="2,2"/>
+            </Setter>
             <Setter Property="VisualStateManager.VisualStateGroups">
                 <VisualStateGroupList>
                     <VisualStateGroup x:Name="CommonStates">
