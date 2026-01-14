@@ -43,9 +43,12 @@ jobs:
       id: version
       shell: pwsh
       run: |
-        [xml]$proj = Get-Content ${{ env.PROJECT_PATH }}
-        $version = $proj.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
+        # Read version from Directory.Build.props (centralized location)
+        [xml]$props = Get-Content "Directory.Build.props"
+        $version = $props.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
+        
         if ([string]::IsNullOrEmpty($version)) { $version = "1.0.0" }
+        
         echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         echo "Building version: $version"
 
