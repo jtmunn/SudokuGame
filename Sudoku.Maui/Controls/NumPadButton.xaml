@@ -2,8 +2,9 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Sudoku.Maui.Controls.NumPadButton"
-             x:Name="Root">
-    
+             x:Name="Root"
+             Padding="0,0,6,6">
+     
     <!-- Main Circle Button -->
     <Border x:Name="ButtonBorder"
             x:FieldModifier="private"

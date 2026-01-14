@@ -172,6 +172,7 @@
                 <!-- Action Buttons - positioned using code-behind with AbsoluteLayout.LayoutBounds -->
                 <VerticalStackLayout x:Name="ActionButtonStack"
                                     Spacing="12"
+                                    Padding="0,0,6,6"
                                     AbsoluteLayout.LayoutFlags="None">
                     <Button x:Name="HintButton"
                             Text="{StaticResource IconLightbulb}"
