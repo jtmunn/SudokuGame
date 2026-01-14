@@ -1,4 +1,4 @@
-using Sudoku.Core.Models;
+﻿using Sudoku.Core.Models;
 using Sudoku.Core.Services;
 using Sudoku.Maui.Services;
 using Sudoku.Maui.Controls;
@@ -261,23 +261,57 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private async Task StartNewGameAsync()
         {
+            CancellationTokenSource? spinnerCts = null;
+            
             try
             {
-                // Show loading overlay
-                LoadingOverlay.IsVisible = true;
-                LoadingMessage.Text = "Generating puzzle...";
-                
-                // Allow UI to update
-                await Task.Delay(50);
-                
                 // Get difficulty from settings
                 var settings = _settingsService.LoadSettings();
                 
                 // Map MAUI DifficultyLevel to Core DifficultyLevel
                 var coreDifficulty = MapDifficulty(settings.DefaultDifficulty);
                 
+                // Setup delayed spinner (only show if generation takes >500ms)
+                spinnerCts = new CancellationTokenSource();
+                var spinnerToken = spinnerCts.Token;
+                
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // Check cancellation every 50ms instead of relying on exception
+                        // This avoids TaskCanceledException breaking the debugger
+                        for (int i = 0; i < 10; i++) // 10 * 50ms = 500ms
+                        {
+                            if (spinnerToken.IsCancellationRequested)
+                                return; // Exit without showing spinner
+                            
+                            await Task.Delay(50);
+                        }
+                        
+                        // If we reach here, generation is taking >500ms, show spinner
+                        if (!spinnerToken.IsCancellationRequested)
+                        {
+                            MainThread.BeginInvokeOnMainThread(() =>
+                            {
+                                LoadingOverlay.IsVisible = true;
+                                LoadingMessage.Text = "Generating puzzle...";
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log unexpected errors but don't crash
+                        System.Diagnostics.Debug.WriteLine($"Spinner task error: {ex.Message}");
+                    }
+                });  // ✅ Token only used inside the task
+                
                 // Generate new puzzle on background thread
                 var board = await Task.Run(() => _generator.Generate(coreDifficulty));
+                
+                // Cancel spinner task if it hasn't shown yet
+                spinnerCts?.Cancel();
+                
                 _currentBoard = board;
                 
                 // Get solution
@@ -305,6 +339,10 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
+                // Cancel and dispose spinner task
+                spinnerCts?.Cancel();
+                spinnerCts?.Dispose();
+                
                 // Always hide loading overlay
                 LoadingOverlay.IsVisible = false;
             }

@@ -1,4 +1,4 @@
-using Sudoku.Core.Models;
+﻿using Sudoku.Core.Models;
 
 namespace Sudoku.Core.Services
 {
@@ -38,7 +38,7 @@ namespace Sudoku.Core.Services
         /// Uses logical solver to verify the puzzle matches the target difficulty.
         /// </summary>
         public SudokuBoard Generate(DifficultyLevel difficulty = DifficultyLevel.Easy)
-        {
+        {            
             // Create a complete valid board
             var board = new SudokuBoard();
             FillBoard(board);
@@ -97,26 +97,34 @@ namespace Sudoku.Core.Services
 
         /// <summary>
         /// Checks if placing a number at the given position is valid.
+        /// Optimized version using direct array access to avoid IEnumerable allocations.
         /// </summary>
         private bool IsValidPlacement(SudokuBoard board, int row, int col, int num)
         {
-            foreach (var cell in board.GetRow(row))
+            // Check row - direct array access
+            for (int c = 0; c < SudokuBoard.Size; c++)
             {
-                if (cell.Value == num)
+                if (board.GetCell(row, c).Value == num)
                     return false;
             }
 
-            foreach (var cell in board.GetColumn(col))
+            // Check column - direct array access
+            for (int r = 0; r < SudokuBoard.Size; r++)
             {
-                if (cell.Value == num)
+                if (board.GetCell(r, col).Value == num)
                     return false;
             }
 
-            int boxIndex = (row / 3) * 3 + (col / 3);
-            foreach (var cell in board.GetBox(boxIndex))
+            // Check 3x3 box - direct array access
+            int boxRow = (row / 3) * 3;
+            int boxCol = (col / 3) * 3;
+            for (int r = boxRow; r < boxRow + 3; r++)
             {
-                if (cell.Value == num)
-                    return false;
+                for (int c = boxCol; c < boxCol + 3; c++)
+                {
+                    if (board.GetCell(r, c).Value == num)
+                        return false;
+                }
             }
 
             return true;
