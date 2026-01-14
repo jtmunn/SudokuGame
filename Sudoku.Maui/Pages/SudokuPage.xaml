@@ -16,9 +16,6 @@
             <Setter Property="Padding" Value="0"/>
             <Setter Property="BackgroundColor" Value="{DynamicResource SuccessButtonColor}"/>
             <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
-            <Setter Property="Shadow">
-                <Shadow Brush="Black" Opacity="0.2" Radius="4" Offset="2,2"/>
-            </Setter>
             <Setter Property="VisualStateManager.VisualStateGroups">
                 <VisualStateGroupList>
                     <VisualStateGroup x:Name="CommonStates">
@@ -169,10 +166,9 @@
                                              BackgroundColor="{DynamicResource SurfaceColor}" />
                 </Border>
                 
-                <!-- Action Buttons - positioned using code-behind with AbsoluteLayout.LayoutBounds -->
+                <!-- Action Buttons -->
                 <VerticalStackLayout x:Name="ActionButtonStack"
                                     Spacing="12"
-                                    Padding="0,0,6,6"
                                     AbsoluteLayout.LayoutFlags="None">
                     <Button x:Name="HintButton"
                             Text="{StaticResource IconLightbulb}"
