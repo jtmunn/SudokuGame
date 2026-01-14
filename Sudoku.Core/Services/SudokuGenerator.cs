@@ -18,21 +18,24 @@ namespace Sudoku.Core.Services
     /// <summary>
     /// Generates valid Sudoku puzzles with varying difficulty levels.
     /// Uses backtracking algorithm to create a complete valid solution,
-    /// then removes cells based on difficulty while ensuring unique solution.
+    /// then removes cells based on logical difficulty (not clue count).
     /// </summary>
     public class SudokuGenerator
     {
         private readonly Random _random;
         private readonly SudokuSolver _solver;
+        private readonly SudokuLogicalSolver _logicalSolver;
 
-        public SudokuGenerator(SudokuSolver solver)
+        public SudokuGenerator(SudokuSolver solver, SudokuLogicalSolver logicalSolver)
         {
             _random = new Random();
             _solver = solver;
+            _logicalSolver = logicalSolver;
         }
 
         /// <summary>
         /// Generates a new Sudoku puzzle with the specified difficulty.
+        /// Uses logical solver to verify the puzzle matches the target difficulty.
         /// </summary>
         public SudokuBoard Generate(DifficultyLevel difficulty = DifficultyLevel.Easy)
         {
@@ -40,9 +43,9 @@ namespace Sudoku.Core.Services
             var board = new SudokuBoard();
             FillBoard(board);
 
-            // Remove cells based on difficulty
-            int cellsToRemove = GetCellsToRemove(difficulty);
-            RemoveCells(board, cellsToRemove);
+            // Remove cells until we hit target difficulty
+            int targetScore = GetTargetDifficultyScore(difficulty);
+            RemoveCellsToTargetDifficulty(board, targetScore);
 
             // Mark remaining cells as given
             foreach (var cell in board.GetAllCells())
@@ -120,10 +123,10 @@ namespace Sudoku.Core.Services
         }
 
         /// <summary>
-        /// Removes cells from the board to create the puzzle.
-        /// Uses uniqueness checking to ensure puzzle has exactly one solution.
+        /// Removes cells from the board until target difficulty is reached.
+        /// Uses logical solver to verify puzzle can be solved and measure difficulty.
         /// </summary>
-        private void RemoveCells(SudokuBoard board, int targetCount)
+        private void RemoveCellsToTargetDifficulty(SudokuBoard board, int targetScore)
         {
             var positions = new List<(int row, int col)>();
             for (int row = 0; row < SudokuBoard.Size; row++)
@@ -137,18 +140,19 @@ namespace Sudoku.Core.Services
             // Shuffle positions to randomize removal pattern
             positions = positions.OrderBy(x => _random.Next()).ToList();
 
-            int removed = 0;
+            int currentScore = 0;
             int attempts = 0;
             int maxAttempts = positions.Count;
 
             foreach (var (row, col) in positions)
             {
-                if (removed >= targetCount)
-                    break;
-
                 attempts++;
                 if (attempts > maxAttempts)
                     break; // Safety: prevent infinite loop
+
+                // Stop if we've reached target difficulty (allow 80% to 120% of target)
+                if (currentScore >= targetScore * 0.8 && currentScore <= targetScore * 1.2)
+                    break;
 
                 var cell = board.GetCell(row, col);
                 if (cell.Value == 0)
@@ -160,33 +164,50 @@ namespace Sudoku.Core.Services
                 board.SetCell(row, col, 0);
 
                 // Check if puzzle still has unique solution
-                if (_solver.HasUniqueSolution(board))
+                if (!_solver.HasUniqueSolution(board))
                 {
-                    // Keep it removed - puzzle still valid
-                    removed++;
-                }
-                else
-                {
-                    // Restore the cell - removal would create multiple solutions
+                    // Restore - removal would create multiple solutions
                     board.SetCell(row, col, backup);
+                    continue;
+                }
+
+                // Test difficulty with logical solver
+                var testBoard = board.Clone();
+                var solveResult = _logicalSolver.Solve(testBoard);
+
+                if (!solveResult.IsSolved)
+                {
+                    // Can't be solved with logic alone - too hard or broken
+                    board.SetCell(row, col, backup);
+                    continue;
+                }
+
+                // Update current score
+                currentScore = solveResult.DifficultyScore;
+
+                // If we've exceeded target significantly, restore and stop
+                if (currentScore > targetScore * 1.5)
+                {
+                    board.SetCell(row, col, backup);
+                    break;
                 }
             }
         }
 
         /// <summary>
-        /// Determines how many cells to remove based on difficulty.
-        /// Total cells = 81, so cells to remove = 81 - desired clues.
+        /// Gets the target difficulty score based on desired difficulty level.
+        /// Based on SudokuWiki.org difficulty tiers.
         /// </summary>
-        private int GetCellsToRemove(DifficultyLevel difficulty)
+        private int GetTargetDifficultyScore(DifficultyLevel difficulty)
         {
             return difficulty switch
             {
-                DifficultyLevel.Easy => _random.Next(31, 36),      // ~46-50 clues
-                DifficultyLevel.Medium => _random.Next(36, 46),    // ~35-45 clues
-                DifficultyLevel.Hard => _random.Next(46, 50),      // ~31-35 clues
-                DifficultyLevel.Expert => _random.Next(50, 54),    // ~27-31 clues
-                DifficultyLevel.Evil => _random.Next(54, 60),      // ~21-27 clues
-                _ => 31
+                DifficultyLevel.Easy => 50,       // Basic strategies only
+                DifficultyLevel.Medium => 200,    // Up to Tough strategies
+                DifficultyLevel.Hard => 450,      // Requires Diabolical strategies  
+                DifficultyLevel.Expert => 800,    // Requires Extreme strategies
+                DifficultyLevel.Evil => 1200,     // Multiple Extreme strategies
+                _ => 50
             };
         }
 
