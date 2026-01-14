@@ -4,16 +4,15 @@ namespace Sudoku.Core.Services
 {
     /// <summary>
     /// Difficulty levels for generated puzzles.
-    /// Ranges based on number of given cells (clues).
+    /// Based on logical solving strategies required (not clue count).
     /// </summary>
     public enum DifficultyLevel
     {
-        Easy,         // 46-50 given cells (clues)
-        Medium,       // 36-45 given cells (clues)
-        Hard,         // 32-35 given cells (clues)
-        Expert,       // 28-31 given cells (clues)
-        Master,       // 25-27 given cells (clues)
-        GrandMaster   // 22-24 given cells (clues)
+        Easy,      // Score: 0-100 (Basic strategies only)
+        Medium,    // Score: 101-300 (Up to Tough strategies)
+        Hard,      // Score: 301-600 (Requires Diabolical strategies)
+        Expert,    // Score: 601-1000 (Requires Extreme strategies)
+        Evil       // Score: 1000+ (Multiple Extreme strategies)
     }
 
     /// <summary>
@@ -182,12 +181,11 @@ namespace Sudoku.Core.Services
         {
             return difficulty switch
             {
-                DifficultyLevel.Easy => _random.Next(31, 36),
-                DifficultyLevel.Medium => _random.Next(36, 46),
-                DifficultyLevel.Hard => _random.Next(46, 50),
-                DifficultyLevel.Expert => _random.Next(50, 54),
-                DifficultyLevel.Master => _random.Next(54, 57),
-                DifficultyLevel.GrandMaster => _random.Next(57, 60),
+                DifficultyLevel.Easy => _random.Next(31, 36),      // ~46-50 clues
+                DifficultyLevel.Medium => _random.Next(36, 46),    // ~35-45 clues
+                DifficultyLevel.Hard => _random.Next(46, 50),      // ~31-35 clues
+                DifficultyLevel.Expert => _random.Next(50, 54),    // ~27-31 clues
+                DifficultyLevel.Evil => _random.Next(54, 60),      // ~21-27 clues
                 _ => 31
             };
         }

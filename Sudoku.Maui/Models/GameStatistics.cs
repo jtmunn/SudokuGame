@@ -26,14 +26,9 @@ namespace Sudoku.Maui.Models
         public int? BestTimeExpert { get; set; }
         
         /// <summary>
-        /// Best time in seconds for Master difficulty (null if never completed).
+        /// Best time in seconds for Evil difficulty (null if never completed).
         /// </summary>
-        public int? BestTimeMaster { get; set; }
-        
-        /// <summary>
-        /// Best time in seconds for GrandMaster difficulty (null if never completed).
-        /// </summary>
-        public int? BestTimeGrandMaster { get; set; }
+        public int? BestTimeEvil { get; set; }
         
         /// <summary>
         /// Gets the best time for a specific difficulty level.
@@ -46,8 +41,7 @@ namespace Sudoku.Maui.Models
                 DifficultyLevel.Medium => BestTimeMedium,
                 DifficultyLevel.Hard => BestTimeHard,
                 DifficultyLevel.Expert => BestTimeExpert,
-                DifficultyLevel.Master => BestTimeMaster,
-                DifficultyLevel.GrandMaster => BestTimeGrandMaster,
+                DifficultyLevel.Evil => BestTimeEvil,
                 _ => null
             };
         }
@@ -71,11 +65,8 @@ namespace Sudoku.Maui.Models
                 case DifficultyLevel.Expert:
                     BestTimeExpert = timeInSeconds;
                     break;
-                case DifficultyLevel.Master:
-                    BestTimeMaster = timeInSeconds;
-                    break;
-                case DifficultyLevel.GrandMaster:
-                    BestTimeGrandMaster = timeInSeconds;
+                case DifficultyLevel.Evil:
+                    BestTimeEvil = timeInSeconds;
                     break;
             }
         }

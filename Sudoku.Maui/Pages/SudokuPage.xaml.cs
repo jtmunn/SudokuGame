@@ -387,8 +387,7 @@ namespace Sudoku.Maui.Pages
                 Models.DifficultyLevel.Medium => Core.Services.DifficultyLevel.Medium,
                 Models.DifficultyLevel.Hard => Core.Services.DifficultyLevel.Hard,
                 Models.DifficultyLevel.Expert => Core.Services.DifficultyLevel.Expert,
-                Models.DifficultyLevel.Master => Core.Services.DifficultyLevel.Master,
-                Models.DifficultyLevel.GrandMaster => Core.Services.DifficultyLevel.GrandMaster,
+                Models.DifficultyLevel.Evil => Core.Services.DifficultyLevel.Evil,
                 _ => Core.Services.DifficultyLevel.Easy
             };
         }

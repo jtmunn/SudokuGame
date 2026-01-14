@@ -23,7 +23,6 @@ namespace Sudoku.Maui.Models
         Medium,
         Hard,
         Expert,
-        Master,
-        GrandMaster
+        Evil
     }
 }
