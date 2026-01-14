@@ -259,39 +259,55 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Starts a new game with a fresh puzzle.
         /// </summary>
-        private void StartNewGame()
+        private async Task StartNewGameAsync()
         {
-            // Get difficulty from settings
-            var settings = _settingsService.LoadSettings();
-            
-            // Map MAUI DifficultyLevel to Core DifficultyLevel
-            var coreDifficulty = MapDifficulty(settings.DefaultDifficulty);
-            
-            // Generate new puzzle based on difficulty
-            _currentBoard = _generator.Generate(coreDifficulty);
-            
-            // Get solution
-            _solution = _solver.GetSolution(_currentBoard);
+            try
+            {
+                // Show loading overlay
+                LoadingOverlay.IsVisible = true;
+                LoadingMessage.Text = "Generating puzzle...";
+                
+                // Allow UI to update
+                await Task.Delay(50);
+                
+                // Get difficulty from settings
+                var settings = _settingsService.LoadSettings();
+                
+                // Map MAUI DifficultyLevel to Core DifficultyLevel
+                var coreDifficulty = MapDifficulty(settings.DefaultDifficulty);
+                
+                // Generate new puzzle on background thread
+                var board = await Task.Run(() => _generator.Generate(coreDifficulty));
+                _currentBoard = board;
+                
+                // Get solution
+                _solution = _solver.GetSolution(_currentBoard);
 
-            // Update UI
-            UpdateGrid();
-            ClearSelection();
-            
-            // Reset and start timer
-            ResetTimer();
-            StartTimer();
-            
-            // Reset solved state and statistics
-            _isPuzzleSolved = false;
-            _mistakesCount = 0;
-            _hintsUsedCount = 0;
-            
-            // Update difficulty label
-            _currentDifficulty = settings.DefaultDifficulty.ToString();
-            UpdateDifficultyLabel();
-            
-            // Clear any saved game state since we're starting fresh
-            _ = _gameStateService.ClearGameStateAsync();
+                // Update UI
+                UpdateGrid();
+                ClearSelection();
+                
+                // Reset and start timer
+                ResetTimer();
+                StartTimer();
+                
+                // Reset solved state and statistics
+                _isPuzzleSolved = false;
+                _mistakesCount = 0;
+                _hintsUsedCount = 0;
+                
+                // Update difficulty label
+                _currentDifficulty = settings.DefaultDifficulty.ToString();
+                UpdateDifficultyLabel();
+                
+                // Clear any saved game state since we're starting fresh
+                await _gameStateService.ClearGameStateAsync();
+            }
+            finally
+            {
+                // Always hide loading overlay
+                LoadingOverlay.IsVisible = false;
+            }
         }
         
         /// <summary>
@@ -342,7 +358,7 @@ namespace Sudoku.Maui.Pages
             {
                 System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to restore game state: {ex.Message}");
                 // Fall back to starting a new game
-                StartNewGame();
+                _ = StartNewGameAsync();
             }
         }
         
@@ -448,7 +464,7 @@ namespace Sudoku.Maui.Pages
                     }
                 }
                 
-                StartNewGame();
+                await StartNewGameAsync();
             }
             finally
             {
@@ -893,11 +909,11 @@ namespace Sudoku.Maui.Pages
             _isProcessingInput = false;
         }
         
-        private void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
+        private async void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
         {
             // Start a new game
             _isProcessingInput = false;
-            StartNewGame();
+            await StartNewGameAsync();
         }
 
         private void AttachWindowKeyHandler()
@@ -979,7 +995,7 @@ namespace Sudoku.Maui.Pages
                 }
                 else
                 {
-                    StartNewGame();
+                    _ = StartNewGameAsync();
                 }
                 _isFirstAppearing = false;
             }

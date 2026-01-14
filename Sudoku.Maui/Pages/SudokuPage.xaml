@@ -262,6 +262,27 @@
         <controls:GameSummaryPopup x:Name="SummaryPopup"
                                   DoneRequested="OnSummaryDoneRequested"
                                   PlayAgainRequested="OnSummaryPlayAgainRequested" />
+        
+        <!-- Loading Overlay -->
+        <Grid x:Name="LoadingOverlay"
+              IsVisible="False"
+              BackgroundColor="#80000000"
+              ZIndex="1000">
+            <VerticalStackLayout HorizontalOptions="Center" 
+                                VerticalOptions="Center"
+                                Spacing="20">
+                <ActivityIndicator IsRunning="True"
+                                 Color="{DynamicResource Primary}"
+                                 WidthRequest="60"
+                                 HeightRequest="60"/>
+                <Label x:Name="LoadingMessage"
+                       Text="Generating puzzle..."
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 
 </ContentPage>
