@@ -113,6 +113,31 @@ public partial class NumPadButton : ContentView
         Tapped?.Invoke(this, EventArgs.Empty);
     }
 
+    private void OnPointerEntered(object? sender, PointerEventArgs e)
+    {
+        if (!IsEnabled || ButtonBorder == null)
+            return;
+
+        // Apply hover color
+        Color hoverColor = GetThemeColor("PrimaryButtonHoverColor");
+        ButtonBorder.BackgroundColor = hoverColor;
+        ButtonBorder.Stroke = hoverColor;
+    }
+
+    private void OnPointerExited(object? sender, PointerEventArgs e)
+    {
+        if (ButtonBorder == null)
+            return;
+
+        // Restore normal color based on enabled state
+        Color backgroundColor = IsEnabled 
+            ? GetThemeColor("PrimaryButtonColor")
+            : GetThemeColor("DisabledButtonColor");
+            
+        ButtonBorder.BackgroundColor = backgroundColor;
+        ButtonBorder.Stroke = backgroundColor;
+    }
+
     private static void OnRemainingCountChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is NumPadButton button)

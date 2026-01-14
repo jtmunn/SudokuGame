@@ -9,17 +9,10 @@
             x:FieldModifier="private"
             BackgroundColor="{DynamicResource PrimaryButtonColor}"
             Stroke="{DynamicResource PrimaryButtonColor}"
-            StrokeThickness="1">
+            StrokeThickness="0">
         <Border.StrokeShape>
             <RoundRectangle CornerRadius="999" />
         </Border.StrokeShape>
-        
-        <Border.Shadow>
-            <Shadow Brush="{DynamicResource ShadowColor}" 
-                    Opacity="{DynamicResource ShadowOpacity}" 
-                    Radius="6" 
-                    Offset="3,3"/>
-        </Border.Shadow>
         
         <Grid>
             <!-- Main Number - Centered -->
@@ -46,6 +39,8 @@
         
         <Border.GestureRecognizers>
             <TapGestureRecognizer Tapped="OnTapped" />
+            <PointerGestureRecognizer PointerEntered="OnPointerEntered" 
+                                     PointerExited="OnPointerExited" />
         </Border.GestureRecognizers>
     </Border>
 </ContentView>
