@@ -8,11 +8,11 @@ namespace Sudoku.Core.Services
     /// </summary>
     public enum DifficultyLevel
     {
-        Easy,      // Score: 0-100 (Basic strategies)
-        Medium,    // Score: 101-300 (Basic + X-Wing/Y-Wing)
-        Hard,      // Score: 301-450 (Add Swordfish)
-        Expert,    // Score: 451-600 (Add XY-Chain)
-        Evil       // Score: 600+ (Multiple advanced strategies)
+        Easy,      // Score: 40-60 (Target: 50, Basic strategies)
+        Medium,    // Score: 160-240 (Target: 200, Basic + X-Wing/Y-Wing)
+        Hard,      // Score: 280-420 (Target: 350, Add Swordfish)
+        Expert,    // Score: 400-600 (Target: 500, Add XY-Chain)
+        Evil       // Score: 560+ (Target: 700, Multiple advanced strategies)
     }
 
     /// <summary>

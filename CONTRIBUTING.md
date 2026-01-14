@@ -62,8 +62,8 @@ See below for our coding guidelines!
    ```
 
 4. **Set up development environment**
-   - See [DEVELOPERS.md](DEVELOPERS.md) for detailed setup instructions
-   - Don't forget to add `fa-solid-900.ttf` font file!
+- See [DEVELOPERS.md](docs/DEVELOPERS.md) for detailed setup instructions
+- Don't forget to add `fa-solid-900.ttf` font file!
 
 5. **Make your changes**
    - Write clean, readable code
@@ -235,13 +235,13 @@ public class sudokucell  // Wrong naming
 
 ### Project-Specific Rules
 
-**⚠️ Critical**: Read [AI_INSTRUCTIONS.md](.github/copilot-instructions.md) before coding! Key rules:
+**⚠️ Critical**: Read [copilot-instructions.md](.github/copilot-instructions.md) before coding! Key rules:
 
 1. **Never hardcode colors** - use theme resources
 2. **Use modern async APIs** - `DisplayAlertAsync`, not `DisplayAlert`
 3. **No obsolete APIs** - No `Frame`, use `Border`
 4. **Warnings = Errors** - Fix all warnings immediately
-5. **Constants over magic numbers** - See `CONSTANTS_REFERENCE.md`
+5. **Constants over magic numbers** - See `docs/CONSTANTS_REFERENCE.md`
 
 ---
 

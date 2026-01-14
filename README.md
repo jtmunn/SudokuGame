@@ -33,9 +33,9 @@ It's been equal parts challenging and rewarding. And now it's yours to use, modi
 
 > **Note:** Windows may show a security warning for unsigned apps. Click "More info" → "Run anyway" to proceed.
 
-**First time?** See [INSTALLATION.md](INSTALLATION.md) for help.
+**First time?** See [INSTALLATION.md](docs/INSTALLATION.md) for help.
 
-**Building from source?** See [DEVELOPERS.md](DEVELOPERS.md)
+**Building from source?** See [DEVELOPERS.md](docs/DEVELOPERS.md)
 
 ### Android / iOS / macOS
 - *Coming soon*
@@ -44,21 +44,21 @@ It's been equal parts challenging and rewarding. And now it's yours to use, modi
 
 ## 🎯 Features
 
-- **Six difficulty levels** - Easy through GrandMaster
+- **Five difficulty levels** - Easy, Medium, Hard, Expert, Evil
 - **Light & dark themes** - Preference saved between sessions
 - **Game statistics** - Track your best solve times
 - **Auto-save** - Pick up exactly where you left off
 - **Keyboard support** (Windows) - Number keys, Backspace/Delete
 - **Optional hints** - Or hide them for hardcore mode
 
-> **Note on Difficulty:** Ratings are currently based on the number of clues provided. True Sudoku difficulty depends on which solving techniques are required (naked singles, hidden pairs, X-wing, etc.). This is actively being researched and improved. For now, puzzles may feel easier than their difficulty label suggests.
+> **Note on Difficulty:** Puzzles are rated based on the logical solving techniques required (naked singles, X-wing, swordfish, etc.), not just the number of clues. The difficulty algorithm is continuously being refined to better match human solving experience.
 
 ---
 
 ## 🔮 What's Next?
 
-- ✏️ **Pencil marks** - Note candidate numbers in cells (maybe)
-- 📊 **Improved difficulty algorithm** - Technique-based rating (actively researching)
+- ✏️ **Pencil marks UI** - Visual candidate tracking (backend ready, UI needed)
+- 🎯 **Additional solving strategies** - Naked Quads, Unique Rectangles, Finned Fish (nice-to-have for extreme puzzles)
 
 Everything else? Not planned. Keeping it focused.
 
@@ -91,7 +91,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 **Tech Stack:** .NET 10, .NET MAUI, C# 14
 
-- Architecture & build instructions: [DEVELOPERS.md](DEVELOPERS.md)
+- Architecture & build instructions: [DEVELOPERS.md](docs/DEVELOPERS.md)
 - Contributing guidelines: [CONTRIBUTING.md](CONTRIBUTING.md)
 - License: [MIT License](LICENSE)
 

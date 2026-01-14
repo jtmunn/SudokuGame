@@ -96,7 +96,7 @@ These properties also require proper object syntax (not simple strings/booleans)
 - ✅ Clean separation: Core (logic) + MAUI (UI)
 - ✅ Proper DI registration in MauiProgram.cs
 - ✅ Theme system using separate XAML files (LightTheme.xaml, DarkTheme.xaml)
-- ✅ Constants documented in CONSTANTS_REFERENCE.md
+- ✅ Constants documented in CONSTANTS_REFERENCE.md (in docs/)
 
 ---
 
@@ -283,7 +283,7 @@ button.TextColor = Colors.Black; // NEVER DO THIS
 
 ### Constants - Never Hardcode
 
-**All sizing constants documented in:** `CONSTANTS_REFERENCE.md`
+**All sizing constants documented in:** `docs/CONSTANTS_REFERENCE.md`
 
 **Key Constants:**
 ```csharp
@@ -363,7 +363,7 @@ ActionButtonStack.TranslationX = offset; // OK for buttons
 
 ### When an Issue Arises
 
-**🚨 BEFORE suggesting solutions, consult:** `TROUBLESHOOTING.md`
+**🚨 BEFORE suggesting solutions, consult:** `docs/TROUBLESHOOTING.md`
 
 This file contains documented solutions for:
 - Release build crashes
