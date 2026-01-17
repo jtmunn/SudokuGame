@@ -999,6 +999,18 @@ namespace Sudoku.Maui.Pages
             }
 #endif
         }
+        
+        private void AttachWindowFocusHandler()
+        {
+            var window = Application.Current?.Windows.FirstOrDefault();
+            if (window != null)
+            {
+                window.Activated -= OnWindowActivated;
+                window.Deactivated -= OnWindowDeactivated;
+                window.Activated += OnWindowActivated;
+                window.Deactivated += OnWindowDeactivated;
+            }
+        }
 
         private void DetachWindowKeyHandler()
         {
@@ -1010,6 +1022,16 @@ namespace Sudoku.Maui.Pages
                 rootElement.KeyUp -= OnNativeWindowKeyUp;
             }
 #endif
+        }
+        
+        private void DetachWindowFocusHandler()
+        {
+            var window = Application.Current?.Windows.FirstOrDefault();
+            if (window != null)
+            {
+                window.Activated -= OnWindowActivated;
+                window.Deactivated -= OnWindowDeactivated;
+            }
         }
 
 #if WINDOWS
@@ -1049,12 +1071,28 @@ namespace Sudoku.Maui.Pages
         }
 #endif
 
+        private void OnWindowActivated(object? sender, EventArgs e)
+        {
+            // Resume timer if puzzle not solved and timer exists
+            if (!_isPuzzleSolved && _gameTimer != null && !_gameTimer.Enabled)
+            {
+                StartTimer();
+            }
+        }
+        
+        private void OnWindowDeactivated(object? sender, EventArgs e)
+        {
+            // Pause timer when window loses focus
+            StopTimer();
+        }
+
         private bool _isFirstAppearing = true;
         
         protected override void OnAppearing()
         {
             base.OnAppearing();
             AttachWindowKeyHandler();
+            AttachWindowFocusHandler();
             
             // On first appearance, check for saved game or show difficulty selection
             if (_isFirstAppearing)
@@ -1089,6 +1127,7 @@ namespace Sudoku.Maui.Pages
         {
             base.OnDisappearing();
             DetachWindowKeyHandler();
+            DetachWindowFocusHandler();
             // Stop timer when leaving the page
             StopTimer();
             
@@ -1102,6 +1141,9 @@ namespace Sudoku.Maui.Pages
         /// <param name="canDismiss">Whether the user can dismiss without selecting (false for first launch).</param>
         private async Task ShowDifficultySelectionAsync(bool canDismiss = true)
         {
+            // Pause timer while modal is open
+            StopTimer();
+            
             var settings = _settingsService.LoadSettings();
             var statistics = _settingsService.LoadStatistics();
             
@@ -1124,8 +1166,11 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private void OnDifficultyPopupDismissed(object? sender, EventArgs e)
         {
-            // User dismissed the modal without selecting - do nothing
-            // They can continue with current game if one exists
+            // User dismissed the modal without selecting - resume timer if puzzle not solved
+            if (!_isPuzzleSolved && _gameTimer != null)
+            {
+                StartTimer();
+            }
         }
     }
 }
