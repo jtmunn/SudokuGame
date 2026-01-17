@@ -45,6 +45,9 @@ namespace Sudoku.Maui.Pages
         // Game statistics tracking
         private int _mistakesCount = 0;
         private int _hintsUsedCount = 0;
+        
+        // Track whether user has made any entries in the current puzzle
+        private bool _hasUserMadeEntries = false;
 
         // Colors for visual feedback - use safe access with fallback
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor", Colors.White);
@@ -326,6 +329,7 @@ namespace Sudoku.Maui.Pages
                 _isPuzzleSolved = false;
                 _mistakesCount = 0;
                 _hintsUsedCount = 0;
+                _hasUserMadeEntries = false;
                 
                 // Update difficulty label
                 _currentDifficulty = difficulty.ToString();
@@ -383,6 +387,9 @@ namespace Sudoku.Maui.Pages
                 
                 // Restore solved state
                 _isPuzzleSolved = gameState.IsSolved;
+                
+                // Check if board has any user entries
+                _hasUserMadeEntries = BoardHasUserEntries(_currentBoard);
                 
                 // Update UI
                 UpdateGrid();
@@ -494,8 +501,8 @@ namespace Sudoku.Maui.Pages
             
             try
             {
-                // Skip prompt if puzzle is already solved
-                if (!_isPuzzleSolved)
+                // Only prompt if puzzle is not solved AND user has made any entries
+                if (!_isPuzzleSolved && _hasUserMadeEntries)
                 {
                     bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
                     if (!answer)
@@ -856,6 +863,9 @@ namespace Sudoku.Maui.Pages
 
                 // Move is valid (no visible conflicts), place it
                 _currentBoard.SetCell(_selectedRow, _selectedCol, number);
+                
+                // Mark that user has made an entry
+                _hasUserMadeEntries = true;
 
                 // Check if the placed number is actually correct against the solution
                 if (_solution != null)
@@ -906,6 +916,26 @@ namespace Sudoku.Maui.Pages
             cell.HasError = false;
             _validator.UpdateErrorFlags(_currentBoard);
             UpdateGrid();
+            
+            // Mark that user has made a change (clearing is also a change)
+            _hasUserMadeEntries = true;
+        }
+        
+        /// <summary>
+        /// Checks if the board contains any user-entered values (non-given cells with values).
+        /// </summary>
+        private bool BoardHasUserEntries(SudokuBoard board)
+        {
+            for (int row = 0; row < SudokuBoard.Size; row++)
+            {
+                for (int col = 0; col < SudokuBoard.Size; col++)
+                {
+                    var cell = board.GetCell(row, col);
+                    if (cell.Value != 0 && !cell.IsGiven)
+                        return true;
+                }
+            }
+            return false;
         }
         
         /// <summary>
