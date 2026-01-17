@@ -1,4 +1,4 @@
-# 🎮 Sudoku
+﻿# 🎮 Sudoku
 
 > **A cross-platform puzzle game built with .NET MAUI—because I love Sudoku, and I love building things.**
 
@@ -45,9 +45,12 @@ It's been equal parts challenging and rewarding. And now it's yours to use, modi
 ## 🎯 Features
 
 - **Five difficulty levels** - Easy, Medium, Hard, Expert, Evil
+- **Difficulty selection modal** - Choose your challenge at startup or start new games
+- **Game statistics** - Track best completion times with summary popups showing your performance
 - **Light & dark themes** - Preference saved between sessions
-- **Game statistics** - Track your best solve times
 - **Auto-save** - Pick up exactly where you left off
+- **Smart timer** - Pauses when window loses focus or during menus
+- **Number pad counters** - See remaining count for each number (1-9)
 - **Keyboard support** (Windows) - Number keys, Backspace/Delete
 - **Optional hints** - Or hide them for hardcore mode
 
@@ -73,6 +76,16 @@ Everything else? Not planned. Keeping it focused.
 - **Open Source** - [MIT License](LICENSE) - Use it, modify it, learn from it.
 
 This isn't a business. It's not monetization bait. It's just a Sudoku game I wanted to build and share.
+
+---
+
+## 📖 Documentation
+
+- **[Installation Guide](docs/INSTALLATION.md)** - Download and setup instructions
+- **[Developer Guide](docs/DEVELOPERS.md)** - Build from source and architecture
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
 
 ---
 

@@ -6,8 +6,8 @@
   
   <PropertyGroup>
     <!-- Application Version (update this ONE place for all projects) -->
-    <ApplicationDisplayVersion>1.2.0</ApplicationDisplayVersion>
-    <ApplicationVersion>2</ApplicationVersion>
+    <ApplicationDisplayVersion>1.3.0</ApplicationDisplayVersion>
+    <ApplicationVersion>3</ApplicationVersion>
     
     <!-- Common Build Settings -->
     <ImplicitUsings>enable</ImplicitUsings>

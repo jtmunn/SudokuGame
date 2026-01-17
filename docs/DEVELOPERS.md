@@ -39,8 +39,10 @@ Solution Structure:
 │   │   ├── GameStatistics.cs     - Solve time tracking
 │   │   └── DifficultyLevel.cs    - UI difficulty enum
 │   ├── Controls/
-│   │   ├── SudokuGridView.cs     - Custom grid rendering
-│   │   └── NumPadButton.xaml(.cs) - Number input buttons
+│   │   ├── SudokuGridView.cs          - Custom grid rendering with theme support
+│   │   ├── NumPadButton.xaml(.cs)     - Number input buttons with remaining count
+│   │   ├── DifficultySelectionPopup.xaml(.cs) - Modal for difficulty selection
+│   │   └── GameSummaryPopup.xaml(.cs) - Completion summary with statistics
 │   └── Resources/
 │       ├── Fonts/                - FontAwesome icons
 │       └── Styles/               - Theme colors and styles
@@ -58,6 +60,7 @@ Solution Structure:
 📄 .github/copilot-instructions.md - Comprehensive guidelines for AI agents
 📄 docs/CONSTANTS_REFERENCE.md     - All sizing and spacing constants
 📄 docs/DIFFICULTY_ALGORITHM_RESEARCH.md - Strategy research and scoring
+📄 CHANGELOG.md                    - Version history and release notes
 ```
 
 ---
