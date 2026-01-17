@@ -117,6 +117,40 @@ namespace Sudoku.Core.Tests.Services
             }
         }
 
+        [Theory]
+        [InlineData(DifficultyLevel.Easy, 36, 46)]
+        [InlineData(DifficultyLevel.Medium, 32, 35)]
+        [InlineData(DifficultyLevel.Hard, 28, 31)]
+        [InlineData(DifficultyLevel.Expert, 24, 27)]
+        [InlineData(DifficultyLevel.Evil, 22, 25)]
+        public void Generate_PuzzleHasCorrectClueCountRange(DifficultyLevel difficulty, int minClues, int maxClues)
+        {
+            // Act
+            var board = _generator.Generate(difficulty);
+
+            // Assert
+            var givenCells = board.GetAllCells().Count(c => c.IsGiven);
+            Assert.InRange(givenCells, minClues, maxClues);
+        }
+
+        [Fact]
+        public void Generate_EasyPuzzle_HasReasonableEmptyCellCount()
+        {
+            // Act - This test specifically addresses the bug where Easy had only 5 empty cells
+            var board = _generator.Generate(DifficultyLevel.Easy);
+
+            // Assert
+            var emptyCells = board.GetAllCells().Count(c => c.Value == 0);
+            var givenCells = board.GetAllCells().Count(c => c.IsGiven);
+            
+            // Easy should have 35-45 empty cells (36-46 given clues)
+            Assert.InRange(emptyCells, 35, 45);
+            Assert.InRange(givenCells, 36, 46);
+            
+            // Definitely NOT just 5 empty cells!
+            Assert.True(emptyCells >= 30, $"Easy puzzle should have at least 30 empty cells, but had {emptyCells}");
+        }
+
         [Fact]
         public void Generate_NoConflictsInInitialState()
         {
