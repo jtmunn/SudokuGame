@@ -259,17 +259,14 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Starts a new game with a fresh puzzle.
         /// </summary>
-        private async Task StartNewGameAsync()
+        private async Task StartNewGameAsync(Models.DifficultyLevel difficulty)
         {
             CancellationTokenSource? spinnerCts = null;
             
             try
             {
-                // Get difficulty from settings
-                var settings = _settingsService.LoadSettings();
-                
                 // Map MAUI DifficultyLevel to Core DifficultyLevel
-                var coreDifficulty = MapDifficulty(settings.DefaultDifficulty);
+                var coreDifficulty = MapDifficulty(difficulty);
                 
                 // Setup delayed spinner (only show if generation takes >500ms)
                 spinnerCts = new CancellationTokenSource();
@@ -331,8 +328,13 @@ namespace Sudoku.Maui.Pages
                 _hintsUsedCount = 0;
                 
                 // Update difficulty label
-                _currentDifficulty = settings.DefaultDifficulty.ToString();
+                _currentDifficulty = difficulty.ToString();
                 UpdateDifficultyLabel();
+                
+                // Save last played difficulty to settings
+                var settings = _settingsService.LoadSettings();
+                settings.LastPlayedDifficulty = difficulty;
+                await _settingsService.SaveSettingsAsync(settings);
                 
                 // Clear any saved game state since we're starting fresh
                 await _gameStateService.ClearGameStateAsync();
@@ -395,8 +397,8 @@ namespace Sudoku.Maui.Pages
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to restore game state: {ex.Message}");
-                // Fall back to starting a new game
-                _ = StartNewGameAsync();
+                // Fall back to showing difficulty selection (cannot be dismissed since there's no valid game)
+                _ = ShowDifficultySelectionAsync(canDismiss: false);
             }
         }
         
@@ -502,7 +504,8 @@ namespace Sudoku.Maui.Pages
                     }
                 }
                 
-                await StartNewGameAsync();
+                // Show difficulty selection modal
+                await ShowDifficultySelectionAsync();
             }
             finally
             {
@@ -921,7 +924,7 @@ namespace Sudoku.Maui.Pages
             // Load statistics to check for best time
             var stats = _settingsService.LoadStatistics();
             var settings = _settingsService.LoadSettings();
-            var currentDifficultyEnum = settings.DefaultDifficulty;
+            var currentDifficultyEnum = settings.LastPlayedDifficulty ?? Models.DifficultyLevel.Medium;
             var previousBestTime = stats.GetBestTime(currentDifficultyEnum);
             
             // Update best time if this is a new record or first completion
@@ -949,9 +952,9 @@ namespace Sudoku.Maui.Pages
         
         private async void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
         {
-            // Start a new game
+            // Show difficulty selection for new game
             _isProcessingInput = false;
-            await StartNewGameAsync();
+            await ShowDifficultySelectionAsync();
         }
 
         private void AttachWindowKeyHandler()
@@ -1023,7 +1026,7 @@ namespace Sudoku.Maui.Pages
             base.OnAppearing();
             AttachWindowKeyHandler();
             
-            // On first appearance, check for saved game or start new
+            // On first appearance, check for saved game or show difficulty selection
             if (_isFirstAppearing)
             {
                 var savedGame = _gameStateService.LoadGameState();
@@ -1033,7 +1036,8 @@ namespace Sudoku.Maui.Pages
                 }
                 else
                 {
-                    _ = StartNewGameAsync();
+                    // No saved game - show difficulty selection modal (cannot be dismissed)
+                    _ = ShowDifficultySelectionAsync(canDismiss: false);
                 }
                 _isFirstAppearing = false;
             }
@@ -1060,6 +1064,38 @@ namespace Sudoku.Maui.Pages
             
             // Save game state when navigating away
             _ = SaveCurrentGameStateAsync();
+        }
+        
+        /// <summary>
+        /// Shows the difficulty selection popup.
+        /// </summary>
+        /// <param name="canDismiss">Whether the user can dismiss without selecting (false for first launch).</param>
+        private async Task ShowDifficultySelectionAsync(bool canDismiss = true)
+        {
+            var settings = _settingsService.LoadSettings();
+            var statistics = _settingsService.LoadStatistics();
+            
+            // Determine last played difficulty from settings or saved game state
+            Models.DifficultyLevel? lastPlayed = settings.LastPlayedDifficulty;
+            
+            await DifficultyPopup.ShowAsync(lastPlayed, statistics, canDismiss);
+        }
+        
+        /// <summary>
+        /// Handles difficulty selection from the popup.
+        /// </summary>
+        private async void OnDifficultySelected(object? sender, Models.DifficultyLevel difficulty)
+        {
+            await StartNewGameAsync(difficulty);
+        }
+        
+        /// <summary>
+        /// Handles difficulty popup dismissal (user tapped outside or clicked X).
+        /// </summary>
+        private void OnDifficultyPopupDismissed(object? sender, EventArgs e)
+        {
+            // User dismissed the modal without selecting - do nothing
+            // They can continue with current game if one exists
         }
     }
 }

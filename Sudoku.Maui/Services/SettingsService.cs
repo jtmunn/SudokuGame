@@ -109,7 +109,7 @@ namespace Sudoku.Maui.Services
         {
             return new GameSettings
             {
-                DefaultDifficulty = DifficultyLevel.Medium,
+                LastPlayedDifficulty = null,
                 ShowHintButton = true,
                 ShowCheckButton = true,
                 Theme = AppTheme.Light

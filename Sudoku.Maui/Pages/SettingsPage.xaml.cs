@@ -27,7 +27,6 @@ namespace Sudoku.Maui.Pages
             _isLoadingSettings = true; // Set guard flag
 
             ThemePicker.SelectedIndex = _currentSettings.Theme == AppTheme.Light ? 0 : 1;
-            DifficultyPicker.SelectedIndex = (int)_currentSettings.DefaultDifficulty;
             ShowHintSwitch.IsToggled = _currentSettings.ShowHintButton;
             ShowCheckSwitch.IsToggled = _currentSettings.ShowCheckButton;
 
@@ -49,15 +48,6 @@ namespace Sudoku.Maui.Pages
                 app.LoadTheme(_currentSettings.Theme);
             }
             
-            await _settingsService.SaveSettingsAsync(_currentSettings);
-        }
-
-        private async void OnDifficultyChanged(object? sender, EventArgs e)
-        {
-            if (_isLoadingSettings || DifficultyPicker.SelectedIndex == -1) // Check guard flag
-                return;
-
-            _currentSettings.DefaultDifficulty = (DifficultyLevel)DifficultyPicker.SelectedIndex;
             await _settingsService.SaveSettingsAsync(_currentSettings);
         }
 

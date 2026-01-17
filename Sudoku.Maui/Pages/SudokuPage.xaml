@@ -263,6 +263,11 @@
                                   DoneRequested="OnSummaryDoneRequested"
                                   PlayAgainRequested="OnSummaryPlayAgainRequested" />
         
+        <!-- Difficulty Selection Popup (overlays everything when visible) -->
+        <controls:DifficultySelectionPopup x:Name="DifficultyPopup"
+                                          DifficultySelected="OnDifficultySelected"
+                                          Dismissed="OnDifficultyPopupDismissed" />
+        
         <!-- Loading Overlay -->
         <Grid x:Name="LoadingOverlay"
               IsVisible="False"

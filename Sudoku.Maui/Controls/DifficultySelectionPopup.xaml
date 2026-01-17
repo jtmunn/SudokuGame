@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Sudoku.Maui.Controls.DifficultySelectionPopup"
+             IsVisible="False">
+    
+    <!-- Semi-transparent overlay -->
+    <Grid BackgroundColor="#80000000">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnOverlayTapped" />
+        </Grid.GestureRecognizers>
+        
+        <!-- Centered popup card -->
+        <Border x:Name="PopupCard"
+                x:FieldModifier="private"
+                BackgroundColor="{DynamicResource SummaryBackgroundColor}"
+                Stroke="{DynamicResource SummaryBorderColor}"
+                StrokeThickness="1"
+                Padding="30"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                WidthRequest="400"
+                MaximumWidthRequest="400">
+            
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            
+            <Border.Shadow>
+                <Shadow Brush="{DynamicResource ShadowColor}" 
+                        Opacity="0.3" 
+                        Radius="8" 
+                        Offset="0,2"/>
+            </Border.Shadow>
+            
+            <Grid RowDefinitions="Auto,*" RowSpacing="24">
+                <!-- Header with optional close button -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Text="Select Difficulty"
+                           FontSize="22"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"
+                           TextColor="{DynamicResource SummaryTitleColor}" />
+                    
+                    <Button Grid.Column="1"
+                            x:Name="CloseButton"
+                            x:FieldModifier="private"
+                            Text="&#xf00d;"
+                            FontFamily="FontAwesome"
+                            FontSize="18"
+                            WidthRequest="32"
+                            HeightRequest="32"
+                            CornerRadius="16"
+                            Padding="0"
+                            BackgroundColor="Transparent"
+                            TextColor="{DynamicResource SummaryLabelColor}"
+                            Clicked="OnCloseClicked" />
+                </Grid>
+                
+                <!-- Difficulty cards -->
+                <VerticalStackLayout Grid.Row="1" Spacing="10">
+                    <!-- Easy -->
+                    <Border x:Name="EasyCard"
+                            x:FieldModifier="private"
+                            BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                            StrokeThickness="0"
+                            Padding="20,16"
+                            Margin="0,0,10,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{DynamicResource ShadowColor}" 
+                                    Opacity="{DynamicResource ShadowOpacity}" 
+                                    Radius="6" 
+                                    Offset="3,3"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnEasyTapped" />
+                        </Border.GestureRecognizers>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                            
+                        
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                <Label Text="Easy"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{DynamicResource ButtonTextColor}" />
+                                <Label x:Name="EasyBestTime"
+                                       x:FieldModifier="private"
+                                       FontSize="13"
+                                       TextColor="{DynamicResource ButtonTextColor}"
+                                       Opacity="0.8"
+                                       IsVisible="False" />
+                                </VerticalStackLayout>
+                                
+                            
+                            <Border Grid.Column="1"
+                                    x:Name="EasyLastPlayedBadge"
+                                    x:FieldModifier="private"
+                                    BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                                    Padding="10,5"
+                                    VerticalOptions="Center"
+                                    IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="3" />
+                                    </Border.StrokeShape>
+                                    <Label Text="Last Played"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextColor="{DynamicResource ButtonTextColor}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                        
+                    <!-- Medium -->
+                    <Border x:Name="MediumCard"
+                            x:FieldModifier="private"
+                            BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                            StrokeThickness="0"
+                            Padding="20,16"
+                            Margin="0,0,10,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{DynamicResource ShadowColor}" 
+                                    Opacity="{DynamicResource ShadowOpacity}" 
+                                    Radius="6" 
+                                    Offset="3,3"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnMediumTapped" />
+                        </Border.GestureRecognizers>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                            
+                        
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                <Label Text="Medium"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{DynamicResource ButtonTextColor}" />
+                                <Label x:Name="MediumBestTime"
+                                       x:FieldModifier="private"
+                                       FontSize="13"
+                                       TextColor="{DynamicResource ButtonTextColor}"
+                                       Opacity="0.8"
+                                       IsVisible="False" />
+                                </VerticalStackLayout>
+                                
+                            
+                            <Border Grid.Column="1"
+                                    x:Name="MediumLastPlayedBadge"
+                                    x:FieldModifier="private"
+                                    BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                                    Padding="10,5"
+                                    VerticalOptions="Center"
+                                    IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="3" />
+                                    </Border.StrokeShape>
+                                    <Label Text="Last Played"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextColor="{DynamicResource ButtonTextColor}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                        
+                    <!-- Hard -->
+                    <Border x:Name="HardCard"
+                            x:FieldModifier="private"
+                            BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                            StrokeThickness="0"
+                            Padding="20,16"
+                            Margin="0,0,10,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{DynamicResource ShadowColor}" 
+                                    Opacity="{DynamicResource ShadowOpacity}" 
+                                    Radius="6" 
+                                    Offset="3,3"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHardTapped" />
+                        </Border.GestureRecognizers>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                            
+                        
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                <Label Text="Hard"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{DynamicResource ButtonTextColor}" />
+                                <Label x:Name="HardBestTime"
+                                       x:FieldModifier="private"
+                                       FontSize="13"
+                                       TextColor="{DynamicResource ButtonTextColor}"
+                                       Opacity="0.8"
+                                       IsVisible="False" />
+                                </VerticalStackLayout>
+                                
+                            
+                            <Border Grid.Column="1"
+                                    x:Name="HardLastPlayedBadge"
+                                    x:FieldModifier="private"
+                                    BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                                    Padding="10,5"
+                                    VerticalOptions="Center"
+                                    IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="3" />
+                                    </Border.StrokeShape>
+                                    <Label Text="Last Played"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextColor="{DynamicResource ButtonTextColor}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                        
+                    <!-- Expert -->
+                    <Border x:Name="ExpertCard"
+                            x:FieldModifier="private"
+                            BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                            StrokeThickness="0"
+                            Padding="20,16"
+                            Margin="0,0,10,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{DynamicResource ShadowColor}" 
+                                    Opacity="{DynamicResource ShadowOpacity}" 
+                                    Radius="6" 
+                                    Offset="3,3"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnExpertTapped" />
+                        </Border.GestureRecognizers>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                            
+                        
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                <Label Text="Expert"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{DynamicResource ButtonTextColor}" />
+                                <Label x:Name="ExpertBestTime"
+                                       x:FieldModifier="private"
+                                       FontSize="13"
+                                       TextColor="{DynamicResource ButtonTextColor}"
+                                       Opacity="0.8"
+                                       IsVisible="False" />
+                                </VerticalStackLayout>
+                                
+                            
+                            <Border Grid.Column="1"
+                                    x:Name="ExpertLastPlayedBadge"
+                                    x:FieldModifier="private"
+                                    BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                                    Padding="10,5"
+                                    VerticalOptions="Center"
+                                    IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="3" />
+                                    </Border.StrokeShape>
+                                    <Label Text="Last Played"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextColor="{DynamicResource ButtonTextColor}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                        
+                    <!-- Evil -->
+                    <Border x:Name="EvilCard"
+                            x:FieldModifier="private"
+                            BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                            StrokeThickness="0"
+                            Padding="20,16"
+                            Margin="0,0,10,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="{DynamicResource ShadowColor}" 
+                                    Opacity="{DynamicResource ShadowOpacity}" 
+                                    Radius="6" 
+                                    Offset="3,3"/>
+                        </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnEvilTapped" />
+                        </Border.GestureRecognizers>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                            
+                        
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                <Label Text="Evil"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{DynamicResource ButtonTextColor}" />
+                                <Label x:Name="EvilBestTime"
+                                       x:FieldModifier="private"
+                                       FontSize="13"
+                                       TextColor="{DynamicResource ButtonTextColor}"
+                                       Opacity="0.8"
+                                       IsVisible="False" />
+                                </VerticalStackLayout>
+                                
+                            
+                            <Border Grid.Column="1"
+                                    x:Name="EvilLastPlayedBadge"
+                                    x:FieldModifier="private"
+                                    BackgroundColor="{DynamicResource PrimaryButtonColor}"
+                                    Padding="10,5"
+                                    VerticalOptions="Center"
+                                    IsVisible="False">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="3" />
+                                    </Border.StrokeShape>
+                                    <Label Text="Last Played"
+                                           FontSize="11"
+                                           FontAttributes="Bold"
+                                           TextColor="{DynamicResource ButtonTextColor}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>

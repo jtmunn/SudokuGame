@@ -64,28 +64,6 @@
                            FontAttributes="Bold"
                            TextColor="{DynamicResource TextColor}"/>
                     <HorizontalStackLayout Spacing="10">
-                        <Label Text="Default Difficulty:" 
-                               VerticalOptions="Center" 
-                               FontSize="16"
-                               TextColor="{DynamicResource SecondaryTextColor}"/>
-                        <Picker x:Name="DifficultyPicker" 
-                                SelectedIndexChanged="OnDifficultyChanged" 
-                                HorizontalOptions="FillAndExpand" 
-                                FontSize="16"
-                                TextColor="{DynamicResource TextColor}"
-                                BackgroundColor="{DynamicResource SettingsInputBackgroundColor}">
-                            <Picker.ItemsSource>
-                                <x:Array Type="{x:Type x:String}">
-                                    <x:String>Easy</x:String>
-                                    <x:String>Medium</x:String>
-                                    <x:String>Hard</x:String>
-                                    <x:String>Expert</x:String>
-                                    <x:String>Evil</x:String>
-                                </x:Array>
-                            </Picker.ItemsSource>
-                        </Picker>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="10">
                         <Label Text="Show Hint Button" 
                                VerticalOptions="Center" 
                                FontSize="16" 
