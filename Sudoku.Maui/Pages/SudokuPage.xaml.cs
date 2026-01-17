@@ -108,6 +108,9 @@ namespace Sudoku.Maui.Pages
             SizeChanged += OnPageSizeChanged;
             UpdateGridSize();
             
+            // Initialize all cells with default white backgrounds
+            UpdateGrid();
+            
             // Don't start game here - wait for OnAppearing when theme is loaded
             ApplySettings();
         }
@@ -769,21 +772,21 @@ namespace Sudoku.Maui.Pages
 						// Error cells ALWAYS show error color (highest priority)
 						button.BackgroundColor = ErrorCellColor;
 					}
-					else if (r == row && c == col)
-					{
-						// Selected cell - prominent highlight
-						button.BackgroundColor = SelectedCellColor;
-					}
+				else if (r == row && c == col)
+				{
+					// Selected cell - prominent highlight
+					button.BackgroundColor = SelectedCellColor;
+				}
 					else if (selectedValue > 0 && cell.Value == selectedValue)
 					{
 						// Matching numbers
 						button.BackgroundColor = MatchingNumberColor;
 					}
-					else if (r == row || c == col || inSameBlock)
-					{
-						// Same row, column, or 3x3 block - light highlight
-						button.BackgroundColor = LightHighlightCellColor;
-					}
+				else if (r == row || c == col || inSameBlock)
+				{
+					// Same row, column, or 3x3 block - light highlight
+					button.BackgroundColor = LightHighlightCellColor;
+				}
 					else if (cell.IsGiven)
 					{
 						// Given cells - use given color
