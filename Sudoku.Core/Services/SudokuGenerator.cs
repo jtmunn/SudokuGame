@@ -35,7 +35,8 @@ namespace Sudoku.Core.Services
 
         /// <summary>
         /// Generates a new Sudoku puzzle with the specified difficulty.
-        /// Uses logical solver to verify the puzzle matches the target difficulty.
+        /// Uses clue count (industry standard) as primary driver, with logical difficulty as secondary validation.
+        /// Based on SudokuWiki.org research: "usually leaves between twenty and thirty clues behind".
         /// </summary>
         public SudokuBoard Generate(DifficultyLevel difficulty = DifficultyLevel.Easy)
         {            
@@ -43,9 +44,10 @@ namespace Sudoku.Core.Services
             var board = new SudokuBoard();
             FillBoard(board);
 
-            // Remove cells until we hit target difficulty
+            // Remove cells until we hit target clue count range (primary criterion)
+            var (minClues, maxClues) = GetTargetClueCountRange(difficulty);
             int targetScore = GetTargetDifficultyScore(difficulty);
-            RemoveCellsToTargetDifficulty(board, targetScore);
+            RemoveCellsForDifficulty(board, minClues, maxClues, targetScore);
 
             // Mark remaining cells as given
             foreach (var cell in board.GetAllCells())
@@ -131,10 +133,11 @@ namespace Sudoku.Core.Services
         }
 
         /// <summary>
-        /// Removes cells from the board until target difficulty is reached.
-        /// Uses logical solver to verify puzzle can be solved and measure difficulty.
+        /// Removes cells from the board to achieve target clue count (primary) and reasonable difficulty score (secondary).
+        /// Based on SudokuWiki.org standards: clue count determines difficulty, not score alone.
+        /// Maintains unique solution constraint throughout removal process.
         /// </summary>
-        private void RemoveCellsToTargetDifficulty(SudokuBoard board, int targetScore)
+        private void RemoveCellsForDifficulty(SudokuBoard board, int minClues, int maxClues, int targetScore)
         {
             var positions = new List<(int row, int col)>();
             for (int row = 0; row < SudokuBoard.Size; row++)
@@ -148,9 +151,9 @@ namespace Sudoku.Core.Services
             // Shuffle positions to randomize removal pattern
             positions = positions.OrderBy(x => _random.Next()).ToList();
 
-            int currentScore = 0;
             int attempts = 0;
-            int maxAttempts = positions.Count;
+            int maxAttempts = positions.Count * 2; // Allow multiple passes if needed
+            int currentClues = 81; // Start with full board
 
             foreach (var (row, col) in positions)
             {
@@ -158,52 +161,83 @@ namespace Sudoku.Core.Services
                 if (attempts > maxAttempts)
                     break; // Safety: prevent infinite loop
 
-                // Stop if we've reached target difficulty (allow 80% to 120% of target)
-                if (currentScore >= targetScore * 0.8 && currentScore <= targetScore * 1.2)
-                    break;
-
                 var cell = board.GetCell(row, col);
                 if (cell.Value == 0)
                     continue; // Already empty
+
+                // PRIMARY CRITERION: Check if we've reached target clue count range
+                if (currentClues <= maxClues)
+                {
+                    // We're in the acceptable clue range, verify difficulty score
+                    var testBoard = board.Clone();
+                    var solveResult = _logicalSolver.Solve(testBoard);
+                    
+                    // SECONDARY CRITERION: Check if difficulty score is reasonable (within 50% to 150% of target)
+                    if (solveResult.IsSolved && 
+                        solveResult.DifficultyScore >= targetScore * 0.5 && 
+                        solveResult.DifficultyScore <= targetScore * 1.5)
+                    {
+                        // Both criteria met - stop removing cells
+                        break;
+                    }
+                    
+                    // If we're at minimum clues, stop even if score isn't perfect
+                    if (currentClues <= minClues)
+                        break;
+                }
 
                 int backup = cell.Value;
                 
                 // Temporarily remove the cell
                 board.SetCell(row, col, 0);
+                currentClues--;
 
                 // Check if puzzle still has unique solution
                 if (!_solver.HasUniqueSolution(board))
                 {
                     // Restore - removal would create multiple solutions
                     board.SetCell(row, col, backup);
+                    currentClues++;
                     continue;
                 }
 
-                // Test difficulty with logical solver
-                var testBoard = board.Clone();
-                var solveResult = _logicalSolver.Solve(testBoard);
+                // Test if puzzle is still logically solvable
+                var logicalTest = board.Clone();
+                var logicalResult = _logicalSolver.Solve(logicalTest);
 
-                if (!solveResult.IsSolved)
+                if (!logicalResult.IsSolved)
                 {
-                    // Can't be solved with logic alone - too hard or broken
+                    // Can't be solved with logic alone - restore and continue
                     board.SetCell(row, col, backup);
+                    currentClues++;
                     continue;
                 }
 
-                // Update current score
-                currentScore = solveResult.DifficultyScore;
-
-                // If we've exceeded target significantly, restore and stop
-                if (currentScore > targetScore * 1.5)
-                {
-                    board.SetCell(row, col, backup);
-                    break;
-                }
+                // Cell successfully removed, continue to next position
             }
         }
 
         /// <summary>
+        /// Gets the target clue count range based on desired difficulty level.
+        /// Based on SudokuWiki.org industry standards and puzzle analysis.
+        /// Returns (minClues, maxClues) where minClues is minimum acceptable givens.
+        /// </summary>
+        private (int minClues, int maxClues) GetTargetClueCountRange(DifficultyLevel difficulty)
+        {
+            return difficulty switch
+            {
+                DifficultyLevel.Easy => (36, 46),     // 35-45 empty cells
+                DifficultyLevel.Medium => (32, 35),    // 46-49 empty cells
+                DifficultyLevel.Hard => (28, 31),      // 50-53 empty cells
+                DifficultyLevel.Expert => (24, 27),    // 54-57 empty cells
+                DifficultyLevel.Evil => (22, 25),      // 56-59 empty cells (minimum viable: 17)
+                _ => (36, 46)
+            };
+        }
+
+        /// <summary>
         /// Gets the target difficulty score based on desired difficulty level.
+        /// Used as SECONDARY validation criterion after clue count is achieved.
         /// Adjusted to match currently implemented strategies.
         /// </summary>
         private int GetTargetDifficultyScore(DifficultyLevel difficulty)
