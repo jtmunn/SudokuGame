@@ -867,7 +867,10 @@ namespace Sudoku.Maui.Pages
                 // Mark that user has made an entry
                 _hasUserMadeEntries = true;
 
-                // Check if the placed number is actually correct against the solution
+                // Update error flags first to check for any conflicts across the board
+                _validator.UpdateErrorFlags(_currentBoard);
+
+                // Then check if the placed number matches the solution (this overrides conflict check)
                 if (_solution != null)
                 {
                     var solutionCell = _solution.GetCell(_selectedRow, _selectedCol);
