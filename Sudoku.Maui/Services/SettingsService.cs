@@ -30,7 +30,8 @@ namespace Sudoku.Maui.Services
                 else
                 {
                     _cachedSettings = CreateDefaultSettings();
-                    SaveSettingsAsync(_cachedSettings).Wait();
+                    // Don't save on first load - let it save naturally when settings change
+                    // Calling .Wait() here causes deadlock during MAUI initialization
                 }
             }
             catch (Exception ex)
