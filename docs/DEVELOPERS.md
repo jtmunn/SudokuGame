@@ -231,12 +231,21 @@ Strategies are organized by difficulty and applied in order:
 
 1. **Puzzle Generation**:
    - `SudokuGenerator` creates a complete valid board
-   - Removes cells one-by-one
-   - After each removal, tests with `SudokuLogicalSolver`
-   - Stops when target difficulty score is reached
+   - Removes cells one-by-one until target criteria met
+   - **PRIMARY:** Clue count reaches industry-standard range (e.g., Easy: 36-46 givens)
+   - **SECONDARY:** Difficulty score validated with `SudokuLogicalSolver`
+   - Maintains unique solution throughout removal process
 
 2. **Difficulty Scoring**:
    ```csharp
+   PRIMARY - Clue Count Ranges:
+   Easy:   36-46 given clues (35-45 empty cells)
+   Medium: 32-35 given clues (46-49 empty cells)
+   Hard:   28-31 given clues (50-53 empty cells)
+   Expert: 24-27 given clues (54-57 empty cells)
+   Evil:   22-25 given clues (56-59 empty cells)
+   
+   SECONDARY - Strategy Score Validation:
    Easy:   Target score ~50   (Basic strategies only)
    Medium: Target score ~200  (Basic + X-Wing/Y-Wing)
    Hard:   Target score ~350  (Add Swordfish)

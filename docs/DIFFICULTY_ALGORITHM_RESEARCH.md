@@ -133,8 +133,9 @@ These strategies would enhance difficulty grading for extreme puzzles:
    - Remove cells one-by-one
    - After each removal:
      * Verify unique solution (SudokuSolver)
-     * Test difficulty (SudokuLogicalSolver)
-   - Stop when target difficulty reached
+     * Check clue count is in target range (PRIMARY)
+     * Test difficulty score (SudokuLogicalSolver) (SECONDARY)
+   - Stop when both criteria satisfied
    ```
 
 2. **Logical Solving** (`SudokuLogicalSolver.cs`):
@@ -147,25 +148,35 @@ These strategies would enhance difficulty grading for extreme puzzles:
    ```
 
 3. **Difficulty Targets** (Actual Implementation):
+
+**PRIMARY CRITERION - Clue Count Ranges:**
 ```csharp
-Easy:   Target score 50   (Accepts: 40-60)
-Medium: Target score 200  (Accepts: 160-240)
-Hard:   Target score 350  (Accepts: 280-420)
-Expert: Target score 500  (Accepts: 400-600)
-Evil:   Target score 700  (Accepts: 560-840)
+Easy:   36-46 given clues (35-45 empty cells)
+Medium: 32-35 given clues (46-49 empty cells)
+Hard:   28-31 given clues (50-53 empty cells)
+Expert: 24-27 given clues (54-57 empty cells)
+Evil:   22-25 given clues (56-59 empty cells)
+```
+*Based on SudokuWiki.org: "It usually leaves between twenty and thirty clues behind."*
+
+**SECONDARY CRITERION - Difficulty Score Validation:**
+```csharp
+Easy:   Target score 50   (Accepts: 25-75)
+Medium: Target score 200  (Accepts: 100-300)
+Hard:   Target score 350  (Accepts: 175-525)
+Expert: Target score 500  (Accepts: 250-750)
+Evil:   Target score 700  (Accepts: 350-1050)
 ```
 
-**Why ±20% Tolerance?**
+**Why Clue Count First, Then Score?**
    
-Puzzle generation is iterative - removing each cell can cause unpredictable difficulty changes (±5 to ±50 points). Without tolerance, the generator could loop infinitely trying to hit an exact target.
-   
-The **80%-120% acceptance range** (±20%) provides:
-- ✅ **Prevents infinite loops** - Generator stops when "close enough"
-- ✅ **Natural variation** - Puzzles within a difficulty feel appropriately varied
-- ✅ **Reasonable consistency** - Narrow enough that difficulty labels remain meaningful
-- ✅ **Industry standard** - Common tolerance for this type of system
-   
-Example: For Medium (target 200), the generator accepts any score between 160-240 and stops removing cells.
+From SudokuWiki.org research: *"clue density does not - in general - affect the grade or difficulty of a puzzle"*. However, with very few empty cells (like 5), puzzles become trivially easy regardless of strategy requirements.
+
+The dual-criteria approach ensures:
+- ✅ **Industry-standard puzzle appearance** - Proper empty cell distribution
+- ✅ **Consistent difficulty feel** - Users see puzzles matching other Sudoku apps
+- ✅ **Prevents degenerate cases** - Can't have "Easy" with 76 givens (5 empty)
+- ✅ **Validates logical complexity** - Score ensures strategies match difficulty level
 
 ### Testing
 
@@ -213,6 +224,9 @@ Run tests: `dotnet test Sudoku.Core.Tests`
 ## External References
 
 - **SudokuWiki.org** - Complete strategy documentation with scoring
+  - [Introduction](https://www.sudokuwiki.org/Introduction) - "It usually leaves between twenty and thirty clues behind"
+  - [Brute Force vs Logical Strategies](https://www.sudokuwiki.org/Brute_Force_vs_Logical_Strategies) - "clue density does not - in general - affect the grade or difficulty"
+  - [Strategy Families](https://www.sudokuwiki.org/Strategy_Families) - Complete strategy catalog
 - **Sudoku Explainer (Java)** - Open-source solver with difficulty rating
 - **Donald Knuth's Dancing Links** - Algorithm X for puzzle solving
 - **"Sudoku Creation and Grading" PDF** - Available on SudokuWiki.org
