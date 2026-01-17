@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions for Sudoku .NET MAUI Project
+﻿# GitHub Copilot Instructions for Sudoku .NET MAUI Project
 
 ## 🚨 CRITICAL: Think Before You Code
 
@@ -79,6 +79,26 @@ These properties also require proper object syntax (not simple strings/booleans)
     </Label.FormattedText>
 </Label>
 ```
+
+---
+
+## 🚨 GIT COMMIT RULES
+
+**ALWAYS use single-line commit messages:**
+
+```bash
+# ✅ CORRECT
+git commit -m "Add feature X to improve Y"
+
+# ❌ WRONG - Multi-line breaks in PowerShell
+git commit -m "Add feature X
+
+This adds functionality for Y
+- Detail 1
+- Detail 2"
+```
+
+**Why:** Multi-line commit messages break in PowerShell terminal. Keep all commit messages on a single line.
 
 ---
 
