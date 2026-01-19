@@ -1,4 +1,4 @@
-using Sudoku.Core.Models;
+﻿using Sudoku.Core.Models;
 using Sudoku.Core.Strategies;
 using Sudoku.Core.Strategies.Basic;
 using Sudoku.Core.Tests.Helpers;

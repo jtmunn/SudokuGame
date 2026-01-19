@@ -1,4 +1,4 @@
-using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
+﻿using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
 using Sudoku.Application.Models;
 
 namespace Sudoku.Maui.Controls;

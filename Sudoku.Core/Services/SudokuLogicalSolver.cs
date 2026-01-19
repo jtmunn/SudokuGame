@@ -1,4 +1,4 @@
-using Sudoku.Core.Models;
+ï»¿using Sudoku.Core.Models;
 using Sudoku.Core.Strategies;
 using Sudoku.Core.Strategies.Basic;
 using Sudoku.Core.Strategies.Tough;
@@ -172,7 +172,7 @@ namespace Sudoku.Core.Services
 
         /// <summary>
         /// Calculates the overall difficulty score based on strategies used.
-        /// Formula: Sum of (strategy score × times used) + (hardest strategy score × 2)
+        /// Formula: Sum of (strategy score ï¿½ times used) + (hardest strategy score ï¿½ 2)
         /// </summary>
         private int CalculateDifficulty(SolveResult result)
         {

@@ -1,4 +1,4 @@
-namespace Sudoku.Core.Models
+﻿namespace Sudoku.Core.Models
 {
     /// <summary>
     /// Represents a single cell in the Sudoku grid.

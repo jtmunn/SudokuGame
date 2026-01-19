@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Sudoku.Core.Models;
 using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
