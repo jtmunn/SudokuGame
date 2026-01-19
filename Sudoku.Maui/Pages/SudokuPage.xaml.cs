@@ -1,8 +1,11 @@
-﻿using Sudoku.Core.Models;
+using Sudoku.Core.Models;
 using Sudoku.Core.Services;
-using Sudoku.Maui.Services;
+using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
+using Sudoku.Application.Services;
 using Sudoku.Maui.Controls;
-using Models = Sudoku.Maui.Models;
+using Sudoku.Maui.Helpers;
+using Sudoku.Application.ViewModels;
+using AppModels = Sudoku.Application.Models;
 
 namespace Sudoku.Maui.Pages
 {
@@ -13,6 +16,8 @@ namespace Sudoku.Maui.Pages
         private readonly SudokuSolver _solver;
         private readonly ISettingsService _settingsService;
         private readonly IGameStateService _gameStateService;
+        private readonly SudokuPageViewModel _viewModel;
+        private readonly CellHighlightManager _highlightManager;
 
         private SudokuBoard _currentBoard;
         private SudokuBoard? _solution;
@@ -21,33 +26,11 @@ namespace Sudoku.Maui.Pages
         private int _selectedRow = -1;
         private int _selectedCol = -1;
         
-        private const int MinGridSize = 360;
-        private const double BaseGridSize = 450.0; // Reference size for scaling calculations
-        private const double BaseButtonSize = 45.0; // Base size for number pad and action buttons
-        private const double BaseFontSize = 20.0; // Base font size for buttons
-        private const int GameAreaPadding = 10; // Padding around game area
-        private const int ActionButtonMargin = 20; // Left margin for action buttons
-        private const int HeaderHeight = 56; // Header bar height
-        private const int NumberPadHeight = 120; // Approximate height for number pad area
-        private const int NumberButtonMargin = 6; // Margin around each number button
+        // Layout constants now in SudokuLayoutManager
+        private double _currentGridSize = SudokuLayoutManager.BaseGridSize;
         
-        private double _currentGridSize = BaseGridSize;
-        
-        // Timer
-        private System.Timers.Timer? _gameTimer;
-        private int _elapsedSeconds = 0;
-        private string _currentDifficulty = "Easy";
-        private bool _isPuzzleSolved = false;
-        
-        // Input processing lock to prevent race conditions
-        private bool _isProcessingInput = false;
-        
-        // Game statistics tracking
-        private int _mistakesCount = 0;
-        private int _hintsUsedCount = 0;
-        
-        // Track whether user has made any entries in the current puzzle
-        private bool _hasUserMadeEntries = false;
+        // Timer/state/statistics now in ViewModel
+        private bool _isFirstAppearing = true;
 
         // Colors for visual feedback - use safe access with fallback
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor", Colors.White);
@@ -66,10 +49,10 @@ namespace Sudoku.Maui.Pages
         {
             try
             {
-                if (Application.Current?.Resources != null)
+                if (Microsoft.Maui.Controls.Application.Current?.Resources != null)
                 {
                     // Search through merged dictionaries like SudokuGridView does
-                    foreach (var dict in Application.Current.Resources.MergedDictionaries)
+                    foreach (var dict in Microsoft.Maui.Controls.Application.Current.Resources.MergedDictionaries)
                     {
                         if (dict.ContainsKey(key))
                             return (Color)dict[key];
@@ -85,7 +68,7 @@ namespace Sudoku.Maui.Pages
 
         public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
                          SudokuSolver solver, ISettingsService settingsService,
-                         IGameStateService gameStateService)
+                         IGameStateService gameStateService, SudokuPageViewModel viewModel)
         {
             InitializeComponent();
             
@@ -94,6 +77,11 @@ namespace Sudoku.Maui.Pages
             _solver = solver;
             _settingsService = settingsService;
             _gameStateService = gameStateService;
+            _viewModel = viewModel;
+            _highlightManager = new CellHighlightManager(GetThemeColor);
+            
+            // Set BindingContext for XAML data binding
+            BindingContext = _viewModel;
             
             _currentBoard = new SudokuBoard();
 
@@ -122,8 +110,8 @@ namespace Sudoku.Maui.Pages
             HintButton.IsVisible = settings.ShowHintButton;
             CheckButton.IsVisible = settings.ShowCheckButton;
             
-            // Update button sizes to ensure they're positioned correctly
-            UpdateButtonSizes();
+            // Trigger full layout update which includes button sizing
+            UpdateGridSize();
         }
 
         private void OnPageSizeChanged(object? sender, EventArgs e)
@@ -133,126 +121,77 @@ namespace Sudoku.Maui.Pages
 
         private void UpdateGridSize()
         {
-            // Grid calculates size using FULL available width - action buttons positioned separately
-            // This keeps the grid centered in the window, with action buttons positioned to its right
             var settings = _settingsService.LoadSettings();
+            bool showActionButtons = settings.ShowHintButton || settings.ShowCheckButton;
             
-            // Calculate available space for grid (DO NOT reserve space for action buttons here)
-            double totalPadding = GameAreaPadding * 2;
-            var availableWidth = Width - totalPadding;
+            // Use LayoutManager to calculate all sizes and positions
+            var layout = SudokuLayoutManager.Calculate(Width, Height, showActionButtons);
             
-            // Calculate scaled number pad height
-            double preliminarySize = Math.Max(MinGridSize, Math.Min(availableWidth, Width));
-            double scale = preliminarySize / BaseGridSize;
-            double scaledButtonSize = Math.Round(BaseButtonSize * scale);
-            double scaledNumberPadHeight = scaledButtonSize + (NumberButtonMargin * 4) + 30;
-            
-            // Calculate available height
-            var availableHeight = Height - HeaderHeight - scaledNumberPadHeight - (GameAreaPadding * 2);
-            
-            // Grid size is the smaller dimension, ALWAYS clamped to minimum
-            // This ensures at minimum window size, grid stays at MinGridSize
-            var size = Math.Min(availableWidth, availableHeight);
-            size = Math.Max(MinGridSize, size);
-            
-            _currentGridSize = size;
-            GridBorder.WidthRequest = size;
-            GridBorder.HeightRequest = size;
+            _currentGridSize = layout.GridSize;
+            GridBorder.WidthRequest = layout.GridSize;
+            GridBorder.HeightRequest = layout.GridSize;
             
             // Update font sizes for all cell buttons
-            UpdateCellFontSizes();
+            UpdateCellFontSizes(layout.CellFontSize);
             
-            // Update button sizes based on FINAL grid size
-            UpdateButtonSizes();
+            // Update button sizes
+            UpdateButtonSizes(layout);
             
-            // Check if there's enough width to show action buttons
-            double finalScale = _currentGridSize / BaseGridSize;
-            double actionButtonWidth = Math.Round(BaseButtonSize * finalScale);
-            double centerX = Width / 2;
-            double buttonX = centerX + (_currentGridSize / 2) + ActionButtonMargin;
-            double requiredWidth = buttonX + actionButtonWidth;
-            
-            // Only show and position action buttons if there's enough space
-            bool hasSpaceForButtons = requiredWidth <= Width && (settings.ShowHintButton || settings.ShowCheckButton);
-            
-            if (hasSpaceForButtons)
+            // Position action buttons if there's space
+            if (layout.HasSpaceForActionButtons && showActionButtons)
             {
-                // Position action buttons using AbsoluteLayout to the right of centered grid
-                double buttonY = (Height - HeaderHeight - scaledNumberPadHeight) / 2; // Center vertically in game area
-                
-                AbsoluteLayout.SetLayoutBounds(ActionButtonStack, new Rect(buttonX, buttonY, actionButtonWidth, AbsoluteLayout.AutoSize));
+                AbsoluteLayout.SetLayoutBounds(ActionButtonStack, layout.ActionButtonBounds);
                 ActionButtonStack.IsVisible = true;
             }
             else
             {
-                // Hide action buttons when window is too narrow
                 ActionButtonStack.IsVisible = false;
             }
         }
         
-        private void UpdateButtonSizes()
+        private void UpdateButtonSizes(LayoutCalculations layout)
         {
-            // Calculate scale factor based on current grid size vs base size
-            double scale = _currentGridSize / BaseGridSize;
-            
-            // Number buttons - scale from base size
-            double numberSize = Math.Round(BaseButtonSize * scale);
-            double numberFont = Math.Round(BaseFontSize * scale);
-            double countFont = Math.Round((BaseFontSize * scale * 0.5) - 1); // Count is half the main font size, minus 1
-            
-            // Calculate scaled margin for count position (starts at 15% of button size from edges)
-            double countMargin = Math.Round(numberSize * 0.15);
-            
+            // Update number pad buttons using calculated layout
             foreach (var child in NumberPad.Children)
             {
                 if (child is Button btn)
                 {
-                    btn.WidthRequest = numberSize;
-                    btn.HeightRequest = numberSize;
-                    btn.CornerRadius = (int)(numberSize / 2); // Keep circular
-                    btn.FontSize = numberFont;
+                    btn.WidthRequest = layout.ButtonSize;
+                    btn.HeightRequest = layout.ButtonSize;
+                    btn.CornerRadius = (int)(layout.ButtonSize / 2);
+                    btn.FontSize = layout.FontSize;
                 }
                 else if (child is Controls.NumPadButton numPadBtn)
                 {
-                    numPadBtn.WidthRequest = numberSize;
-                    numPadBtn.HeightRequest = numberSize;
-                    numPadBtn.MainFontSize = numberFont;
-                    numPadBtn.CountFontSize = countFont;
-                    numPadBtn.CountMargin = new Thickness(0, countMargin, countMargin, 0);
+                    numPadBtn.WidthRequest = layout.ButtonSize;
+                    numPadBtn.HeightRequest = layout.ButtonSize;
+                    numPadBtn.MainFontSize = layout.FontSize;
+                    numPadBtn.CountFontSize = layout.CountFontSize;
+                    numPadBtn.CountMargin = layout.CountMargin;
                 }
             }
             
-            // Action buttons - same scaling as number buttons
-            double actionSize = Math.Round(BaseButtonSize * scale);
-            double actionFont = Math.Round(BaseFontSize * scale);
-            
-            // Only update if buttons are visible (respects settings)
+            // Action buttons - same sizing
             if (HintButton.IsVisible)
             {
-                HintButton.WidthRequest = actionSize;
-                HintButton.HeightRequest = actionSize;
-                HintButton.CornerRadius = (int)(actionSize / 2);
-                HintButton.FontSize = actionFont;
+                HintButton.WidthRequest = layout.ButtonSize;
+                HintButton.HeightRequest = layout.ButtonSize;
+                HintButton.CornerRadius = (int)(layout.ButtonSize / 2);
+                HintButton.FontSize = layout.FontSize;
             }
             
             if (CheckButton.IsVisible)
             {
-                CheckButton.WidthRequest = actionSize;
-                CheckButton.HeightRequest = actionSize;
-                CheckButton.CornerRadius = (int)(actionSize / 2);
-                CheckButton.FontSize = actionFont;
+                CheckButton.WidthRequest = layout.ButtonSize;
+                CheckButton.HeightRequest = layout.ButtonSize;
+                CheckButton.CornerRadius = (int)(layout.ButtonSize / 2);
+                CheckButton.FontSize = layout.FontSize;
             }
         }
 
-        private void UpdateCellFontSizes()
+        private void UpdateCellFontSizes(double fontSize)
         {
-            // Calculate scale factor based on grid size (same as buttons)
-            double scale = _currentGridSize / BaseGridSize;
-            
-            // Use a reasonable base font size that scales with the grid
-            double fontSize = 30.0 * scale;
-            
-            // Apply to all cell buttons
+            // Apply calculated font size to all cell buttons
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
                 for (int col = 0; col < SudokuBoard.Size; col++)
@@ -265,7 +204,7 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Starts a new game with a fresh puzzle.
         /// </summary>
-        private async Task StartNewGameAsync(Models.DifficultyLevel difficulty)
+        private async Task StartNewGameAsync(Sudoku.Core.Services.DifficultyLevel difficulty)
         {
             CancellationTokenSource? spinnerCts = null;
             
@@ -325,18 +264,17 @@ namespace Sudoku.Maui.Pages
                 ClearSelection();
                 
                 // Reset and start timer
-                ResetTimer();
-                StartTimer();
+                _viewModel.ResetTimer();
+                _viewModel.StartTimer();
                 
-                // Reset solved state and statistics
-                _isPuzzleSolved = false;
-                _mistakesCount = 0;
-                _hintsUsedCount = 0;
-                _hasUserMadeEntries = false;
+                // Reset solved state and statistics in ViewModel
+                _viewModel.IsPuzzleSolved = false;
+                _viewModel.MistakesCount = 0;
+                _viewModel.HintsUsedCount = 0;
+                _viewModel.HasUserMadeEntries = false;
                 
-                // Update difficulty label
-                _currentDifficulty = difficulty.ToString();
-                UpdateDifficultyLabel();
+                // Update difficulty
+                _viewModel.CurrentDifficulty = difficulty.ToString();
                 
                 // Save last played difficulty to settings
                 var settings = _settingsService.LoadSettings();
@@ -360,7 +298,7 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Restores a game from saved state.
         /// </summary>
-        private void RestoreGame(Models.GameState gameState)
+        private void RestoreGame(AppModels.GameState gameState)
         {
             try
             {
@@ -380,28 +318,20 @@ namespace Sudoku.Maui.Pages
                     _solution = SudokuBoard.Deserialize(gameState.SolutionData);
                 }
                 
-                // Restore timer
-                _elapsedSeconds = gameState.ElapsedSeconds;
-                UpdateTimerDisplay();
-                
-                // Restore difficulty
-                _currentDifficulty = gameState.Difficulty ?? "Medium";
-                UpdateDifficultyLabel();
-                
-                // Restore solved state
-                _isPuzzleSolved = gameState.IsSolved;
-                
-                // Check if board has any user entries
-                _hasUserMadeEntries = BoardHasUserEntries(_currentBoard);
+                // Restore timer and state
+                _viewModel.ElapsedSeconds = gameState.ElapsedSeconds;
+                _viewModel.CurrentDifficulty = gameState.Difficulty ?? "Medium";
+                _viewModel.IsPuzzleSolved = gameState.IsSolved;
+                _viewModel.HasUserMadeEntries = BoardHasUserEntries(_currentBoard);
                 
                 // Update UI
                 UpdateGrid();
                 ClearSelection();
                 
                 // Start timer if puzzle not solved
-                if (!_isPuzzleSolved)
+                if (!_viewModel.IsPuzzleSolved)
                 {
-                    StartTimer();
+                    _viewModel.StartTimer();
                 }
             }
             catch (Exception ex)
@@ -418,20 +348,20 @@ namespace Sudoku.Maui.Pages
         public async Task SaveCurrentGameStateAsync()
         {
             // Don't save if puzzle is solved or board is empty
-            if (_isPuzzleSolved || _currentBoard.GetAllCells().All(c => c.Value == 0))
+            if (_viewModel.IsPuzzleSolved || _currentBoard.GetAllCells().All(c => c.Value == 0))
             {
                 return;
             }
             
             try
             {
-                var gameState = new Models.GameState
+                var gameState = new AppModels.GameState
                 {
                     BoardData = _currentBoard.Serialize(),
                     SolutionData = _solution?.Serialize(),
-                    ElapsedSeconds = _elapsedSeconds,
-                    Difficulty = _currentDifficulty,
-                    IsSolved = _isPuzzleSolved
+                    ElapsedSeconds = _viewModel.ElapsedSeconds,
+                    Difficulty = _viewModel.CurrentDifficulty,
+                    IsSolved = _viewModel.IsPuzzleSolved
                 };
                 
                 await _gameStateService.SaveGameStateAsync(gameState);
@@ -445,67 +375,36 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Maps MAUI DifficultyLevel enum to Core DifficultyLevel enum.
         /// </summary>
-        private Core.Services.DifficultyLevel MapDifficulty(Models.DifficultyLevel mauiDifficulty)
+        private Core.Services.DifficultyLevel MapDifficulty(CoreDifficulty mauiDifficulty)
         {
             return mauiDifficulty switch
             {
-                Models.DifficultyLevel.Easy => Core.Services.DifficultyLevel.Easy,
-                Models.DifficultyLevel.Medium => Core.Services.DifficultyLevel.Medium,
-                Models.DifficultyLevel.Hard => Core.Services.DifficultyLevel.Hard,
-                Models.DifficultyLevel.Expert => Core.Services.DifficultyLevel.Expert,
-                Models.DifficultyLevel.Evil => Core.Services.DifficultyLevel.Evil,
+                CoreDifficulty.Easy => Core.Services.DifficultyLevel.Easy,
+                CoreDifficulty.Medium => Core.Services.DifficultyLevel.Medium,
+                CoreDifficulty.Hard => Core.Services.DifficultyLevel.Hard,
+                CoreDifficulty.Expert => Core.Services.DifficultyLevel.Expert,
+                CoreDifficulty.Evil => Core.Services.DifficultyLevel.Evil,
                 _ => Core.Services.DifficultyLevel.Easy
             };
         }
 
-        private void StartTimer()
-        {
-            _gameTimer?.Stop();
-            _gameTimer = new System.Timers.Timer(1000); // 1 second interval
-            _gameTimer.Elapsed += OnTimerElapsed;
-            _gameTimer.Start();
-        }
         
-        private void StopTimer()
-        {
-            _gameTimer?.Stop();
-        }
         
-        private void ResetTimer()
-        {
-            _elapsedSeconds = 0;
-            UpdateTimerDisplay();
-        }
         
-        private void OnTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
-        {
-            _elapsedSeconds++;
-            MainThread.BeginInvokeOnMainThread(() => UpdateTimerDisplay());
-        }
         
-        private void UpdateTimerDisplay()
-        {
-            int minutes = _elapsedSeconds / 60;
-            int seconds = _elapsedSeconds % 60;
-            TimerLabel.Text = $"Time: {minutes:D2}:{seconds:D2}";
-        }
         
-        private void UpdateDifficultyLabel()
-        {
-            DifficultyLabel.Text = $"Difficulty: {_currentDifficulty}";
-        }
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_viewModel.IsProcessingInput)
                 return;
             
-            _isProcessingInput = true;
+            _viewModel.IsProcessingInput = true;
             
             try
             {
                 // Only prompt if puzzle is not solved AND user has made any entries
-                if (!_isPuzzleSolved && _hasUserMadeEntries)
+                if (!_viewModel.IsPuzzleSolved && _viewModel.HasUserMadeEntries)
                 {
                     bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
                     if (!answer)
@@ -519,20 +418,20 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _isProcessingInput = false;
+                _viewModel.IsProcessingInput = false;
             }
         }
         
         private async void OnSettingsClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_viewModel.IsProcessingInput)
                 return;
             
-            _isProcessingInput = true;
+            _viewModel.IsProcessingInput = true;
             
             try
             {
-                StopTimer();
+                _viewModel.StopTimer();
                 
                 // Save game state before navigating away
                 await SaveCurrentGameStateAsync();
@@ -541,16 +440,16 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _isProcessingInput = false;
+                _viewModel.IsProcessingInput = false;
             }
         }
 
         private async void OnHintClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_viewModel.IsProcessingInput)
                 return;
             
-            _isProcessingInput = true;
+            _viewModel.IsProcessingInput = true;
             
             try
             {
@@ -574,8 +473,8 @@ namespace Sudoku.Maui.Pages
                 var (row, col, value) = hint.Value;
                 _currentBoard.SetCell(row, col, value);
                 
-                // Increment hints used counter
-                _hintsUsedCount++;
+                // Increment hints used counter in ViewModel
+                _viewModel.HintsUsedCount++;
 
                 _selectedRow = row;
                 _selectedCol = col;
@@ -599,16 +498,16 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _isProcessingInput = false;
+                _viewModel.IsProcessingInput = false;
             }
         }
 
         private async void OnCheckClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_viewModel.IsProcessingInput)
                 return;
             
-            _isProcessingInput = true;
+            _viewModel.IsProcessingInput = true;
             
             try
             {
@@ -640,7 +539,7 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _isProcessingInput = false;
+                _viewModel.IsProcessingInput = false;
             }
         }
 
@@ -748,69 +647,18 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private void HighlightSelection(int row, int col)
         {
-            var selectedCell = _currentBoard.GetCell(row, col);
-            var selectedValue = selectedCell.Value;
+            // Use CellHighlightManager to calculate colors
+            var colorMap = _highlightManager.CalculateColors(_currentBoard, row, col);
             
-            // Calculate which 3x3 block the selected cell is in
-            int blockRow = row / 3;
-            int blockCol = col / 3;
-
-            // Reset all cells and apply highlights
+            // Apply colors to all cell buttons
             for (int r = 0; r < SudokuBoard.Size; r++)
             {
                 for (int c = 0; c < SudokuBoard.Size; c++)
                 {
-                    var cell = _currentBoard.GetCell(r, c);
+                    var (backgroundColor, textColor) = colorMap.GetColors(r, c);
                     var button = _cellButtons[r, c];
-                    
-                    // Check if cell is in same 3x3 block
-                    bool inSameBlock = (r / 3 == blockRow) && (c / 3 == blockCol);
-					
-                    // Determine background color based on priority (ERROR takes precedence)
-					if (cell.HasError)
-					{
-						// Error cells ALWAYS show error color (highest priority)
-						button.BackgroundColor = ErrorCellColor;
-					}
-				else if (r == row && c == col)
-				{
-					// Selected cell - prominent highlight
-					button.BackgroundColor = SelectedCellColor;
-				}
-					else if (selectedValue > 0 && cell.Value == selectedValue)
-					{
-						// Matching numbers
-						button.BackgroundColor = MatchingNumberColor;
-					}
-				else if (r == row || c == col || inSameBlock)
-				{
-					// Same row, column, or 3x3 block - light highlight
-					button.BackgroundColor = LightHighlightCellColor;
-				}
-					else if (cell.IsGiven)
-					{
-						// Given cells - use given color
-						button.BackgroundColor = GivenCellColor;
-					}
-					else
-					{
-						// User-entered cells - use default color
-						button.BackgroundColor = DefaultCellColor;
-					}
-					
-					// Keep text color consistent based on cell type
-					if (cell.HasError)
-					{
-						button.TextColor = Colors.White;
-					}
-					else if (cell.IsGiven)
-					{
-						button.TextColor = GivenTextColor;
-					}
-					else
-					{
-						button.TextColor = CellTextColor;
-					}
+                    button.BackgroundColor = backgroundColor;
+                    button.TextColor = textColor;
                 }
             }
         }
@@ -839,10 +687,7 @@ namespace Sudoku.Maui.Pages
 
         private async Task ApplyNumberInputAsync(int number)
         {
-            if (_isProcessingInput)
-                return;
-            
-            _isProcessingInput = true;
+            if (_viewModel.IsProcessingInput) return; _viewModel.IsProcessingInput = true;
             
             try
             {
@@ -868,7 +713,7 @@ namespace Sudoku.Maui.Pages
                 _currentBoard.SetCell(_selectedRow, _selectedCol, number);
                 
                 // Mark that user has made an entry
-                _hasUserMadeEntries = true;
+                _viewModel.HasUserMadeEntries = true;
 
                 // Update error flags first to check for any conflicts across the board
                 _validator.UpdateErrorFlags(_currentBoard);
@@ -880,7 +725,7 @@ namespace Sudoku.Maui.Pages
                     if (cell.Value != solutionCell.Value)
                     {
                         cell.HasError = true;
-                        _mistakesCount++;
+                        _viewModel.MistakesCount++;
                     }
                 }
 
@@ -895,7 +740,7 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _isProcessingInput = false;
+                _viewModel.IsProcessingInput = false;
             }
         }
 
@@ -924,7 +769,7 @@ namespace Sudoku.Maui.Pages
             UpdateGrid();
             
             // Mark that user has made a change (clearing is also a change)
-            _hasUserMadeEntries = true;
+            _viewModel.HasUserMadeEntries = true;
         }
         
         /// <summary>
@@ -950,53 +795,53 @@ namespace Sudoku.Maui.Pages
         private async Task OnPuzzleSolvedAsync()
         {
             // Prevent duplicate calls if already showing summary
-            if (_isPuzzleSolved)
+            if (_viewModel.IsPuzzleSolved)
                 return;
             
-            _isPuzzleSolved = true;
-            StopTimer();
+            _viewModel.IsPuzzleSolved = true;
+            _viewModel.StopTimer();
             await _gameStateService.ClearGameStateAsync();
             
             // Load statistics to check for best time
             var stats = _settingsService.LoadStatistics();
             var settings = _settingsService.LoadSettings();
-            var currentDifficultyEnum = settings.LastPlayedDifficulty ?? Models.DifficultyLevel.Medium;
+            var currentDifficultyEnum = settings.LastPlayedDifficulty ?? CoreDifficulty.Medium;
             var previousBestTime = stats.GetBestTime(currentDifficultyEnum);
             
             // Update best time if this is a new record or first completion
-            if (!previousBestTime.HasValue || _elapsedSeconds < previousBestTime.Value)
+            if (!previousBestTime.HasValue || _viewModel.ElapsedSeconds < previousBestTime.Value)
             {
-                stats.SetBestTime(currentDifficultyEnum, _elapsedSeconds);
+                stats.SetBestTime(currentDifficultyEnum, _viewModel.ElapsedSeconds);
                 await _settingsService.SaveStatisticsAsync(stats);
             }
             
             // Show summary popup - IsBusy will be cleared by the popup event handlers
             await SummaryPopup.ShowAsync(
-                _currentDifficulty,
-                _elapsedSeconds,
+                _viewModel.CurrentDifficulty,
+                _viewModel.ElapsedSeconds,
                 previousBestTime,
-                _mistakesCount,
-                _hintsUsedCount
+                _viewModel.MistakesCount,
+                _viewModel.HintsUsedCount
             );
         }
         
         private void OnSummaryDoneRequested(object? sender, EventArgs e)
         {
             // Popup already hidden by the control
-            _isProcessingInput = false;
+            _viewModel.IsProcessingInput = false;
         }
         
         private async void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
         {
             // Show difficulty selection for new game
-            _isProcessingInput = false;
+            _viewModel.IsProcessingInput = false;
             await ShowDifficultySelectionAsync();
         }
 
         private void AttachWindowKeyHandler()
         {
 #if WINDOWS
-            var window = Application.Current?.Windows.FirstOrDefault();
+            var window = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
             if (window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow &&
                 nativeWindow.Content is Microsoft.UI.Xaml.UIElement rootElement)
             {
@@ -1008,7 +853,7 @@ namespace Sudoku.Maui.Pages
         
         private void AttachWindowFocusHandler()
         {
-            var window = Application.Current?.Windows.FirstOrDefault();
+            var window = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
             if (window != null)
             {
                 window.Activated -= OnWindowActivated;
@@ -1021,7 +866,7 @@ namespace Sudoku.Maui.Pages
         private void DetachWindowKeyHandler()
         {
 #if WINDOWS
-            var window = Application.Current?.Windows.FirstOrDefault();
+            var window = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
             if (window?.Handler?.PlatformView is Microsoft.UI.Xaml.Window nativeWindow &&
                 nativeWindow.Content is Microsoft.UI.Xaml.UIElement rootElement)
             {
@@ -1032,7 +877,7 @@ namespace Sudoku.Maui.Pages
         
         private void DetachWindowFocusHandler()
         {
-            var window = Application.Current?.Windows.FirstOrDefault();
+            var window = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
             if (window != null)
             {
                 window.Activated -= OnWindowActivated;
@@ -1080,19 +925,17 @@ namespace Sudoku.Maui.Pages
         private void OnWindowActivated(object? sender, EventArgs e)
         {
             // Resume timer if puzzle not solved and timer exists
-            if (!_isPuzzleSolved && _gameTimer != null && !_gameTimer.Enabled)
+            if (!_viewModel.IsPuzzleSolved)
             {
-                StartTimer();
+                _viewModel.StartTimer();
             }
         }
         
         private void OnWindowDeactivated(object? sender, EventArgs e)
         {
             // Pause timer when window loses focus
-            StopTimer();
+            _viewModel.StopTimer();
         }
-
-        private bool _isFirstAppearing = true;
         
         protected override void OnAppearing()
         {
@@ -1122,9 +965,9 @@ namespace Sudoku.Maui.Pages
                 // Refresh cell colors to pick up current theme
                 UpdateGrid();
                 // Restart timer if coming back from settings
-                if (_gameTimer != null && !_gameTimer.Enabled && !_isPuzzleSolved)
+                if (!_viewModel.IsPuzzleSolved)
                 {
-                    StartTimer();
+                    _viewModel.StartTimer();
                 }
             }
         }
@@ -1135,7 +978,7 @@ namespace Sudoku.Maui.Pages
             DetachWindowKeyHandler();
             DetachWindowFocusHandler();
             // Stop timer when leaving the page
-            StopTimer();
+            _viewModel.StopTimer();
             
             // Save game state when navigating away
             _ = SaveCurrentGameStateAsync();
@@ -1148,13 +991,13 @@ namespace Sudoku.Maui.Pages
         private async Task ShowDifficultySelectionAsync(bool canDismiss = true)
         {
             // Pause timer while modal is open
-            StopTimer();
+            _viewModel.StopTimer();
             
             var settings = _settingsService.LoadSettings();
             var statistics = _settingsService.LoadStatistics();
             
             // Determine last played difficulty from settings or saved game state
-            Models.DifficultyLevel? lastPlayed = settings.LastPlayedDifficulty;
+            CoreDifficulty? lastPlayed = settings.LastPlayedDifficulty;
             
             await DifficultyPopup.ShowAsync(lastPlayed, statistics, canDismiss);
         }
@@ -1162,7 +1005,7 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Handles difficulty selection from the popup.
         /// </summary>
-        private async void OnDifficultySelected(object? sender, Models.DifficultyLevel difficulty)
+        private async void OnDifficultySelected(object? sender, CoreDifficulty difficulty)
         {
             await StartNewGameAsync(difficulty);
         }
@@ -1173,10 +1016,17 @@ namespace Sudoku.Maui.Pages
         private void OnDifficultyPopupDismissed(object? sender, EventArgs e)
         {
             // User dismissed the modal without selecting - resume timer if puzzle not solved
-            if (!_isPuzzleSolved && _gameTimer != null)
+            if (!_viewModel.IsPuzzleSolved)
             {
-                StartTimer();
+                _viewModel.StartTimer();
             }
         }
     }
 }
+
+
+
+
+
+
+

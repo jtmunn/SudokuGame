@@ -1,4 +1,4 @@
-﻿using Sudoku.Core.Models;
+using Sudoku.Core.Models;
 
 namespace Sudoku.Maui.Controls
 {
@@ -128,12 +128,12 @@ namespace Sudoku.Maui.Controls
         {
             try
             {
-                if (Application.Current?.Resources != null)
+                if (Microsoft.Maui.Controls.Application.Current?.Resources != null)
                 {
                     Color gridBorderColor = Colors.Gray;
                     Color gridThickBorderColor = Colors.DarkBlue;
                     
-                    foreach (var dict in Application.Current.Resources.MergedDictionaries)
+                    foreach (var dict in Microsoft.Maui.Controls.Application.Current.Resources.MergedDictionaries)
                     {
                         if (dict.ContainsKey("GridBorderColor"))
                             gridBorderColor = (Color)dict["GridBorderColor"];
@@ -191,3 +191,4 @@ namespace Sudoku.Maui.Controls
         }
     }
 }
+

@@ -74,6 +74,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
+	  <ProjectReference Include="..\Sudoku.Application\Sudoku.Application.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -108,7 +109,14 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
-
+	
+	<!-- Documentation files from  docs folder -->
+	<ItemGroup>
+		<None Include="..\docs\*.*">
+			<Link>Documentation\%(Filename)%(Extension)</Link>
+		</None>
+	</ItemGroup>
+	
 	<!-- Documentation files from root directory -->
 	<ItemGroup>
 	  <None Include="..\*.md">
@@ -122,8 +130,5 @@
 	    <Link>Documentation\.github\%(Filename)%(Extension)</Link>
 	  </None>
 	</ItemGroup>
-	<ItemGroup>
-	  <None Remove="..\README_BACKUP.md" />
-	</ItemGroup>
-
+	
 </Project>

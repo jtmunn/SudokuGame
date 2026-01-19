@@ -1,11 +1,22 @@
-namespace Sudoku.Maui.Models
+using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
+
+namespace Sudoku.Application.Models
 {
+    /// <summary>
+    /// Application theme modes (platform-agnostic).
+    /// </summary>
+    public enum ThemeMode
+    {
+        Light = 0,
+        Dark = 1
+    }
+
     public class GameSettings
     {
-        public DifficultyLevel? LastPlayedDifficulty { get; set; }
+        public CoreDifficulty? LastPlayedDifficulty { get; set; }
         public bool ShowHintButton { get; set; } = true;
         public bool ShowCheckButton { get; set; } = true;
-        public AppTheme Theme { get; set; } = AppTheme.Light;
+        public ThemeMode Theme { get; set; } = ThemeMode.Light;
         
         // Window size persistence
         public double? WindowWidth { get; set; }
@@ -16,13 +27,5 @@ namespace Sudoku.Maui.Models
         public double? RestoredWidth { get; set; }
         public double? RestoredHeight { get; set; }
     }
-
-    public enum DifficultyLevel
-    {
-        Easy,
-        Medium,
-        Hard,
-        Expert,
-        Evil
-    }
 }
+

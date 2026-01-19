@@ -1,4 +1,4 @@
-namespace Sudoku.Maui.Models
+namespace Sudoku.Application.Models
 {
     /// <summary>
     /// Represents the complete state of an active Sudoku game.
@@ -42,3 +42,4 @@ namespace Sudoku.Maui.Models
         public DateTime SavedAt { get; set; }
     }
 }
+

@@ -1,10 +1,11 @@
-using Sudoku.Maui.Models;
+using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
+using Sudoku.Application.Models;
 
 namespace Sudoku.Maui.Controls;
 
 public partial class DifficultySelectionPopup : ContentView
 {
-    public event EventHandler<DifficultyLevel>? DifficultySelected;
+    public event EventHandler<CoreDifficulty>? DifficultySelected;
     public event EventHandler? Dismissed;
     
     private bool _canDismiss = true; // Track if modal can be dismissed
@@ -20,7 +21,7 @@ public partial class DifficultySelectionPopup : ContentView
     /// <param name="lastPlayedDifficulty">The last played difficulty to highlight, or null.</param>
     /// <param name="statistics">Game statistics containing best times.</param>
     /// <param name="canDismiss">Whether the popup can be dismissed without selecting (false for first launch).</param>
-    public async Task ShowAsync(DifficultyLevel? lastPlayedDifficulty, GameStatistics statistics, bool canDismiss = true)
+    public async Task ShowAsync(CoreDifficulty? lastPlayedDifficulty, GameStatistics statistics, bool canDismiss = true)
     {
         _canDismiss = canDismiss;
         
@@ -28,11 +29,11 @@ public partial class DifficultySelectionPopup : ContentView
         CloseButton.IsVisible = canDismiss;
         
         // Update best times for each difficulty
-        UpdateBestTime(DifficultyLevel.Easy, statistics.BestTimeEasy, EasyBestTime);
-        UpdateBestTime(DifficultyLevel.Medium, statistics.BestTimeMedium, MediumBestTime);
-        UpdateBestTime(DifficultyLevel.Hard, statistics.BestTimeHard, HardBestTime);
-        UpdateBestTime(DifficultyLevel.Expert, statistics.BestTimeExpert, ExpertBestTime);
-        UpdateBestTime(DifficultyLevel.Evil, statistics.BestTimeEvil, EvilBestTime);
+        UpdateBestTime(CoreDifficulty.Easy, statistics.BestTimeEasy, EasyBestTime);
+        UpdateBestTime(CoreDifficulty.Medium, statistics.BestTimeMedium, MediumBestTime);
+        UpdateBestTime(CoreDifficulty.Hard, statistics.BestTimeHard, HardBestTime);
+        UpdateBestTime(CoreDifficulty.Expert, statistics.BestTimeExpert, ExpertBestTime);
+        UpdateBestTime(CoreDifficulty.Evil, statistics.BestTimeEvil, EvilBestTime);
         
         // Hide all "Last Played" badges
         EasyLastPlayedBadge.IsVisible = false;
@@ -46,19 +47,19 @@ public partial class DifficultySelectionPopup : ContentView
         {
             switch (lastPlayedDifficulty.Value)
             {
-                case DifficultyLevel.Easy:
+                case CoreDifficulty.Easy:
                     EasyLastPlayedBadge.IsVisible = true;
                     break;
-                case DifficultyLevel.Medium:
+                case CoreDifficulty.Medium:
                     MediumLastPlayedBadge.IsVisible = true;
                     break;
-                case DifficultyLevel.Hard:
+                case CoreDifficulty.Hard:
                     HardLastPlayedBadge.IsVisible = true;
                     break;
-                case DifficultyLevel.Expert:
+                case CoreDifficulty.Expert:
                     ExpertLastPlayedBadge.IsVisible = true;
                     break;
-                case DifficultyLevel.Evil:
+                case CoreDifficulty.Evil:
                     EvilLastPlayedBadge.IsVisible = true;
                     break;
             }
@@ -88,7 +89,7 @@ public partial class DifficultySelectionPopup : ContentView
         IsVisible = false;
     }
     
-    private void UpdateBestTime(DifficultyLevel difficulty, int? bestTimeInSeconds, Label label)
+    private void UpdateBestTime(CoreDifficulty difficulty, int? bestTimeInSeconds, Label label)
     {
         if (bestTimeInSeconds.HasValue)
         {
@@ -111,31 +112,31 @@ public partial class DifficultySelectionPopup : ContentView
     private async void OnEasyTapped(object? sender, TappedEventArgs e)
     {
         await HideAsync();
-        DifficultySelected?.Invoke(this, DifficultyLevel.Easy);
+        DifficultySelected?.Invoke(this, CoreDifficulty.Easy);
     }
     
     private async void OnMediumTapped(object? sender, TappedEventArgs e)
     {
         await HideAsync();
-        DifficultySelected?.Invoke(this, DifficultyLevel.Medium);
+        DifficultySelected?.Invoke(this, CoreDifficulty.Medium);
     }
     
     private async void OnHardTapped(object? sender, TappedEventArgs e)
     {
         await HideAsync();
-        DifficultySelected?.Invoke(this, DifficultyLevel.Hard);
+        DifficultySelected?.Invoke(this, CoreDifficulty.Hard);
     }
     
     private async void OnExpertTapped(object? sender, TappedEventArgs e)
     {
         await HideAsync();
-        DifficultySelected?.Invoke(this, DifficultyLevel.Expert);
+        DifficultySelected?.Invoke(this, CoreDifficulty.Expert);
     }
     
     private async void OnEvilTapped(object? sender, TappedEventArgs e)
     {
         await HideAsync();
-        DifficultySelected?.Invoke(this, DifficultyLevel.Evil);
+        DifficultySelected?.Invoke(this, CoreDifficulty.Evil);
     }
     
     private async void OnCloseClicked(object? sender, EventArgs e)
@@ -157,3 +158,6 @@ public partial class DifficultySelectionPopup : ContentView
         Dismissed?.Invoke(this, EventArgs.Empty);
     }
 }
+
+
+

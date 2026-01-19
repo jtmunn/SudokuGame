@@ -1,5 +1,6 @@
 using System.Text.Json;
-using Sudoku.Maui.Models;
+using AppModels = Sudoku.Application.Models;
+using Sudoku.Application.Services;
 
 namespace Sudoku.Maui.Services
 {
@@ -9,8 +10,8 @@ namespace Sudoku.Maui.Services
         private const string StatisticsFileName = "sudoku_statistics.json";
         private readonly string _settingsFilePath;
         private readonly string _statisticsFilePath;
-        private GameSettings? _cachedSettings;
-        private GameStatistics? _cachedStatistics;
+        private AppModels.GameSettings? _cachedSettings;
+        private AppModels.GameStatistics? _cachedStatistics;
 
         public SettingsService()
         {
@@ -18,14 +19,14 @@ namespace Sudoku.Maui.Services
             _statisticsFilePath = Path.Combine(FileSystem.AppDataDirectory, StatisticsFileName);
         }
 
-        public GameSettings LoadSettings()
+        public AppModels.GameSettings LoadSettings()
         {
             try
             {
                 if (File.Exists(_settingsFilePath))
                 {
                     var json = File.ReadAllText(_settingsFilePath);
-                    _cachedSettings = JsonSerializer.Deserialize<GameSettings>(json) ?? CreateDefaultSettings();
+                    _cachedSettings = JsonSerializer.Deserialize<AppModels.GameSettings>(json) ?? CreateDefaultSettings();
                 }
                 else
                 {
@@ -43,12 +44,12 @@ namespace Sudoku.Maui.Services
             return _cachedSettings;
         }
 
-        public async Task<GameSettings> GetSettingsAsync()
+        public async Task<AppModels.GameSettings> GetSettingsAsync()
         {
             return await Task.Run(() => LoadSettings());
         }
 
-        public async Task SaveSettingsAsync(GameSettings settings)
+        public async Task SaveSettingsAsync(AppModels.GameSettings settings)
         {
             _cachedSettings = settings;
             
@@ -63,7 +64,7 @@ namespace Sudoku.Maui.Services
             }
         }
 
-        public GameStatistics LoadStatistics()
+        public AppModels.GameStatistics LoadStatistics()
         {
             if (_cachedStatistics != null)
             {
@@ -75,23 +76,23 @@ namespace Sudoku.Maui.Services
                 if (File.Exists(_statisticsFilePath))
                 {
                     var json = File.ReadAllText(_statisticsFilePath);
-                    _cachedStatistics = JsonSerializer.Deserialize<GameStatistics>(json) ?? new GameStatistics();
+                    _cachedStatistics = JsonSerializer.Deserialize<AppModels.GameStatistics>(json) ?? new AppModels.GameStatistics();
                 }
                 else
                 {
-                    _cachedStatistics = new GameStatistics();
+                    _cachedStatistics = new AppModels.GameStatistics();
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"SettingsService: Error loading statistics: {ex.Message}");
-                _cachedStatistics = new GameStatistics();
+                _cachedStatistics = new AppModels.GameStatistics();
             }
 
             return _cachedStatistics;
         }
 
-        public async Task SaveStatisticsAsync(GameStatistics statistics)
+        public async Task SaveStatisticsAsync(AppModels.GameStatistics statistics)
         {
             _cachedStatistics = statistics;
             
@@ -106,15 +107,16 @@ namespace Sudoku.Maui.Services
             }
         }
 
-        private GameSettings CreateDefaultSettings()
+        private AppModels.GameSettings CreateDefaultSettings()
         {
-            return new GameSettings
+            return new AppModels.GameSettings
             {
                 LastPlayedDifficulty = null,
                 ShowHintButton = true,
                 ShowCheckButton = true,
-                Theme = AppTheme.Light
+                Theme = AppModels.ThemeMode.Light
             };
         }
     }
 }
+

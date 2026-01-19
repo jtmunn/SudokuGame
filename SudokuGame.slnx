@@ -1,7 +1,11 @@
 <Solution>
+  <Project Path="Sudoku.Application/Sudoku.Application.csproj" />
   <Project Path="Sudoku.Core.Tests/Sudoku.Core.Tests.csproj" />
   <Project Path="Sudoku.Core/Sudoku.Core.csproj" />
+  <Project Path="Sudoku.Application.Tests/Sudoku.Application.Tests.csproj" />
   <Project Path="Sudoku.Maui/Sudoku.Maui.csproj">
     <Deploy />
   </Project>
 </Solution>
+
+

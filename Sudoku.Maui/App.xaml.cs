@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sudoku.Application.Services;
 using Sudoku.Maui.Services;
 using Sudoku.Maui.Pages;
 
@@ -32,8 +33,9 @@ namespace Sudoku.Maui
             if (settingsService != null)
             {
                 var settings = settingsService.LoadSettings();
-                UserAppTheme = settings.Theme;
-                LoadTheme(settings.Theme);
+                var appTheme = ToMauiTheme(settings.Theme);
+                UserAppTheme = appTheme;
+                LoadTheme(appTheme);
             }
             
             // NOW create the window - theme is already loaded
@@ -341,12 +343,23 @@ namespace Sudoku.Maui
                 settings.RestoredHeight = _lastRestoredHeight;
 #endif
                 
+                
                 _ = settingsService.SaveSettingsAsync(settings);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"SaveWindowSize exception: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Converts Application ThemeMode to MAUI AppTheme.
+        /// </summary>
+        private static AppTheme ToMauiTheme(Sudoku.Application.Models.ThemeMode theme)
+        {
+            return theme == Sudoku.Application.Models.ThemeMode.Dark 
+                ? AppTheme.Dark 
+                : AppTheme.Light;
         }
     }
 }

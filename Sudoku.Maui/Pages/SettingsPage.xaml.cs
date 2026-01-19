@@ -1,12 +1,12 @@
-using Sudoku.Maui.Models;
-using Sudoku.Maui.Services;
+using AppModels = Sudoku.Application.Models;
+using Sudoku.Application.Services;
 
 namespace Sudoku.Maui.Pages
 {
     public partial class SettingsPage : ContentPage
     {
         private readonly ISettingsService _settingsService;
-        private GameSettings _currentSettings;
+        private AppModels.GameSettings _currentSettings;
         private bool _isLoadingSettings; // Guard flag to prevent event handlers during initialization
 
         public SettingsPage(ISettingsService settingsService)
@@ -26,7 +26,7 @@ namespace Sudoku.Maui.Pages
         {
             _isLoadingSettings = true; // Set guard flag
 
-            ThemePicker.SelectedIndex = _currentSettings.Theme == AppTheme.Light ? 0 : 1;
+            ThemePicker.SelectedIndex = _currentSettings.Theme == AppModels.ThemeMode.Light ? 0 : 1;
             ShowHintSwitch.IsToggled = _currentSettings.ShowHintButton;
             ShowCheckSwitch.IsToggled = _currentSettings.ShowCheckButton;
 
@@ -38,18 +38,28 @@ namespace Sudoku.Maui.Pages
             if (_isLoadingSettings || ThemePicker.SelectedIndex == -1) // Check guard flag
                 return;
 
-            _currentSettings.Theme = ThemePicker.SelectedIndex == 0 ? AppTheme.Light : AppTheme.Dark;
+            // Update our enum
+            _currentSettings.Theme = ThemePicker.SelectedIndex == 0 
+                ? AppModels.ThemeMode.Light 
+                : AppModels.ThemeMode.Dark;
+            
+            // Convert to MAUI AppTheme for UI
+            var mauiTheme = _currentSettings.Theme == AppModels.ThemeMode.Dark 
+                ? AppTheme.Dark 
+                : AppTheme.Light;
             
             // Set UserAppTheme AND load the theme dictionary
-            Application.Current!.UserAppTheme = _currentSettings.Theme;
+            Microsoft.Maui.Controls.Application.Current!.UserAppTheme = mauiTheme;
             
-            if (Application.Current is App app)
+            if (Microsoft.Maui.Controls.Application.Current is App app)
             {
-                app.LoadTheme(_currentSettings.Theme);
+                app.LoadTheme(mauiTheme);
             }
+            
             
             await _settingsService.SaveSettingsAsync(_currentSettings);
         }
+
 
         private async void OnShowHintToggled(object? sender, ToggledEventArgs e)
         {
@@ -75,3 +85,4 @@ namespace Sudoku.Maui.Pages
         }
     }
 }
+

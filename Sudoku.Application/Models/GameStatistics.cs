@@ -1,4 +1,6 @@
-namespace Sudoku.Maui.Models
+using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
+
+namespace Sudoku.Application.Models
 {
     /// <summary>
     /// Tracks game statistics including best times per difficulty.
@@ -33,15 +35,15 @@ namespace Sudoku.Maui.Models
         /// <summary>
         /// Gets the best time for a specific difficulty level.
         /// </summary>
-        public int? GetBestTime(DifficultyLevel difficulty)
+        public int? GetBestTime(CoreDifficulty difficulty)
         {
             return difficulty switch
             {
-                DifficultyLevel.Easy => BestTimeEasy,
-                DifficultyLevel.Medium => BestTimeMedium,
-                DifficultyLevel.Hard => BestTimeHard,
-                DifficultyLevel.Expert => BestTimeExpert,
-                DifficultyLevel.Evil => BestTimeEvil,
+                CoreDifficulty.Easy => BestTimeEasy,
+                CoreDifficulty.Medium => BestTimeMedium,
+                CoreDifficulty.Hard => BestTimeHard,
+                CoreDifficulty.Expert => BestTimeExpert,
+                CoreDifficulty.Evil => BestTimeEvil,
                 _ => null
             };
         }
@@ -49,26 +51,27 @@ namespace Sudoku.Maui.Models
         /// <summary>
         /// Sets the best time for a specific difficulty level.
         /// </summary>
-        public void SetBestTime(DifficultyLevel difficulty, int timeInSeconds)
+        public void SetBestTime(CoreDifficulty difficulty, int timeInSeconds)
         {
             switch (difficulty)
             {
-                case DifficultyLevel.Easy:
+                case CoreDifficulty.Easy:
                     BestTimeEasy = timeInSeconds;
                     break;
-                case DifficultyLevel.Medium:
+                case CoreDifficulty.Medium:
                     BestTimeMedium = timeInSeconds;
                     break;
-                case DifficultyLevel.Hard:
+                case CoreDifficulty.Hard:
                     BestTimeHard = timeInSeconds;
                     break;
-                case DifficultyLevel.Expert:
+                case CoreDifficulty.Expert:
                     BestTimeExpert = timeInSeconds;
                     break;
-                case DifficultyLevel.Evil:
+                case CoreDifficulty.Evil:
                     BestTimeEvil = timeInSeconds;
                     break;
             }
         }
     }
 }
+

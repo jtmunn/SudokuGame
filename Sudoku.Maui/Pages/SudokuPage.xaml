@@ -102,7 +102,7 @@
                 <!-- Left: Difficulty Level -->
                 <Label Grid.Column="0" 
                        x:Name="DifficultyLabel"
-                       Text="Difficulty: Easy"
+                       Text="{Binding CurrentDifficulty, StringFormat='Difficulty: {0}'}"
                        FontSize="18"
                        FontAttributes="Bold"
                        VerticalOptions="Center"
@@ -112,7 +112,7 @@
                 <!-- Center: Timer -->
                 <Label Grid.Column="1" 
                        x:Name="TimerLabel"
-                       Text="Time: 00:00"
+                       Text="{Binding TimerText, StringFormat='Time: {0}'}"
                        FontSize="20"
                        FontAttributes="Bold"
                        HorizontalOptions="Center"

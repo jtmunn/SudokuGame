@@ -1,6 +1,6 @@
-using Sudoku.Maui.Models;
+using Sudoku.Application.Models;
 
-namespace Sudoku.Maui.Services
+namespace Sudoku.Application.Services
 {
     public interface ISettingsService
     {
@@ -12,3 +12,4 @@ namespace Sudoku.Maui.Services
         Task SaveStatisticsAsync(GameStatistics statistics);
     }
 }
+

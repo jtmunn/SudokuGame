@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+<PropertyGroup>
+  <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+  <ImplicitUsings>enable</ImplicitUsings>
+  <Nullable>enable</Nullable>
+  <IsPackable>false</IsPackable>
+  <IsTestProject>true</IsTestProject>
+  <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+  <UseMaui>false</UseMaui>
+  <EnableMauiResourceGeneration>false</EnableMauiResourceGeneration>
+  <_MauiForceResizetizer>false</_MauiForceResizetizer>
+  <IncludeMauiResources>false</IncludeMauiResources>
+  <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+</PropertyGroup>
+  
+<Target Name="SkipResizetizer" BeforeTargets="ResizetizeImages">
+  <PropertyGroup>
+    <SkipResizetizeImages>true</SkipResizetizeImages>
+  </PropertyGroup>
+</Target>
+  
+<ItemGroup>
+  <!-- Exclude MAUI resources from test project -->
+  <MauiImage Remove="@(MauiImage)" />
+  <MauiIcon Remove="@(MauiIcon)" />
+  <MauiSplashScreen Remove="@(MauiSplashScreen)" />
+</ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
+    <ProjectReference Include="..\Sudoku.Application\Sudoku.Application.csproj" />
+  </ItemGroup>
+
+</Project>

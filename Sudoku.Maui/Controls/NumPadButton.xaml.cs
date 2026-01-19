@@ -96,9 +96,9 @@ public partial class NumPadButton : ContentView
 
     private Color GetThemeColor(string key)
     {
-        if (Application.Current?.Resources.MergedDictionaries != null)
+        if (Microsoft.Maui.Controls.Application.Current?.Resources.MergedDictionaries != null)
         {
-            foreach (var dict in Application.Current.Resources.MergedDictionaries)
+            foreach (var dict in Microsoft.Maui.Controls.Application.Current.Resources.MergedDictionaries)
             {
                 if (dict.ContainsKey(key))
                     return (Color)dict[key];
@@ -146,3 +146,4 @@ public partial class NumPadButton : ContentView
         }
     }
 }
+

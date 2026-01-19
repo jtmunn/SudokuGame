@@ -1,6 +1,6 @@
-using Sudoku.Maui.Models;
+using Sudoku.Application.Models;
 
-namespace Sudoku.Maui.Services
+namespace Sudoku.Application.Services
 {
     /// <summary>
     /// Service for persisting and restoring game state.
@@ -29,3 +29,4 @@ namespace Sudoku.Maui.Services
         bool HasSavedGame();
     }
 }
+
