@@ -1,4 +1,4 @@
-using Sudoku.Core.Models;
+﻿using Sudoku.Core.Models;
 using Sudoku.Core.Services;
 using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
 using Sudoku.Application.Services;
