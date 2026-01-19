@@ -1,4 +1,4 @@
-﻿using Sudoku.Core.Models;
+using Sudoku.Core.Models;
 using Sudoku.Core.Services;
 using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
 using Sudoku.Application.Services;
@@ -32,38 +32,33 @@ namespace Sudoku.Maui.Pages
         // Timer/state/statistics now in ViewModel
         private bool _isFirstAppearing = true;
 
-        // Colors for visual feedback - use safe access with fallback
-        private Color DefaultCellColor => GetThemeColor("CellDefaultColor", Colors.White);
-        private Color GivenCellColor => GetThemeColor("CellGivenColor", Colors.White);
-        private Color SelectedCellColor => GetThemeColor("CellSelectedColor", Colors.LightBlue);
-        private Color ErrorCellColor => GetThemeColor("CellErrorColor", Colors.Red);
-        private Color HighlightCellColor => GetThemeColor("CellHighlightColor", Colors.LightGray);
-        private Color LightHighlightCellColor => GetThemeColor("CellLightHighlightColor", Colors.LightGray);
-        private Color MatchingNumberColor => GetThemeColor("CellMatchingNumberColor", Colors.Gray);
-        private Color CellTextColor => GetThemeColor("CellUserTextColor", Colors.Black);
-        private Color GivenTextColor => GetThemeColor("CellGivenTextColor", Colors.Black);
-        private Color BorderColor => GetThemeColor("GridBorderColor", Colors.Gray);
-        private Color ThickBorderColor => GetThemeColor("GridThickBorderColor", Colors.DarkBlue);
+        // Colors for visual feedback - loaded from theme
+        private Color DefaultCellColor => GetThemeColor("CellDefaultColor");
+        private Color GivenCellColor => GetThemeColor("CellGivenColor");
+        private Color SelectedCellColor => GetThemeColor("CellSelectedColor");
+        private Color ErrorCellColor => GetThemeColor("CellErrorColor");
+        private Color HighlightCellColor => GetThemeColor("CellHighlightColor");
+        private Color LightHighlightCellColor => GetThemeColor("CellLightHighlightColor");
+        private Color MatchingNumberColor => GetThemeColor("CellMatchingNumberColor");
+        private Color CellTextColor => GetThemeColor("CellUserTextColor");
+        private Color GivenTextColor => GetThemeColor("CellGivenTextColor");
+        private Color BorderColor => GetThemeColor("GridBorderColor");
+        private Color ThickBorderColor => GetThemeColor("GridThickBorderColor");
 
-        private Color GetThemeColor(string key, Color fallback)
+        private Color GetThemeColor(string key)
         {
-            try
+            if (Microsoft.Maui.Controls.Application.Current?.Resources != null)
             {
-                if (Microsoft.Maui.Controls.Application.Current?.Resources != null)
+                // Search through merged dictionaries for theme colors
+                foreach (var dict in Microsoft.Maui.Controls.Application.Current.Resources.MergedDictionaries)
                 {
-                    // Search through merged dictionaries like SudokuGridView does
-                    foreach (var dict in Microsoft.Maui.Controls.Application.Current.Resources.MergedDictionaries)
-                    {
-                        if (dict.ContainsKey(key))
-                            return (Color)dict[key];
-                    }
+                    if (dict.ContainsKey(key))
+                        return (Color)dict[key];
                 }
             }
-            catch
-            {
-                // Resource not available
-            }
-            return fallback;
+            
+            // Fail fast - color MUST exist in theme
+            throw new InvalidOperationException($"Theme color '{key}' not found in any loaded theme. Ensure both LightTheme.xaml and DarkTheme.xaml define this color.");
         }
 
         public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
@@ -78,7 +73,7 @@ namespace Sudoku.Maui.Pages
             _settingsService = settingsService;
             _gameStateService = gameStateService;
             _viewModel = viewModel;
-            _highlightManager = new CellHighlightManager(GetThemeColor);
+            _highlightManager = new CellHighlightManager((key, _) => GetThemeColor(key));
             
             // Set BindingContext for XAML data binding
             BindingContext = _viewModel;
@@ -296,6 +291,40 @@ namespace Sudoku.Maui.Pages
         }
         
         /// <summary>
+        /// Restarts the current game by clearing all user-entered values while keeping given cells.
+        /// </summary>
+        private void RestartCurrentGame()
+        {
+            // Clear all non-given cells
+            for (int row = 0; row < SudokuBoard.Size; row++)
+            {
+                for (int col = 0; col < SudokuBoard.Size; col++)
+                {
+                    var cell = _currentBoard.GetCell(row, col);
+                    if (!cell.IsGiven)
+                    {
+                        cell.Value = 0;
+                        cell.HasError = false;
+                    }
+                }
+            }
+            
+            // Update UI
+            UpdateGrid();
+            ClearSelection();
+            
+            // Reset timer and statistics
+            _viewModel.ResetTimer();
+            _viewModel.StartTimer();
+            _viewModel.IsPuzzleSolved = false;
+            _viewModel.MistakesCount = 0;
+            _viewModel.HintsUsedCount = 0;
+            _viewModel.HasUserMadeEntries = false;
+            
+            // Note: We keep _solution as it's still the same puzzle
+        }
+        
+        /// <summary>
         /// Restores a game from saved state.
         /// </summary>
         private void RestoreGame(AppModels.GameState gameState)
@@ -387,12 +416,6 @@ namespace Sudoku.Maui.Pages
                 _ => Core.Services.DifficultyLevel.Easy
             };
         }
-
-        
-        
-        
-        
-        
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
@@ -415,6 +438,34 @@ namespace Sudoku.Maui.Pages
                 
                 // Show difficulty selection modal
                 await ShowDifficultySelectionAsync();
+            }
+            finally
+            {
+                _viewModel.IsProcessingInput = false;
+            }
+        }
+        
+        private async void OnRestartClicked(object? sender, EventArgs e)
+        {
+            if (_viewModel.IsProcessingInput)
+                return;
+            
+            _viewModel.IsProcessingInput = true;
+            
+            try
+            {
+                // Only prompt if puzzle is not solved AND user has made any entries
+                if (!_viewModel.IsPuzzleSolved && _viewModel.HasUserMadeEntries)
+                {
+                    bool answer = await DisplayAlertAsync("Restart Puzzle?", "All progress will be lost. Restart this puzzle?", "Yes", "No");
+                    if (!answer)
+                    {
+                        return;
+                    }
+                }
+                
+                // Restart the current puzzle
+                RestartCurrentGame();
             }
             finally
             {

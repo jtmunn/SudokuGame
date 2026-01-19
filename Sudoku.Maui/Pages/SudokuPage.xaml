@@ -84,6 +84,40 @@
             </Setter>
         </Style>
         
+        <Style x:Key="HeaderIconButtonStyle" TargetType="Button">
+            <Setter Property="WidthRequest" Value="40"/>
+            <Setter Property="HeightRequest" Value="40"/>
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="FontFamily" Value="FontAwesome"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderWidth" Value="0"/>
+            <Setter Property="BackgroundColor" Value="Transparent"/>
+            <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="Opacity" Value="1.0"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="Opacity" Value="0.7"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        
         <x:String x:Key="IconLightbulb">&#xf0eb;</x:String>
         <x:String x:Key="IconCheck">&#xf00c;</x:String>
     </ContentPage.Resources>
@@ -123,30 +157,22 @@
                 <HorizontalStackLayout Grid.Column="2" 
                                       Spacing="16"
                                       HorizontalOptions="End">
+                    <Button x:Name="RestartButton"
+                            Text="&#xf01e;"
+                            Clicked="OnRestartClicked"
+                            Style="{StaticResource HeaderIconButtonStyle}"
+                            ToolTipProperties.Text="Restart Game"/>
+                    
                     <Button x:Name="NewGameButton"
                             Text="&#xf067;"
-                            FontFamily="FontAwesome"
-                            FontSize="24"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            Padding="0"
-                            BorderWidth="0"
-                            BackgroundColor="Transparent"
-                            TextColor="{DynamicResource ButtonTextColor}"
                             Clicked="OnNewGameClicked"
+                            Style="{StaticResource HeaderIconButtonStyle}"
                             ToolTipProperties.Text="New Game"/>
                     
                     <Button x:Name="SettingsButton"
                             Text="&#xf013;"
-                            FontFamily="FontAwesome"
-                            FontSize="24"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            Padding="0"
-                            BorderWidth="0"
-                            BackgroundColor="Transparent"
-                            TextColor="{DynamicResource ButtonTextColor}"
                             Clicked="OnSettingsClicked"
+                            Style="{StaticResource HeaderIconButtonStyle}"
                             ToolTipProperties.Text="Settings"/>
                 </HorizontalStackLayout>
             </Grid>

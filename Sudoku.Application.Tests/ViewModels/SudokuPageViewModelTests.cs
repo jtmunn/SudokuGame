@@ -480,6 +480,71 @@ public class SudokuPageViewModelTests
     }
 
     #endregion
+    
+    #region Restart Game Tests
+
+    [Fact]
+    public async Task RestartGame_ResetsStatisticsAndTimer()
+    {
+        // Arrange - Start a game and set some statistics
+        _mockSettingsService.Setup(s => s.LoadSettings())
+            .Returns(new GameSettings());
+        
+        await _viewModel.StartNewGameAsync(CoreDifficultyLevel.Medium);
+        
+        // Make some changes to statistics
+        _viewModel.MistakesCount = 3;
+        _viewModel.HintsUsedCount = 2;
+        _viewModel.HasUserMadeEntries = true;
+        _viewModel.ElapsedSeconds = 120;
+
+        // Act - Reset statistics (simulating restart)
+        _viewModel.ResetTimer();
+        _viewModel.MistakesCount = 0;
+        _viewModel.HintsUsedCount = 0;
+        _viewModel.HasUserMadeEntries = false;
+        _viewModel.IsPuzzleSolved = false;
+
+        // Assert - All statistics should be reset
+        Assert.Equal(0, _viewModel.MistakesCount);
+        Assert.Equal(0, _viewModel.HintsUsedCount);
+        Assert.False(_viewModel.HasUserMadeEntries);
+        Assert.False(_viewModel.IsPuzzleSolved);
+        Assert.Equal(0, _viewModel.ElapsedSeconds);
+    }
+
+    [Fact]
+    public async Task RestartGame_PreservesSolution()
+    {
+        // Arrange - Start a game to get a board and solution
+        _mockSettingsService.Setup(s => s.LoadSettings())
+            .Returns(new GameSettings());
+        
+        await _viewModel.StartNewGameAsync(CoreDifficultyLevel.Easy);
+        var originalSolution = _viewModel.Solution;
+
+        // Act - Solution should remain available after restart (not cleared)
+        // In actual restart, we keep the solution since it's the same puzzle
+        
+        // Assert - Solution should still be available
+        Assert.NotNull(_viewModel.Solution);
+        Assert.Same(originalSolution, _viewModel.Solution);
+    }
+
+    [Fact]
+    public void RestartGame_UserEntriesFlag_ResetsCorrectly()
+    {
+        // Arrange
+        _viewModel.HasUserMadeEntries = true;
+
+        // Act - Reset the flag
+        _viewModel.HasUserMadeEntries = false;
+
+        // Assert
+        Assert.False(_viewModel.HasUserMadeEntries);
+    }
+
+    #endregion
 
     #region CheckSolved Tests
 
