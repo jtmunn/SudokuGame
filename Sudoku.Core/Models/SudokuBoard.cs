@@ -236,7 +236,7 @@ namespace Sudoku.Core.Models
 
         /// <summary>
         /// Serializes the board to a string (for save/load functionality).
-        /// Format: 81 digits where 0 represents empty cells, with 'G' suffix for given cells.
+        /// Format: Values|IsGiven|HasError (3 pipe-delimited sections of 81 characters each).
         /// </summary>
         public string Serialize()
         {
@@ -250,6 +250,11 @@ namespace Sudoku.Core.Models
             {
                 sb.Append(cell.IsGiven ? '1' : '0');
             }
+            sb.Append('|');
+            foreach (var cell in GetAllCells())
+            {
+                sb.Append(cell.HasError ? '1' : '0');
+            }
             return sb.ToString();
         }
 
@@ -260,7 +265,8 @@ namespace Sudoku.Core.Models
         {
             var board = new SudokuBoard();
             var parts = data.Split('|');
-            if (parts.Length != 2 || parts[0].Length != 81 || parts[1].Length != 81)
+            
+            if (parts.Length != 3 || parts[0].Length != 81 || parts[1].Length != 81 || parts[2].Length != 81)
             {
                 throw new ArgumentException("Invalid board data format.");
             }
@@ -272,7 +278,11 @@ namespace Sudoku.Core.Models
                 {
                     int value = int.Parse(parts[0][index].ToString());
                     bool isGiven = parts[1][index] == '1';
+                    bool hasError = parts[2][index] == '1';
+                    
                     board.SetCell(row, col, value, isGiven);
+                    board.GetCell(row, col).HasError = hasError;
+                    
                     index++;
                 }
             }

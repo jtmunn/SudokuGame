@@ -324,9 +324,10 @@ namespace Sudoku.Core.Tests.Models
             // Assert
             Assert.Contains('|', serialized);
             var parts = serialized.Split('|');
-            Assert.Equal(2, parts.Length);
+            Assert.Equal(3, parts.Length);
             Assert.Equal(81, parts[0].Length);
             Assert.Equal(81, parts[1].Length);
+            Assert.Equal(81, parts[2].Length);
         }
 
         [Fact]
@@ -346,6 +347,24 @@ namespace Sudoku.Core.Tests.Models
             Assert.Equal(3, deserialized.GetCell(0, 1).Value);
             Assert.True(deserialized.GetCell(0, 0).IsGiven);
             Assert.False(deserialized.GetCell(0, 1).IsGiven);
+        }
+
+        [Fact]
+        public void Serialize_PreservesHasErrorState()
+        {
+            // Arrange
+            var board = new SudokuBoard();
+            board.SetCell(0, 0, 5, isGiven: true);
+            board.SetCell(0, 1, 3, isGiven: false);
+            board.GetCell(0, 1).HasError = true;
+
+            // Act
+            var serialized = board.Serialize();
+            var deserialized = SudokuBoard.Deserialize(serialized);
+
+            // Assert
+            Assert.False(deserialized.GetCell(0, 0).HasError);
+            Assert.True(deserialized.GetCell(0, 1).HasError);
         }
 
         [Theory]
