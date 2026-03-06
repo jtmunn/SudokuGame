@@ -755,6 +755,8 @@ namespace Sudoku.Maui.Pages
                 // Check if move conflicts with visible numbers
                 if (!_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
                 {
+                    // Invalid move (visible conflict) counts as a mistake
+                    _viewModel.MistakesCount++;
                     // Show conflict feedback - temporarily highlight cell as error
                     await ShowConflictFeedbackAsync();
                     return;

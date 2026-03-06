@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Sudoku.Core.Models;
 using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
@@ -283,38 +283,6 @@ namespace Sudoku.Application.ViewModels
         {
             Solution ??= _solver.GetSolution(CurrentBoard);
             return Solution != null ? _validator.CountCorrectCells(CurrentBoard, Solution) : 0;
-        }
-
-        /// <summary>
-        /// Applies a number to a cell and validates it.
-        /// </summary>
-        public bool ApplyNumber(int row, int col, int number)
-        {
-            var cell = CurrentBoard.GetCell(row, col);
-            if (cell.IsGiven)
-                return false;
-
-            if (!_validator.IsValidMove(CurrentBoard, row, col, number))
-            {
-                return false;
-            }
-
-            CurrentBoard.SetCell(row, col, number);
-            HasUserMadeEntries = true;
-            _validator.UpdateErrorFlags(CurrentBoard);
-
-            // Check against solution if available
-            if (Solution != null)
-            {
-                var solutionCell = Solution.GetCell(row, col);
-                if (cell.Value != solutionCell.Value)
-                {
-                    cell.HasError = true;
-                    MistakesCount++;
-                }
-            }
-
-            return true;
         }
 
         /// <summary>
