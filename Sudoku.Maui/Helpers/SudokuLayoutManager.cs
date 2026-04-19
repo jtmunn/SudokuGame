@@ -1,92 +1,64 @@
 namespace Sudoku.Maui.Helpers
 {
     /// <summary>
-    /// Manages layout calculations for the Sudoku page, including grid sizing,
-    /// button positioning, and responsive scaling.
+    /// Manages layout calculations for the Sudoku page.
+    /// Button sizes scale from window width (not grid), breaking the circular dependency.
+    /// Grid sizing is handled entirely by SquareLayoutControl in the MAUI layout pass.
+    /// Cell font sizes are derived from the actual rendered grid size via SizeChanged.
     /// </summary>
     public class SudokuLayoutManager
     {
-        // Constants for layout calculations
-        public const int MinGridSize = 360;
-        public const double BaseGridSize = 450.0;
-        public const double BaseButtonSize = 45.0;
-        public const double BaseFontSize = 20.0;
-        public const int GameAreaPadding = 10;
-        public const int ActionButtonMargin = 20;
-        public const int HeaderHeight = 56;
-        public const int NumberButtonMargin = 6;
-        
+        // Minimum square size for the SquareLayoutControl
+        public const double MinGridSize = 360;
+
         /// <summary>
-        /// Calculates the optimal grid size based on available space.
+        /// Calculates button and font sizes based on window dimensions.
+        /// No grid sizing — MAUI's star row + SquareLayoutControl handle that.
+        /// Both dimensions are considered so buttons don't steal vertical space from the grid.
         /// </summary>
-        public static LayoutCalculations Calculate(double windowWidth, double windowHeight, bool showActionButtons)
+        public static LayoutCalculations Calculate(double windowWidth, double windowHeight)
         {
             var result = new LayoutCalculations();
-            
-            // Calculate available space for grid (DO NOT reserve space for action buttons here)
-            double totalPadding = GameAreaPadding * 2;
-            var availableWidth = windowWidth - totalPadding;
-            
-            // Calculate scaled number pad height
-            double preliminarySize = Math.Max(MinGridSize, Math.Min(availableWidth, windowWidth));
-            double scale = preliminarySize / BaseGridSize;
-            double scaledButtonSize = Math.Round(BaseButtonSize * scale);
-            double scaledNumberPadHeight = scaledButtonSize + (NumberButtonMargin * 4) + 30;
-            
-            // Calculate available height
-            var availableHeight = windowHeight - HeaderHeight - scaledNumberPadHeight - (GameAreaPadding * 2);
-            
-            // Grid size is the smaller dimension, ALWAYS clamped to minimum
-            var size = Math.Min(availableWidth, availableHeight);
-            size = Math.Max(MinGridSize, size);
-            
-            result.GridSize = size;
-            result.Scale = size / BaseGridSize;
-            result.ScaledNumberPadHeight = scaledNumberPadHeight;
-            
-            // Calculate button sizes
-            result.ButtonSize = Math.Round(BaseButtonSize * result.Scale);
-            result.FontSize = Math.Round(BaseFontSize * result.Scale);
-            result.CountFontSize = Math.Round((BaseFontSize * result.Scale * 0.5) - 1);
-            result.CountMargin = new Thickness(0, Math.Round(result.ButtonSize * 0.15), Math.Round(result.ButtonSize * 0.15), 0);
-            
-            // Calculate action button positioning
-            if (showActionButtons)
-            {
-                double centerX = windowWidth / 2;
-                double buttonX = centerX + (result.GridSize / 2) + ActionButtonMargin;
-                double requiredWidth = buttonX + result.ButtonSize;
-                
-                result.HasSpaceForActionButtons = requiredWidth <= windowWidth;
-                
-                if (result.HasSpaceForActionButtons)
-                {
-                    double buttonY = (windowHeight - HeaderHeight - scaledNumberPadHeight) / 2;
-                    result.ActionButtonBounds = new Rect(buttonX, buttonY, result.ButtonSize, -1); // -1 = AutoSize
-                }
-            }
-            
-            // Calculate cell font size
-            result.CellFontSize = 30.0 * result.Scale;
-            
+
+            // Button size: 5 buttons per row with 12px margin each + padding.
+            // Width: (width - margins) / 8 gives a natural size that fits 5 across comfortably.
+            // Height: / 14 prevents buttons from eating grid space in landscape.
+            // Min of both handles portrait (width-limited) and landscape (height-limited).
+            double fromWidth = (windowWidth - 60) / 7.5;
+            double fromHeight = (windowHeight - 80) / 14.0;
+            result.ButtonSize = Math.Clamp(Math.Min(fromWidth, fromHeight), 44, 100);
+
+            // Font sizes proportional to button size
+            result.FontSize = Math.Round(result.ButtonSize * 0.4);
+            result.CountFontSize = Math.Max(8, Math.Round(result.ButtonSize * 0.18));
+            result.CountMargin = new Thickness(
+                0,
+                Math.Round(result.ButtonSize * 0.15),
+                Math.Round(result.ButtonSize * 0.15),
+                0);
+
             return result;
         }
+
+        /// <summary>
+        /// Calculates the cell font size from the actual rendered grid size.
+        /// Call this from GridBorder.SizeChanged so it uses the real measurement, not a prediction.
+        /// </summary>
+        public static double CalculateCellFontSize(double gridSize)
+        {
+            double cellSize = gridSize / 9.0;
+            return Math.Max(10, cellSize * 0.55);
+        }
     }
-    
+
     /// <summary>
     /// Results of layout calculations.
     /// </summary>
     public class LayoutCalculations
     {
-        public double GridSize { get; set; }
-        public double Scale { get; set; }
-        public double ScaledNumberPadHeight { get; set; }
         public double ButtonSize { get; set; }
         public double FontSize { get; set; }
         public double CountFontSize { get; set; }
         public Thickness CountMargin { get; set; }
-        public double CellFontSize { get; set; }
-        public bool HasSpaceForActionButtons { get; set; }
-        public Rect ActionButtonBounds { get; set; }
     }
 }

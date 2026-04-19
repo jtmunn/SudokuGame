@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:Sudoku.Maui"
              xmlns:controls="clr-namespace:Sudoku.Maui.Controls"
+             xmlns:helpers="clr-namespace:Sudoku.Maui.Helpers"
              x:Class="Sudoku.Maui.Pages.SudokuPage"
              Shell.NavBarIsVisible="False">
 
@@ -120,6 +121,7 @@
         
         <x:String x:Key="IconLightbulb">&#xf0eb;</x:String>
         <x:String x:Key="IconCheck">&#xf00c;</x:String>
+        <x:String x:Key="IconEraser">&#xf12d;</x:String>
     </ContentPage.Resources>
 
     <Grid>
@@ -178,110 +180,128 @@
             </Grid>
             
             <!-- Game Area -->
-            <AbsoluteLayout Grid.Row="1">
-                
-                <!-- Centered grid -->
+            <controls:SquareLayoutControl Grid.Row="1"
+                                          x:Name="SquareLayout"
+                                          MinimumSquareSize="{x:Static helpers:SudokuLayoutManager.MinGridSize}"
+                                          Margin="0,10,0,10"
+                                          HorizontalOptions="Center"
+                                          VerticalOptions="Center">
                 <Border StrokeThickness="0"
                         BackgroundColor="{DynamicResource SurfaceColor}"
                         Padding="0"
-                        x:Name="GridBorder"
-                        AbsoluteLayout.LayoutFlags="PositionProportional"
-                        AbsoluteLayout.LayoutBounds="0.5,0.5,AutoSize,AutoSize">
-                    
+                        x:Name="GridBorder">
                     <controls:SudokuGridView x:Name="SudokuGridView"
                                              BackgroundColor="{DynamicResource SurfaceColor}" />
                 </Border>
-                
-                <!-- Action Buttons -->
-                <VerticalStackLayout x:Name="ActionButtonStack"
-                                    Spacing="12"
-                                    AbsoluteLayout.LayoutFlags="None">
-                    <Button x:Name="HintButton"
-                            Text="{StaticResource IconLightbulb}"
-                            Clicked="OnHintClicked"
-                            Style="{StaticResource ActionButtonStyle}"
-                            BorderWidth="0"
-                            ToolTipProperties.Text="Get a hint"/>
-                    
-                    <Button x:Name="CheckButton"
-                            Text="{StaticResource IconCheck}"
-                            Clicked="OnCheckClicked"
-                            Style="{StaticResource ActionButtonStyle}"
-                            BorderWidth="0"
-                            ToolTipProperties.Text="Check for errors"/>
-                </VerticalStackLayout>
-            </AbsoluteLayout>
+            </controls:SquareLayoutControl>
 
-            <!-- Number Pad -->
-            <HorizontalStackLayout Grid.Row="2"
-                                  Spacing="0" 
-                                  HorizontalOptions="Center"
-                                  Margin="0,0,0,60"
-                                  x:Name="NumberPad">
-                <controls:NumPadButton Number="1" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="2" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="3" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="4" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="5" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="6" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="7" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="8" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-                <controls:NumPadButton Number="9" 
-                                      WidthRequest="80" 
-                                      HeightRequest="80"
-                                      Margin="6"
-                                      MainFontSize="32"
-                                      CountFontSize="10"
-                                      Tapped="OnNumPadButtonTapped"/>
-            </HorizontalStackLayout>
+            <!-- Bottom Bar: Action Buttons + Number Pad -->
+            <VerticalStackLayout Grid.Row="2"
+                                 HorizontalOptions="Center"
+                                 Spacing="0"
+                                 Margin="0,10,0,20"
+                                 x:Name="BottomBar">
+                
+                <!-- Row 1: Action Buttons with text labels -->
+                <HorizontalStackLayout Spacing="12"
+                                       HorizontalOptions="Center"
+                                       Margin="0,0,0,14"
+                                       x:Name="ActionButtonRow">
+                    <Button x:Name="HintButton"
+                            Text="Hint"
+                            Clicked="OnHintClicked"
+                            BackgroundColor="{DynamicResource SuccessButtonColor}"
+                            TextColor="{DynamicResource ButtonTextColor}"
+                            FontSize="16"
+                            HeightRequest="40"
+                            CornerRadius="20"
+                            Padding="16,0"
+                            BorderWidth="0"
+                            ContentLayout="Left,8"
+                            ToolTipProperties.Text="Get a hint">
+                        <Button.ImageSource>
+                            <FontImageSource FontFamily="FontAwesome"
+                                             Glyph="&#xf0eb;"
+                                             Size="16"
+                                             Color="{DynamicResource ButtonTextColor}"/>
+                        </Button.ImageSource>
+                    </Button>
+                    <Button x:Name="CheckButton"
+                            Text="Check"
+                            Clicked="OnCheckClicked"
+                            BackgroundColor="{DynamicResource SuccessButtonColor}"
+                            TextColor="{DynamicResource ButtonTextColor}"
+                            FontSize="16"
+                            HeightRequest="40"
+                            CornerRadius="20"
+                            Padding="16,0"
+                            BorderWidth="0"
+                            ContentLayout="Left,8"
+                            ToolTipProperties.Text="Check for errors">
+                        <Button.ImageSource>
+                            <FontImageSource FontFamily="FontAwesome"
+                                             Glyph="&#xf00c;"
+                                             Size="16"
+                                             Color="{DynamicResource ButtonTextColor}"/>
+                        </Button.ImageSource>
+                    </Button>
+                </HorizontalStackLayout>
+                
+                <!-- Row 2: Numbers 1-5 -->
+                <HorizontalStackLayout Spacing="0"
+                                       HorizontalOptions="Center"
+                                       x:Name="NumberPadRow1">
+                    <controls:NumPadButton Number="1" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="2" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="3" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="4" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="5" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                </HorizontalStackLayout>
+                
+                <!-- Row 2: Numbers 6-9 + Clear -->
+                <HorizontalStackLayout Spacing="0"
+                                       HorizontalOptions="Center"
+                                       x:Name="NumberPadRow2">
+                    <controls:NumPadButton Number="6" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="7" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="8" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <controls:NumPadButton Number="9" 
+                                          WidthRequest="80" HeightRequest="80"
+                                          Margin="6" MainFontSize="32" CountFontSize="10"
+                                          Tapped="OnNumPadButtonTapped"/>
+                    <Button x:Name="ClearButton"
+                            Text="{StaticResource IconEraser}"
+                            Clicked="OnClearClicked"
+                            Style="{StaticResource ActionButtonStyle}"
+                            Margin="6"
+                            BorderWidth="0"
+                            ToolTipProperties.Text="Clear selected cell"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
         </Grid>
     
         <!-- Game Summary Popup (overlays everything when visible) -->

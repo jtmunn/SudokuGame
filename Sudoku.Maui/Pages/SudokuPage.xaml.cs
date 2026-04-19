@@ -26,9 +26,6 @@ namespace Sudoku.Maui.Pages
         private int _selectedRow = -1;
         private int _selectedCol = -1;
         
-        // Layout constants now in SudokuLayoutManager
-        private double _currentGridSize = SudokuLayoutManager.BaseGridSize;
-        
         // Timer/state/statistics now in ViewModel
         private bool _isFirstAppearing = true;
 
@@ -89,7 +86,8 @@ namespace Sudoku.Maui.Pages
             // Grid lines are handled by DynamicResource in SudokuGridView
             
             SizeChanged += OnPageSizeChanged;
-            UpdateGridSize();
+            GridBorder.SizeChanged += OnGridBorderSizeChanged;
+            UpdateButtonSizes();
             
             // Initialize all cells with default white backgrounds
             UpdateGrid();
@@ -106,57 +104,58 @@ namespace Sudoku.Maui.Pages
             CheckButton.IsVisible = settings.ShowCheckButton;
             
             // Trigger full layout update which includes button sizing
-            UpdateGridSize();
+            UpdateButtonSizes();
         }
 
         private void OnPageSizeChanged(object? sender, EventArgs e)
         {
-            UpdateGridSize();
+            UpdateButtonSizes();
         }
 
-        private void UpdateGridSize()
+        private void OnGridBorderSizeChanged(object? sender, EventArgs e)
         {
-            var settings = _settingsService.LoadSettings();
-            bool showActionButtons = settings.ShowHintButton || settings.ShowCheckButton;
-            
-            // Use LayoutManager to calculate all sizes and positions
-            var layout = SudokuLayoutManager.Calculate(Width, Height, showActionButtons);
-            
-            _currentGridSize = layout.GridSize;
-            GridBorder.WidthRequest = layout.GridSize;
-            GridBorder.HeightRequest = layout.GridSize;
-            
-            // Update font sizes for all cell buttons
-            UpdateCellFontSizes(layout.CellFontSize);
-            
-            // Update button sizes
-            UpdateButtonSizes(layout);
-            
-            // Position action buttons if there's space
-            if (layout.HasSpaceForActionButtons && showActionButtons)
+            double gridSize = Math.Min(GridBorder.Width, GridBorder.Height);
+            if (gridSize > 0 && !double.IsNaN(gridSize))
             {
-                AbsoluteLayout.SetLayoutBounds(ActionButtonStack, layout.ActionButtonBounds);
-                ActionButtonStack.IsVisible = true;
-            }
-            else
-            {
-                ActionButtonStack.IsVisible = false;
+                double cellFontSize = SudokuLayoutManager.CalculateCellFontSize(gridSize);
+                UpdateCellFontSizes(cellFontSize);
             }
         }
-        
-        private void UpdateButtonSizes(LayoutCalculations layout)
+
+        private void UpdateButtonSizes()
         {
-            // Update number pad buttons using calculated layout
-            foreach (var child in NumberPad.Children)
+            var layout = SudokuLayoutManager.Calculate(Width, Height);
+            
+            // Update number pad buttons in both rows
+            UpdateButtonsInContainer(NumberPadRow1, layout);
+            UpdateButtonsInContainer(NumberPadRow2, layout);
+            
+            // Clear button - same sizing as number pad (circular)
+            UpdateCircularButton(ClearButton, layout);
+            
+            // Action buttons (Hint/Check) - compact pill-shaped
+            double actionHeight = Math.Round(layout.ButtonSize * 0.45);
+            double actionFontSize = Math.Round(layout.ButtonSize * 0.22);
+            double actionIconSize = Math.Round(layout.ButtonSize * 0.22);
+            HintButton.HeightRequest = actionHeight;
+            HintButton.CornerRadius = (int)(actionHeight / 2);
+            HintButton.FontSize = actionFontSize;
+            CheckButton.HeightRequest = actionHeight;
+            CheckButton.CornerRadius = (int)(actionHeight / 2);
+            CheckButton.FontSize = actionFontSize;
+            
+            // Scale the icon sizes inside Hint/Check
+            if (HintButton.ImageSource is FontImageSource hintIcon)
+                hintIcon.Size = actionIconSize;
+            if (CheckButton.ImageSource is FontImageSource checkIcon)
+                checkIcon.Size = actionIconSize;
+        }
+        
+        private static void UpdateButtonsInContainer(Microsoft.Maui.Controls.Layout container, LayoutCalculations layout)
+        {
+            foreach (var child in container.Children)
             {
-                if (child is Button btn)
-                {
-                    btn.WidthRequest = layout.ButtonSize;
-                    btn.HeightRequest = layout.ButtonSize;
-                    btn.CornerRadius = (int)(layout.ButtonSize / 2);
-                    btn.FontSize = layout.FontSize;
-                }
-                else if (child is Controls.NumPadButton numPadBtn)
+                if (child is Controls.NumPadButton numPadBtn)
                 {
                     numPadBtn.WidthRequest = layout.ButtonSize;
                     numPadBtn.HeightRequest = layout.ButtonSize;
@@ -165,23 +164,14 @@ namespace Sudoku.Maui.Pages
                     numPadBtn.CountMargin = layout.CountMargin;
                 }
             }
-            
-            // Action buttons - same sizing
-            if (HintButton.IsVisible)
-            {
-                HintButton.WidthRequest = layout.ButtonSize;
-                HintButton.HeightRequest = layout.ButtonSize;
-                HintButton.CornerRadius = (int)(layout.ButtonSize / 2);
-                HintButton.FontSize = layout.FontSize;
-            }
-            
-            if (CheckButton.IsVisible)
-            {
-                CheckButton.WidthRequest = layout.ButtonSize;
-                CheckButton.HeightRequest = layout.ButtonSize;
-                CheckButton.CornerRadius = (int)(layout.ButtonSize / 2);
-                CheckButton.FontSize = layout.FontSize;
-            }
+        }
+        
+        private static void UpdateCircularButton(Button button, LayoutCalculations layout)
+        {
+            button.WidthRequest = layout.ButtonSize;
+            button.HeightRequest = layout.ButtonSize;
+            button.CornerRadius = (int)(layout.ButtonSize / 2);
+            button.FontSize = layout.FontSize;
         }
 
         private void UpdateCellFontSizes(double fontSize)
@@ -594,6 +584,11 @@ namespace Sudoku.Maui.Pages
             }
         }
 
+        private void OnClearClicked(object? sender, EventArgs e)
+        {
+            ClearSelectedCellAsync();
+        }
+
         /// <summary>
         /// Updates all cell buttons to reflect the current board state.
         /// </summary>
@@ -668,8 +663,14 @@ namespace Sudoku.Maui.Pages
                 }
             }
 
-            // Update each NumPadButton
-            foreach (var child in NumberPad.Children)
+            // Update each NumPadButton in both rows
+            UpdateNumPadCounts(NumberPadRow1, remainingCounts);
+            UpdateNumPadCounts(NumberPadRow2, remainingCounts);
+        }
+        
+        private static void UpdateNumPadCounts(Microsoft.Maui.Controls.Layout container, int[] remainingCounts)
+        {
+            foreach (var child in container.Children)
             {
                 if (child is Controls.NumPadButton numPadBtn)
                 {
