@@ -1,11 +1,11 @@
 namespace Sudoku.Maui.Controls;
 
-public partial class GameSummaryPopup : ContentView
+public partial class GameSummaryOverlay : ContentView
 {
     public event EventHandler? DoneRequested;
     public event EventHandler? PlayAgainRequested;
     
-    public GameSummaryPopup()
+    public GameSummaryOverlay()
     {
         InitializeComponent();
     }

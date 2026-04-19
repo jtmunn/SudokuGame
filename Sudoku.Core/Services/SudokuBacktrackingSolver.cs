@@ -6,11 +6,11 @@ namespace Sudoku.Core.Services
     /// Solves Sudoku puzzles using backtracking algorithm.
     /// Can be used for hints, auto-solve, and solution validation.
     /// </summary>
-    public class SudokuSolver
+    public class SudokuBacktrackingSolver
     {
         private readonly SudokuValidator _validator;
 
-        public SudokuSolver(SudokuValidator validator)
+        public SudokuBacktrackingSolver(SudokuValidator validator)
         {
             _validator = validator;
         }

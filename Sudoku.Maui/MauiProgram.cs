@@ -23,7 +23,7 @@ namespace Sudoku.Maui
 
             // Register Core services
             builder.Services.AddSingleton<SudokuValidator>();
-            builder.Services.AddSingleton<SudokuSolver>();
+            builder.Services.AddSingleton<SudokuBacktrackingSolver>();
             builder.Services.AddSingleton<SudokuLogicalSolver>();
             builder.Services.AddSingleton<SudokuGenerator>();
 

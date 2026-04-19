@@ -28,9 +28,9 @@ namespace Sudoku.Maui.Helpers
         /// <summary>
         /// Calculates colors for all cells based on current selection and board state.
         /// </summary>
-        public CellColorMap CalculateColors(SudokuBoard board, int selectedRow, int selectedCol)
+        public CellColorGrid CalculateColors(SudokuBoard board, int selectedRow, int selectedCol)
         {
-            var colorMap = new CellColorMap();
+            var colorMap = new CellColorGrid();
             
             if (selectedRow < 0 || selectedCol < 0)
             {
@@ -101,7 +101,7 @@ namespace Sudoku.Maui.Helpers
             return colorMap;
         }
 
-        private void ApplyDefaultColors(SudokuBoard board, CellColorMap colorMap)
+        private void ApplyDefaultColors(SudokuBoard board, CellColorGrid colorMap)
         {
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
@@ -136,7 +136,7 @@ namespace Sudoku.Maui.Helpers
     /// <summary>
     /// Holds background and text colors for all cells in the grid.
     /// </summary>
-    public class CellColorMap
+    public class CellColorGrid
     {
         private readonly (Color background, Color text)[,] _colors = new (Color, Color)[SudokuBoard.Size, SudokuBoard.Size];
 

@@ -13,7 +13,7 @@ Solution Structure:
 │   ├── Services/
 │   │   ├── SudokuGenerator.cs    - Puzzle generation with technique-based difficulty
 │   │   ├── SudokuValidator.cs    - Move validation and error detection
-│   │   ├── SudokuSolver.cs       - Backtracking solver for validation/hints
+│   │   ├── SudokuBacktrackingSolver.cs - Backtracking solver for validation/hints
 │   │   ├── SudokuLogicalSolver.cs - Human-solvable technique solver
 │   │   └── SolveResult.cs        - Difficulty analysis results
 │   └── Strategies/               - 11 solving strategy implementations
@@ -39,10 +39,10 @@ Solution Structure:
 │   │   ├── GameStatistics.cs     - Solve time tracking
 │   │   └── DifficultyLevel.cs    - UI difficulty enum
 │   ├── Controls/
-│   │   ├── SudokuGridView.cs          - Custom grid rendering with theme support
-│   │   ├── NumPadButton.xaml(.cs)     - Number input buttons with remaining count
-│   │   ├── DifficultySelectionPopup.xaml(.cs) - Modal for difficulty selection
-│   │   └── GameSummaryPopup.xaml(.cs) - Completion summary with statistics
+│   │   ├── SudokuBoardControl.cs       - Custom grid rendering with theme support
+│   │   ├── NumberPadButton.xaml(.cs)   - Number input buttons with remaining count
+│   │   ├── DifficultySelectionOverlay.xaml(.cs) - Modal for difficulty selection
+│   │   └── GameSummaryOverlay.xaml(.cs) - Completion summary with statistics
 │   └── Resources/
 │       ├── Fonts/                - FontAwesome icons
 │       └── Styles/               - Theme colors and styles

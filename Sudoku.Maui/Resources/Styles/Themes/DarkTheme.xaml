@@ -38,7 +38,6 @@
     <Color x:Key="CellGivenColor">#2D2D2D</Color>
     <Color x:Key="CellSelectedColor">#8E44AD</Color>
     <Color x:Key="CellErrorColor">#FF6B6B</Color>
-    <Color x:Key="CellHighlightColor">#4A4A4A</Color>
     <Color x:Key="CellLightHighlightColor">#404040</Color>
     <Color x:Key="CellMatchingNumberColor">#5A5A5A</Color>
     

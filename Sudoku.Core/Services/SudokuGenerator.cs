@@ -23,10 +23,10 @@ namespace Sudoku.Core.Services
     public class SudokuGenerator
     {
         private readonly Random _random;
-        private readonly SudokuSolver _solver;
+        private readonly SudokuBacktrackingSolver _solver;
         private readonly SudokuLogicalSolver _logicalSolver;
 
-        public SudokuGenerator(SudokuSolver solver, SudokuLogicalSolver logicalSolver)
+        public SudokuGenerator(SudokuBacktrackingSolver solver, SudokuLogicalSolver logicalSolver)
         {
             _random = new Random();
             _solver = solver;

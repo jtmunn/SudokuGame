@@ -132,7 +132,7 @@ These strategies would enhance difficulty grading for extreme puzzles:
    - Create complete valid board
    - Remove cells one-by-one
    - After each removal:
-     * Verify unique solution (SudokuSolver)
+     * Verify unique solution (SudokuBacktrackingSolver)
      * Check clue count is in target range (PRIMARY)
      * Test difficulty score (SudokuLogicalSolver) (SECONDARY)
    - Stop when both criteria satisfied

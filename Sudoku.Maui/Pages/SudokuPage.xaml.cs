@@ -13,7 +13,7 @@ namespace Sudoku.Maui.Pages
     {
         private readonly SudokuGenerator _generator;
         private readonly SudokuValidator _validator;
-        private readonly SudokuSolver _solver;
+        private readonly SudokuBacktrackingSolver _solver;
         private readonly ISettingsService _settingsService;
         private readonly IGameStateService _gameStateService;
         private readonly SudokuPageViewModel _viewModel;
@@ -32,15 +32,9 @@ namespace Sudoku.Maui.Pages
         // Colors for visual feedback - loaded from theme
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor");
         private Color GivenCellColor => GetThemeColor("CellGivenColor");
-        private Color SelectedCellColor => GetThemeColor("CellSelectedColor");
         private Color ErrorCellColor => GetThemeColor("CellErrorColor");
-        private Color HighlightCellColor => GetThemeColor("CellHighlightColor");
-        private Color LightHighlightCellColor => GetThemeColor("CellLightHighlightColor");
-        private Color MatchingNumberColor => GetThemeColor("CellMatchingNumberColor");
         private Color CellTextColor => GetThemeColor("CellUserTextColor");
         private Color GivenTextColor => GetThemeColor("CellGivenTextColor");
-        private Color BorderColor => GetThemeColor("GridBorderColor");
-        private Color ThickBorderColor => GetThemeColor("GridThickBorderColor");
 
         private Color GetThemeColor(string key)
         {
@@ -59,7 +53,7 @@ namespace Sudoku.Maui.Pages
         }
 
         public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
-                         SudokuSolver solver, ISettingsService settingsService,
+                         SudokuBacktrackingSolver solver, ISettingsService settingsService,
                          IGameStateService gameStateService, SudokuPageViewModel viewModel)
         {
             InitializeComponent();
@@ -78,12 +72,12 @@ namespace Sudoku.Maui.Pages
             _currentBoard = new SudokuBoard();
 
             // Get cell buttons from the custom control
-            _cellButtons = SudokuGridView.GetAllCellButtons();
+            _cellButtons = SudokuBoardControl.GetAllCellButtons();
             
             // Subscribe to cell click events
-            SudokuGridView.CellClicked += OnCellClicked;
+            SudokuBoardControl.CellClicked += OnCellClicked;
 
-            // Grid lines are handled by DynamicResource in SudokuGridView
+            // Grid lines are handled by DynamicResource in SudokuBoardControl
             
             SizeChanged += OnPageSizeChanged;
             GridBorder.SizeChanged += OnGridBorderSizeChanged;
@@ -117,14 +111,14 @@ namespace Sudoku.Maui.Pages
             double gridSize = Math.Min(GridBorder.Width, GridBorder.Height);
             if (gridSize > 0 && !double.IsNaN(gridSize))
             {
-                double cellFontSize = SudokuLayoutManager.CalculateCellFontSize(gridSize);
+                double cellFontSize = SudokuLayoutCalculator.CalculateCellFontSize(gridSize);
                 UpdateCellFontSizes(cellFontSize);
             }
         }
 
         private void UpdateButtonSizes()
         {
-            var layout = SudokuLayoutManager.Calculate(Width, Height);
+            var layout = SudokuLayoutCalculator.Calculate(Width, Height);
             
             // Update number pad buttons in both rows
             UpdateButtonsInContainer(NumberPadRow1, layout);
@@ -151,11 +145,11 @@ namespace Sudoku.Maui.Pages
                 checkIcon.Size = actionIconSize;
         }
         
-        private static void UpdateButtonsInContainer(Microsoft.Maui.Controls.Layout container, LayoutCalculations layout)
+        private static void UpdateButtonsInContainer(Microsoft.Maui.Controls.Layout container, LayoutMetrics layout)
         {
             foreach (var child in container.Children)
             {
-                if (child is Controls.NumPadButton numPadBtn)
+                if (child is Controls.NumberPadButton numPadBtn)
                 {
                     numPadBtn.WidthRequest = layout.ButtonSize;
                     numPadBtn.HeightRequest = layout.ButtonSize;
@@ -166,7 +160,7 @@ namespace Sudoku.Maui.Pages
             }
         }
         
-        private static void UpdateCircularButton(Button button, LayoutCalculations layout)
+        private static void UpdateCircularButton(Button button, LayoutMetrics layout)
         {
             button.WidthRequest = layout.ButtonSize;
             button.HeightRequest = layout.ButtonSize;
@@ -195,9 +189,6 @@ namespace Sudoku.Maui.Pages
             
             try
             {
-                // Map MAUI DifficultyLevel to Core DifficultyLevel
-                var coreDifficulty = MapDifficulty(difficulty);
-                
                 // Setup delayed spinner (only show if generation takes >500ms)
                 spinnerCts = new CancellationTokenSource();
                 var spinnerToken = spinnerCts.Token;
@@ -234,7 +225,7 @@ namespace Sudoku.Maui.Pages
                 });  // ✅ Token only used inside the task
                 
                 // Generate new puzzle on background thread
-                var board = await Task.Run(() => _generator.Generate(coreDifficulty));
+                var board = await Task.Run(() => _generator.Generate(difficulty));
                 
                 // Cancel spinner task if it hasn't shown yet
                 spinnerCts?.Cancel();
@@ -389,22 +380,6 @@ namespace Sudoku.Maui.Pages
             {
                 System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to save game state: {ex.Message}");
             }
-        }
-        
-        /// <summary>
-        /// Maps MAUI DifficultyLevel enum to Core DifficultyLevel enum.
-        /// </summary>
-        private Core.Services.DifficultyLevel MapDifficulty(CoreDifficulty mauiDifficulty)
-        {
-            return mauiDifficulty switch
-            {
-                CoreDifficulty.Easy => Core.Services.DifficultyLevel.Easy,
-                CoreDifficulty.Medium => Core.Services.DifficultyLevel.Medium,
-                CoreDifficulty.Hard => Core.Services.DifficultyLevel.Hard,
-                CoreDifficulty.Expert => Core.Services.DifficultyLevel.Expert,
-                CoreDifficulty.Evil => Core.Services.DifficultyLevel.Evil,
-                _ => Core.Services.DifficultyLevel.Easy
-            };
         }
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
@@ -663,7 +638,7 @@ namespace Sudoku.Maui.Pages
                 }
             }
 
-            // Update each NumPadButton in both rows
+            // Update each NumberPadButton in both rows
             UpdateNumPadCounts(NumberPadRow1, remainingCounts);
             UpdateNumPadCounts(NumberPadRow2, remainingCounts);
         }
@@ -672,7 +647,7 @@ namespace Sudoku.Maui.Pages
         {
             foreach (var child in container.Children)
             {
-                if (child is Controls.NumPadButton numPadBtn)
+                if (child is Controls.NumberPadButton numPadBtn)
                 {
                     numPadBtn.RemainingCount = remainingCounts[numPadBtn.Number];
                     numPadBtn.IsEnabled = remainingCounts[numPadBtn.Number] > 0;
@@ -731,7 +706,7 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private async void OnNumPadButtonTapped(object? sender, EventArgs e)
         {
-            if (sender is not Controls.NumPadButton numPadButton)
+            if (sender is not Controls.NumberPadButton numPadButton)
                 return;
 
             await ApplyNumberInputAsync(numPadButton.Number);
@@ -870,7 +845,7 @@ namespace Sudoku.Maui.Pages
             }
             
             // Show summary popup - IsBusy will be cleared by the popup event handlers
-            await SummaryPopup.ShowAsync(
+            await SummaryOverlay.ShowAsync(
                 _viewModel.CurrentDifficulty,
                 _viewModel.ElapsedSeconds,
                 previousBestTime,
@@ -1053,7 +1028,7 @@ namespace Sudoku.Maui.Pages
             // Determine last played difficulty from settings or saved game state
             CoreDifficulty? lastPlayed = settings.LastPlayedDifficulty;
             
-            await DifficultyPopup.ShowAsync(lastPlayed, statistics, canDismiss);
+            await DifficultyOverlay.ShowAsync(lastPlayed, statistics, canDismiss);
         }
         
         /// <summary>
@@ -1067,7 +1042,7 @@ namespace Sudoku.Maui.Pages
         /// <summary>
         /// Handles difficulty popup dismissal (user tapped outside or clicked X).
         /// </summary>
-        private void OnDifficultyPopupDismissed(object? sender, EventArgs e)
+        private void OnDifficultyOverlayDismissed(object? sender, EventArgs e)
         {
             // User dismissed the modal without selecting - resume timer if puzzle not solved
             if (!_viewModel.IsPuzzleSolved)

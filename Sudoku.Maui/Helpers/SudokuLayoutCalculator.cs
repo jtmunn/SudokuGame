@@ -6,7 +6,7 @@ namespace Sudoku.Maui.Helpers
     /// Grid sizing is handled entirely by SquareLayoutControl in the MAUI layout pass.
     /// Cell font sizes are derived from the actual rendered grid size via SizeChanged.
     /// </summary>
-    public class SudokuLayoutManager
+    public class SudokuLayoutCalculator
     {
         // Minimum square size for the SquareLayoutControl
         public const double MinGridSize = 360;
@@ -16,9 +16,9 @@ namespace Sudoku.Maui.Helpers
         /// No grid sizing — MAUI's star row + SquareLayoutControl handle that.
         /// Both dimensions are considered so buttons don't steal vertical space from the grid.
         /// </summary>
-        public static LayoutCalculations Calculate(double windowWidth, double windowHeight)
+        public static LayoutMetrics Calculate(double windowWidth, double windowHeight)
         {
-            var result = new LayoutCalculations();
+            var result = new LayoutMetrics();
 
             // Button size: 5 buttons per row with 12px margin each + padding.
             // Width: (width - margins) / 8 gives a natural size that fits 5 across comfortably.
@@ -54,7 +54,7 @@ namespace Sudoku.Maui.Helpers
     /// <summary>
     /// Results of layout calculations.
     /// </summary>
-    public class LayoutCalculations
+    public class LayoutMetrics
     {
         public double ButtonSize { get; set; }
         public double FontSize { get; set; }

@@ -5,15 +5,15 @@ using Xunit;
 
 namespace Sudoku.Core.Tests.Services
 {
-    public class SudokuSolverTests
+    public class SudokuBacktrackingSolverTests
     {
-        private readonly SudokuSolver _solver;
+        private readonly SudokuBacktrackingSolver _solver;
         private readonly SudokuValidator _validator;
 
-        public SudokuSolverTests()
+        public SudokuBacktrackingSolverTests()
         {
             _validator = new SudokuValidator();
-            _solver = new SudokuSolver(_validator);
+            _solver = new SudokuBacktrackingSolver(_validator);
         }
 
         [Fact]

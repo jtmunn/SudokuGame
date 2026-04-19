@@ -3,14 +3,14 @@ using Sudoku.Application.Models;
 
 namespace Sudoku.Maui.Controls;
 
-public partial class DifficultySelectionPopup : ContentView
+public partial class DifficultySelectionOverlay : ContentView
 {
     public event EventHandler<CoreDifficulty>? DifficultySelected;
     public event EventHandler? Dismissed;
     
     private bool _canDismiss = true; // Track if modal can be dismissed
     
-    public DifficultySelectionPopup()
+    public DifficultySelectionOverlay()
     {
         InitializeComponent();
     }

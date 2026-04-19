@@ -15,7 +15,7 @@ namespace Sudoku.Application.ViewModels
     {
         private readonly SudokuGenerator _generator;
         private readonly SudokuValidator _validator;
-        private readonly SudokuSolver _solver;
+        private readonly SudokuBacktrackingSolver _solver;
         private readonly ISettingsService _settingsService;
         private readonly IGameStateService _gameStateService;
 
@@ -136,7 +136,7 @@ namespace Sudoku.Application.ViewModels
         public SudokuPageViewModel(
             SudokuGenerator generator,
             SudokuValidator validator,
-            SudokuSolver solver,
+            SudokuBacktrackingSolver solver,
             ISettingsService settingsService,
             IGameStateService gameStateService)
         {
@@ -153,8 +153,7 @@ namespace Sudoku.Application.ViewModels
         /// </summary>
         public async Task<SudokuBoard> StartNewGameAsync(CoreDifficulty difficulty)
         {
-            var coreDifficulty = MapDifficulty(difficulty);
-            var board = await Task.Run(() => _generator.Generate(coreDifficulty));
+            var board = await Task.Run(() => _generator.Generate(difficulty));
 
             CurrentBoard = board;
             Solution = _solver.GetSolution(CurrentBoard);
@@ -345,19 +344,6 @@ namespace Sudoku.Application.ViewModels
         public void ResetTimer()
         {
             ElapsedSeconds = 0;
-        }
-
-        private Core.Services.DifficultyLevel MapDifficulty(CoreDifficulty coreDifficulty)
-        {
-            return coreDifficulty switch
-            {
-                CoreDifficulty.Easy => Core.Services.DifficultyLevel.Easy,
-                CoreDifficulty.Medium => Core.Services.DifficultyLevel.Medium,
-                CoreDifficulty.Hard => Core.Services.DifficultyLevel.Hard,
-                CoreDifficulty.Expert => Core.Services.DifficultyLevel.Expert,
-                CoreDifficulty.Evil => Core.Services.DifficultyLevel.Evil,
-                _ => Core.Services.DifficultyLevel.Easy
-            };
         }
 
         private bool BoardHasUserEntries(SudokuBoard board)

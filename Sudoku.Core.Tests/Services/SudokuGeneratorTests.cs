@@ -8,12 +8,12 @@ namespace Sudoku.Core.Tests.Services
     {
         private readonly SudokuGenerator _generator;
         private readonly SudokuValidator _validator;
-        private readonly SudokuSolver _solver;
+        private readonly SudokuBacktrackingSolver _solver;
 
         public SudokuGeneratorTests()
         {
             _validator = new SudokuValidator();
-            _solver = new SudokuSolver(_validator);
+            _solver = new SudokuBacktrackingSolver(_validator);
             var logicalSolver = new SudokuLogicalSolver();
             _generator = new SudokuGenerator(_solver, logicalSolver);
         }

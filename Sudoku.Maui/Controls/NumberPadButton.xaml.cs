@@ -1,22 +1,22 @@
 namespace Sudoku.Maui.Controls;
 
-public partial class NumPadButton : ContentView
+public partial class NumberPadButton : ContentView
 {
     public static readonly BindableProperty NumberProperty =
-        BindableProperty.Create(nameof(Number), typeof(int), typeof(NumPadButton), 0);
+        BindableProperty.Create(nameof(Number), typeof(int), typeof(NumberPadButton), 0);
 
     public static readonly BindableProperty RemainingCountProperty =
-        BindableProperty.Create(nameof(RemainingCount), typeof(int), typeof(NumPadButton), 0,
+        BindableProperty.Create(nameof(RemainingCount), typeof(int), typeof(NumberPadButton), 0,
             propertyChanged: OnRemainingCountChanged);
 
     public static readonly BindableProperty MainFontSizeProperty =
-        BindableProperty.Create(nameof(MainFontSize), typeof(double), typeof(NumPadButton), 20.0);
+        BindableProperty.Create(nameof(MainFontSize), typeof(double), typeof(NumberPadButton), 20.0);
 
     public static readonly BindableProperty CountFontSizeProperty =
-        BindableProperty.Create(nameof(CountFontSize), typeof(double), typeof(NumPadButton), 10.0);
+        BindableProperty.Create(nameof(CountFontSize), typeof(double), typeof(NumberPadButton), 10.0);
 
     public static readonly BindableProperty CountMarginProperty =
-        BindableProperty.Create(nameof(CountMargin), typeof(Thickness), typeof(NumPadButton), new Thickness(0, 12, 12, 0));
+        BindableProperty.Create(nameof(CountMargin), typeof(Thickness), typeof(NumberPadButton), new Thickness(0, 12, 12, 0));
 
     public int Number
     {
@@ -50,7 +50,7 @@ public partial class NumPadButton : ContentView
 
     public event EventHandler<EventArgs>? Tapped;
 
-    public NumPadButton()
+    public NumberPadButton()
     {
         InitializeComponent();
         Loaded += OnLoaded;
@@ -140,7 +140,7 @@ public partial class NumPadButton : ContentView
 
     private static void OnRemainingCountChanged(BindableObject bindable, object oldValue, object newValue)
     {
-        if (bindable is NumPadButton button)
+        if (bindable is NumberPadButton button)
         {
             button.UpdateButtonState();
         }

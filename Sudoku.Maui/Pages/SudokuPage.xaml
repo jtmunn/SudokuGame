@@ -43,48 +43,6 @@
             </Setter>
         </Style>
         
-        <Style x:Key="NumberButtonStyle" TargetType="Button">
-            <Setter Property="WidthRequest" Value="80"/>
-            <Setter Property="HeightRequest" Value="80"/>
-            <Setter Property="CornerRadius" Value="40"/>
-            <Setter Property="FontSize" Value="32"/>
-            <Setter Property="FontAttributes" Value="Bold"/>
-            <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}"/>
-            <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
-            <Setter Property="Margin" Value="6"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Shadow">
-                <Shadow Brush="{DynamicResource ShadowColor}" 
-                        Opacity="{DynamicResource ShadowOpacity}" 
-                        Radius="6" 
-                        Offset="3,3"/>
-            </Setter>
-            <Setter Property="VisualStateManager.VisualStateGroups">
-                <VisualStateGroupList>
-                    <VisualStateGroup x:Name="CommonStates">
-                        <VisualState x:Name="Normal">
-                            <VisualState.Setters>
-                                <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}"/>
-                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
-                            </VisualState.Setters>
-                        </VisualState>
-                        <VisualState x:Name="PointerOver">
-                            <VisualState.Setters>
-                                <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}"/>
-                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
-                            </VisualState.Setters>
-                        </VisualState>
-                        <VisualState x:Name="Pressed">
-                            <VisualState.Setters>
-                                <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonPressedColor}"/>
-                                <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
-                            </VisualState.Setters>
-                        </VisualState>
-                    </VisualStateGroup>
-                </VisualStateGroupList>
-            </Setter>
-        </Style>
-        
         <Style x:Key="HeaderIconButtonStyle" TargetType="Button">
             <Setter Property="WidthRequest" Value="40"/>
             <Setter Property="HeightRequest" Value="40"/>
@@ -154,8 +112,6 @@
             </Setter>
         </Style>
         
-        <x:String x:Key="IconLightbulb">&#xf0eb;</x:String>
-        <x:String x:Key="IconCheck">&#xf00c;</x:String>
         <x:String x:Key="IconEraser">&#xf12d;</x:String>
     </ContentPage.Resources>
 
@@ -217,7 +173,7 @@
             <!-- Game Area -->
             <controls:SquareLayoutControl Grid.Row="1"
                                           x:Name="SquareLayout"
-                                          MinimumSquareSize="{x:Static helpers:SudokuLayoutManager.MinGridSize}"
+                                          MinimumSquareSize="{x:Static helpers:SudokuLayoutCalculator.MinGridSize}"
                                           Margin="0,10,0,10"
                                           HorizontalOptions="Center"
                                           VerticalOptions="Center">
@@ -225,7 +181,7 @@
                         BackgroundColor="{DynamicResource SurfaceColor}"
                         Padding="0"
                         x:Name="GridBorder">
-                    <controls:SudokuGridView x:Name="SudokuGridView"
+                    <controls:SudokuBoardControl x:Name="SudokuBoardControl"
                                              BackgroundColor="{DynamicResource SurfaceColor}" />
                 </Border>
             </controls:SquareLayoutControl>
@@ -272,45 +228,45 @@
                 <HorizontalStackLayout Spacing="0"
                                        HorizontalOptions="Center"
                                        x:Name="NumberPadRow1">
-                    <controls:NumPadButton Number="1" 
+                    <controls:NumberPadButton Number="1" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="2" 
+                    <controls:NumberPadButton Number="2" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="3" 
+                    <controls:NumberPadButton Number="3" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="4" 
+                    <controls:NumberPadButton Number="4" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="5" 
+                    <controls:NumberPadButton Number="5" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
                 </HorizontalStackLayout>
                 
-                <!-- Row 2: Numbers 6-9 + Clear -->
+                <!-- Row 3: Numbers 6-9 + Clear -->
                 <HorizontalStackLayout Spacing="0"
                                        HorizontalOptions="Center"
                                        x:Name="NumberPadRow2">
-                    <controls:NumPadButton Number="6" 
+                    <controls:NumberPadButton Number="6" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="7" 
+                    <controls:NumberPadButton Number="7" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="8" 
+                    <controls:NumberPadButton Number="8" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
-                    <controls:NumPadButton Number="9" 
+                    <controls:NumberPadButton Number="9" 
                                           WidthRequest="80" HeightRequest="80"
                                           Margin="6" MainFontSize="32" CountFontSize="10"
                                           Tapped="OnNumPadButtonTapped"/>
@@ -325,15 +281,15 @@
             </VerticalStackLayout>
         </Grid>
     
-        <!-- Game Summary Popup (overlays everything when visible) -->
-        <controls:GameSummaryPopup x:Name="SummaryPopup"
+        <!-- Game Summary Overlay (overlays everything when visible) -->
+        <controls:GameSummaryOverlay x:Name="SummaryOverlay"
                                   DoneRequested="OnSummaryDoneRequested"
                                   PlayAgainRequested="OnSummaryPlayAgainRequested" />
         
-        <!-- Difficulty Selection Popup (overlays everything when visible) -->
-        <controls:DifficultySelectionPopup x:Name="DifficultyPopup"
+        <!-- Difficulty Selection Overlay (overlays everything when visible) -->
+        <controls:DifficultySelectionOverlay x:Name="DifficultyOverlay"
                                           DifficultySelected="OnDifficultySelected"
-                                          Dismissed="OnDifficultyPopupDismissed" />
+                                          Dismissed="OnDifficultyOverlayDismissed" />
         
         <!-- Loading Overlay -->
         <Grid x:Name="LoadingOverlay"

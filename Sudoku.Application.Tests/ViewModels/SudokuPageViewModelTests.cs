@@ -6,7 +6,7 @@ using Sudoku.Application.ViewModels;
 using CoreDifficultyLevel = Sudoku.Core.Services.DifficultyLevel;
 using CoreGenerator = Sudoku.Core.Services.SudokuGenerator;
 using CoreValidator = Sudoku.Core.Services.SudokuValidator;
-using CoreSolver = Sudoku.Core.Services.SudokuSolver;
+using CoreSolver = Sudoku.Core.Services.SudokuBacktrackingSolver;
 
 namespace Sudoku.Application.Tests.ViewModels;
 

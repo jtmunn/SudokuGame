@@ -78,16 +78,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="Controls\DifficultySelectionPopup.xaml">
+	  <MauiXaml Update="Controls\DifficultySelectionOverlay.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Controls\GameSummaryPopup.xaml">
+	  <MauiXaml Update="Controls\GameSummaryOverlay.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Controls\NumPadButton.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Controls\SudokuGridView.xaml">
+	  <MauiXaml Update="Controls\NumberPadButton.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\SettingsPage.xaml">

@@ -2,10 +2,9 @@ using Sudoku.Core.Models;
 
 namespace Sudoku.Maui.Controls
 {
-    public class SudokuGridView : Border
+    public class SudokuBoardControl : Border
     {
         private readonly Button[,] _cellButtons;
-        private readonly Border _outerBorder;
         private readonly Grid _mainGrid;
         private readonly List<Border> _cellBorders = new();
         private readonly List<Border> _blockBorders = new();
@@ -13,10 +12,9 @@ namespace Sudoku.Maui.Controls
         // Events
         public event EventHandler<CellClickedEventArgs>? CellClicked;
 
-        public SudokuGridView()
+        public SudokuBoardControl()
         {
             _cellButtons = new Button[SudokuBoard.Size, SudokuBoard.Size];
-            _outerBorder = this;
             
             this.StrokeThickness = 4;
             this.Padding = 0;
