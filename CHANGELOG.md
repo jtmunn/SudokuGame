@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-04-19
+
+### Changed
+- Replaced default app icon with bold "9" on blue background matching app theme
+
+### Improved
+- Release notes now auto-populate from CHANGELOG.md instead of showing only installation instructions
+
+---
+
 ## [1.4.0] - 2026-04-19
 
 ### Changed
