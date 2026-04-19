@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.4.0] - 2025-04-19
+## [1.4.0] - 2026-04-19
 
 ### Changed
 - Removed MVVM ViewModel layer — game state and timer logic inlined directly into SudokuPage code-behind for a simpler architecture
