@@ -4,7 +4,6 @@ using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
 using Sudoku.Application.Services;
 using Sudoku.Maui.Controls;
 using Sudoku.Maui.Helpers;
-using Sudoku.Application.ViewModels;
 using AppModels = Sudoku.Application.Models;
 
 namespace Sudoku.Maui.Pages
@@ -16,7 +15,6 @@ namespace Sudoku.Maui.Pages
         private readonly SudokuBacktrackingSolver _solver;
         private readonly ISettingsService _settingsService;
         private readonly IGameStateService _gameStateService;
-        private readonly SudokuPageViewModel _viewModel;
         private readonly CellHighlightManager _highlightManager;
 
         private SudokuBoard _currentBoard;
@@ -25,9 +23,17 @@ namespace Sudoku.Maui.Pages
         private Button? _selectedButton;
         private int _selectedRow = -1;
         private int _selectedCol = -1;
-        
-        // Timer/state/statistics now in ViewModel
         private bool _isFirstAppearing = true;
+
+        // Game state
+        private System.Timers.Timer? _gameTimer;
+        private int _elapsedSeconds;
+        private string _currentDifficulty = "Easy";
+        private bool _isPuzzleSolved;
+        private int _mistakesCount;
+        private int _hintsUsedCount;
+        private bool _hasUserMadeEntries;
+        private bool _isProcessingInput;
 
         // Colors for visual feedback - loaded from theme
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor");
@@ -54,7 +60,7 @@ namespace Sudoku.Maui.Pages
 
         public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
                          SudokuBacktrackingSolver solver, ISettingsService settingsService,
-                         IGameStateService gameStateService, SudokuPageViewModel viewModel)
+                         IGameStateService gameStateService)
         {
             InitializeComponent();
             
@@ -63,11 +69,7 @@ namespace Sudoku.Maui.Pages
             _solver = solver;
             _settingsService = settingsService;
             _gameStateService = gameStateService;
-            _viewModel = viewModel;
             _highlightManager = new CellHighlightManager((key, _) => GetThemeColor(key));
-            
-            // Set BindingContext for XAML data binding
-            BindingContext = _viewModel;
             
             _currentBoard = new SudokuBoard();
 
@@ -240,17 +242,18 @@ namespace Sudoku.Maui.Pages
                 ClearSelection();
                 
                 // Reset and start timer
-                _viewModel.ResetTimer();
-                _viewModel.StartTimer();
+                ResetTimer();
+                StartTimer();
                 
-                // Reset solved state and statistics in ViewModel
-                _viewModel.IsPuzzleSolved = false;
-                _viewModel.MistakesCount = 0;
-                _viewModel.HintsUsedCount = 0;
-                _viewModel.HasUserMadeEntries = false;
+                // Reset solved state and statistics
+                _isPuzzleSolved = false;
+                _mistakesCount = 0;
+                _hintsUsedCount = 0;
+                _hasUserMadeEntries = false;
                 
                 // Update difficulty
-                _viewModel.CurrentDifficulty = difficulty.ToString();
+                _currentDifficulty = difficulty.ToString();
+                UpdateHeaderLabels();
                 
                 // Save last played difficulty to settings
                 var settings = _settingsService.LoadSettings();
@@ -295,12 +298,12 @@ namespace Sudoku.Maui.Pages
             ClearSelection();
             
             // Reset timer and statistics
-            _viewModel.ResetTimer();
-            _viewModel.StartTimer();
-            _viewModel.IsPuzzleSolved = false;
-            _viewModel.MistakesCount = 0;
-            _viewModel.HintsUsedCount = 0;
-            _viewModel.HasUserMadeEntries = false;
+            ResetTimer();
+            StartTimer();
+            _isPuzzleSolved = false;
+            _mistakesCount = 0;
+            _hintsUsedCount = 0;
+            _hasUserMadeEntries = false;
             
             // Note: We keep _solution as it's still the same puzzle
         }
@@ -329,19 +332,20 @@ namespace Sudoku.Maui.Pages
                 }
                 
                 // Restore timer and state
-                _viewModel.ElapsedSeconds = gameState.ElapsedSeconds;
-                _viewModel.CurrentDifficulty = gameState.Difficulty ?? "Medium";
-                _viewModel.IsPuzzleSolved = gameState.IsSolved;
-                _viewModel.HasUserMadeEntries = BoardHasUserEntries(_currentBoard);
+                _elapsedSeconds = gameState.ElapsedSeconds;
+                _currentDifficulty = gameState.Difficulty ?? "Medium";
+                _isPuzzleSolved = gameState.IsSolved;
+                _hasUserMadeEntries = BoardHasUserEntries(_currentBoard);
+                UpdateHeaderLabels();
                 
                 // Update UI
                 UpdateGrid();
                 ClearSelection();
                 
                 // Start timer if puzzle not solved
-                if (!_viewModel.IsPuzzleSolved)
+                if (!_isPuzzleSolved)
                 {
-                    _viewModel.StartTimer();
+                    StartTimer();
                 }
             }
             catch (Exception ex)
@@ -358,7 +362,7 @@ namespace Sudoku.Maui.Pages
         public async Task SaveCurrentGameStateAsync()
         {
             // Don't save if puzzle is solved or board is empty
-            if (_viewModel.IsPuzzleSolved || _currentBoard.GetAllCells().All(c => c.Value == 0))
+            if (_isPuzzleSolved || _currentBoard.GetAllCells().All(c => c.Value == 0))
             {
                 return;
             }
@@ -369,9 +373,9 @@ namespace Sudoku.Maui.Pages
                 {
                     BoardData = _currentBoard.Serialize(),
                     SolutionData = _solution?.Serialize(),
-                    ElapsedSeconds = _viewModel.ElapsedSeconds,
-                    Difficulty = _viewModel.CurrentDifficulty,
-                    IsSolved = _viewModel.IsPuzzleSolved
+                    ElapsedSeconds = _elapsedSeconds,
+                    Difficulty = _currentDifficulty,
+                    IsSolved = _isPuzzleSolved
                 };
                 
                 await _gameStateService.SaveGameStateAsync(gameState);
@@ -384,15 +388,15 @@ namespace Sudoku.Maui.Pages
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
-            if (_viewModel.IsProcessingInput)
+            if (_isProcessingInput)
                 return;
             
-            _viewModel.IsProcessingInput = true;
+            _isProcessingInput = true;
             
             try
             {
                 // Only prompt if puzzle is not solved AND user has made any entries
-                if (!_viewModel.IsPuzzleSolved && _viewModel.HasUserMadeEntries)
+                if (!_isPuzzleSolved && _hasUserMadeEntries)
                 {
                     bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
                     if (!answer)
@@ -406,21 +410,21 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _viewModel.IsProcessingInput = false;
+                _isProcessingInput = false;
             }
         }
         
         private async void OnRestartClicked(object? sender, EventArgs e)
         {
-            if (_viewModel.IsProcessingInput)
+            if (_isProcessingInput)
                 return;
             
-            _viewModel.IsProcessingInput = true;
+            _isProcessingInput = true;
             
             try
             {
                 // Only prompt if puzzle is not solved AND user has made any entries
-                if (!_viewModel.IsPuzzleSolved && _viewModel.HasUserMadeEntries)
+                if (!_isPuzzleSolved && _hasUserMadeEntries)
                 {
                     bool answer = await DisplayAlertAsync("Restart Puzzle?", "All progress will be lost. Restart this puzzle?", "Yes", "No");
                     if (!answer)
@@ -434,20 +438,20 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _viewModel.IsProcessingInput = false;
+                _isProcessingInput = false;
             }
         }
         
         private async void OnSettingsClicked(object? sender, EventArgs e)
         {
-            if (_viewModel.IsProcessingInput)
+            if (_isProcessingInput)
                 return;
             
-            _viewModel.IsProcessingInput = true;
+            _isProcessingInput = true;
             
             try
             {
-                _viewModel.StopTimer();
+                StopTimer();
                 
                 // Save game state before navigating away
                 await SaveCurrentGameStateAsync();
@@ -456,16 +460,16 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _viewModel.IsProcessingInput = false;
+                _isProcessingInput = false;
             }
         }
 
         private async void OnHintClicked(object? sender, EventArgs e)
         {
-            if (_viewModel.IsProcessingInput)
+            if (_isProcessingInput)
                 return;
             
-            _viewModel.IsProcessingInput = true;
+            _isProcessingInput = true;
             
             try
             {
@@ -489,8 +493,8 @@ namespace Sudoku.Maui.Pages
                 var (row, col, value) = hint.Value;
                 _currentBoard.SetCell(row, col, value);
                 
-                // Increment hints used counter in ViewModel
-                _viewModel.HintsUsedCount++;
+                // Increment hints used counter
+                _hintsUsedCount++;
 
                 _selectedRow = row;
                 _selectedCol = col;
@@ -514,16 +518,16 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _viewModel.IsProcessingInput = false;
+                _isProcessingInput = false;
             }
         }
 
         private async void OnCheckClicked(object? sender, EventArgs e)
         {
-            if (_viewModel.IsProcessingInput)
+            if (_isProcessingInput)
                 return;
             
-            _viewModel.IsProcessingInput = true;
+            _isProcessingInput = true;
             
             try
             {
@@ -555,7 +559,7 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _viewModel.IsProcessingInput = false;
+                _isProcessingInput = false;
             }
         }
 
@@ -714,7 +718,7 @@ namespace Sudoku.Maui.Pages
 
         private async Task ApplyNumberInputAsync(int number)
         {
-            if (_viewModel.IsProcessingInput) return; _viewModel.IsProcessingInput = true;
+            if (_isProcessingInput) return; _isProcessingInput = true;
             
             try
             {
@@ -732,7 +736,7 @@ namespace Sudoku.Maui.Pages
                 if (!_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
                 {
                     // Invalid move (visible conflict) counts as a mistake
-                    _viewModel.MistakesCount++;
+                    _mistakesCount++;
                     // Show conflict feedback - temporarily highlight cell as error
                     await ShowConflictFeedbackAsync();
                     return;
@@ -742,7 +746,7 @@ namespace Sudoku.Maui.Pages
                 _currentBoard.SetCell(_selectedRow, _selectedCol, number);
                 
                 // Mark that user has made an entry
-                _viewModel.HasUserMadeEntries = true;
+                _hasUserMadeEntries = true;
 
                 // Update error flags first to check for any conflicts across the board
                 _validator.UpdateErrorFlags(_currentBoard);
@@ -754,7 +758,7 @@ namespace Sudoku.Maui.Pages
                     if (cell.Value != solutionCell.Value)
                     {
                         cell.HasError = true;
-                        _viewModel.MistakesCount++;
+                        _mistakesCount++;
                     }
                 }
 
@@ -769,7 +773,7 @@ namespace Sudoku.Maui.Pages
             }
             finally
             {
-                _viewModel.IsProcessingInput = false;
+                _isProcessingInput = false;
             }
         }
 
@@ -798,7 +802,44 @@ namespace Sudoku.Maui.Pages
             UpdateGrid();
             
             // Mark that user has made a change (clearing is also a change)
-            _viewModel.HasUserMadeEntries = true;
+            _hasUserMadeEntries = true;
+        }
+
+        // Timer management
+        private void StartTimer()
+        {
+            _gameTimer?.Stop();
+            _gameTimer = new System.Timers.Timer(1000);
+            _gameTimer.Elapsed += (s, e) =>
+            {
+                _elapsedSeconds++;
+                Dispatcher.Dispatch(() => TimerLabel.Text = $"Time: {FormatTime(_elapsedSeconds)}");
+            };
+            _gameTimer.Start();
+        }
+
+        private void StopTimer()
+        {
+            _gameTimer?.Stop();
+        }
+
+        private void ResetTimer()
+        {
+            _elapsedSeconds = 0;
+            TimerLabel.Text = "Time: 00:00";
+        }
+
+        private static string FormatTime(int totalSeconds)
+        {
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            return $"{minutes:D2}:{seconds:D2}";
+        }
+
+        private void UpdateHeaderLabels()
+        {
+            DifficultyLabel.Text = $"Difficulty: {_currentDifficulty}";
+            TimerLabel.Text = $"Time: {FormatTime(_elapsedSeconds)}";
         }
         
         /// <summary>
@@ -824,11 +865,11 @@ namespace Sudoku.Maui.Pages
         private async Task OnPuzzleSolvedAsync()
         {
             // Prevent duplicate calls if already showing summary
-            if (_viewModel.IsPuzzleSolved)
+            if (_isPuzzleSolved)
                 return;
             
-            _viewModel.IsPuzzleSolved = true;
-            _viewModel.StopTimer();
+            _isPuzzleSolved = true;
+            StopTimer();
             await _gameStateService.ClearGameStateAsync();
             
             // Load statistics to check for best time
@@ -838,32 +879,32 @@ namespace Sudoku.Maui.Pages
             var previousBestTime = stats.GetBestTime(currentDifficultyEnum);
             
             // Update best time if this is a new record or first completion
-            if (!previousBestTime.HasValue || _viewModel.ElapsedSeconds < previousBestTime.Value)
+            if (!previousBestTime.HasValue || _elapsedSeconds < previousBestTime.Value)
             {
-                stats.SetBestTime(currentDifficultyEnum, _viewModel.ElapsedSeconds);
+                stats.SetBestTime(currentDifficultyEnum, _elapsedSeconds);
                 await _settingsService.SaveStatisticsAsync(stats);
             }
             
             // Show summary popup - IsBusy will be cleared by the popup event handlers
             await SummaryOverlay.ShowAsync(
-                _viewModel.CurrentDifficulty,
-                _viewModel.ElapsedSeconds,
+                _currentDifficulty,
+                _elapsedSeconds,
                 previousBestTime,
-                _viewModel.MistakesCount,
-                _viewModel.HintsUsedCount
+                _mistakesCount,
+                _hintsUsedCount
             );
         }
         
         private void OnSummaryDoneRequested(object? sender, EventArgs e)
         {
             // Popup already hidden by the control
-            _viewModel.IsProcessingInput = false;
+            _isProcessingInput = false;
         }
         
         private async void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
         {
             // Show difficulty selection for new game
-            _viewModel.IsProcessingInput = false;
+            _isProcessingInput = false;
             await ShowDifficultySelectionAsync();
         }
 
@@ -954,16 +995,16 @@ namespace Sudoku.Maui.Pages
         private void OnWindowActivated(object? sender, EventArgs e)
         {
             // Resume timer if puzzle not solved and timer exists
-            if (!_viewModel.IsPuzzleSolved)
+            if (!_isPuzzleSolved)
             {
-                _viewModel.StartTimer();
+                StartTimer();
             }
         }
         
         private void OnWindowDeactivated(object? sender, EventArgs e)
         {
             // Pause timer when window loses focus
-            _viewModel.StopTimer();
+            StopTimer();
         }
         
         protected override void OnAppearing()
@@ -994,9 +1035,9 @@ namespace Sudoku.Maui.Pages
                 // Refresh cell colors to pick up current theme
                 UpdateGrid();
                 // Restart timer if coming back from settings
-                if (!_viewModel.IsPuzzleSolved)
+                if (!_isPuzzleSolved)
                 {
-                    _viewModel.StartTimer();
+                    StartTimer();
                 }
             }
         }
@@ -1007,7 +1048,7 @@ namespace Sudoku.Maui.Pages
             DetachWindowKeyHandler();
             DetachWindowFocusHandler();
             // Stop timer when leaving the page
-            _viewModel.StopTimer();
+            StopTimer();
             
             // Save game state when navigating away
             _ = SaveCurrentGameStateAsync();
@@ -1020,7 +1061,7 @@ namespace Sudoku.Maui.Pages
         private async Task ShowDifficultySelectionAsync(bool canDismiss = true)
         {
             // Pause timer while modal is open
-            _viewModel.StopTimer();
+            StopTimer();
             
             var settings = _settingsService.LoadSettings();
             var statistics = _settingsService.LoadStatistics();
@@ -1045,9 +1086,9 @@ namespace Sudoku.Maui.Pages
         private void OnDifficultyOverlayDismissed(object? sender, EventArgs e)
         {
             // User dismissed the modal without selecting - resume timer if puzzle not solved
-            if (!_viewModel.IsPuzzleSolved)
+            if (!_isPuzzleSolved)
             {
-                _viewModel.StartTimer();
+                StartTimer();
             }
         }
     }

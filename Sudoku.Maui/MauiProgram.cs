@@ -3,7 +3,6 @@ using Sudoku.Core.Services;
 using Sudoku.Maui.Pages;
 using Sudoku.Maui.Services;
 using Sudoku.Application.Services;
-using Sudoku.Application.ViewModels;
 
 namespace Sudoku.Maui
 {
@@ -30,9 +29,6 @@ namespace Sudoku.Maui
             // Register Maui services
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
             builder.Services.AddSingleton<IGameStateService, GameStateService>();
-
-            // Register ViewModels
-            builder.Services.AddTransient<SudokuPageViewModel>();
 
             // Register pages
             builder.Services.AddTransient<SudokuPage>();

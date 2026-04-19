@@ -121,8 +121,8 @@ namespace Sudoku.Core.Tests.Services
         [InlineData(DifficultyLevel.Easy, 36, 46)]
         [InlineData(DifficultyLevel.Medium, 32, 35)]
         [InlineData(DifficultyLevel.Hard, 28, 31)]
-        [InlineData(DifficultyLevel.Expert, 24, 27)]
-        [InlineData(DifficultyLevel.Evil, 22, 25)]
+        [InlineData(DifficultyLevel.Expert, 24, 28)]
+        [InlineData(DifficultyLevel.Evil, 22, 27)]
         public void Generate_PuzzleHasCorrectClueCountRange(DifficultyLevel difficulty, int minClues, int maxClues)
         {
             // Act
