@@ -125,6 +125,30 @@
                 <Button.Shadow>
                     <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
                 </Button.Shadow>
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonColor}"/>
+                                    <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="PointerOver">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonHoverColor}"/>
+                                    <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                                </VisualState.Setters>
+                            </VisualState>
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryButtonPressedColor}"/>
+                                    <Setter Property="TextColor" Value="{DynamicResource ButtonTextColor}"/>
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </VisualStateManager.VisualStateGroups>
             </Button>
         </VerticalStackLayout>
     </ScrollView>
