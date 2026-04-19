@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.0] - 2025-01-XX
+## [1.4.0] - 2025-04-19
+
+### Changed
+- Removed MVVM ViewModel layer — game state and timer logic inlined directly into SudokuPage code-behind for a simpler architecture
+- Redesigned responsive layout — buttons scale from window size, grid fills remaining space via MAUI star rows
+- Code cleanup — removed dead code and duplicates, renamed classes for clarity and consistency
+
+### Added
+- Hover animation states on Hint, Check, and Settings Back buttons
+- Cell error state (`HasError`) now persisted in board serialization format
+
+### Fixed
+- Cell error state correctly restores through save/load cycles
+- Mistakes counter accuracy bug
+- Removed duplicate `ApplyNumber` method
+- Stabilized flaky clue count test bounds
+
+### Removed
+- Sudoku.Application.Tests project (consolidated with architecture simplification)
+
+---
+
+## [1.3.0] - 2025-01-17
 
 ### Fixed
 - Cell error styling now properly clears when corrected values are entered
