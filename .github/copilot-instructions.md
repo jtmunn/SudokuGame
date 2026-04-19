@@ -1,122 +1,73 @@
 ﻿# GitHub Copilot Instructions for Sudoku .NET MAUI Project
 
-## 🚨 CRITICAL: Think Before You Code
+## 🚨 CRITICAL: Verify MAUI APIs Before Suggesting
 
-**STOP AND THINK BEFORE SUGGESTING ANY SOLUTION**
+**STOP AND VERIFY before suggesting any MAUI control property, method, or event.**
 
-Before proposing any code changes:
-1. ✔️ **Verify** the API/method actually exists in .NET MAUI
-2. ✔️ **Check** that the approach is cross-platform compatible
-3. ✔️ **Consider** if you're fighting the framework or working with it
-4. ℹ️ **Research** the correct lifecycle events/APIs if unsure
-5. ❓ **Ask yourself**: "Would this work the same way on Windows, macOS, iOS, and Android?"
+The .NET MAUI API surface changes between major versions. This project targets **.NET 10** using `$(MauiVersion)` from the SDK.
 
-**Quality over quantity. Take time to think. It's okay to pause and verify.**
+### API Verification Priority
 
-If you're not 100% certain about a MAUI API or pattern:
-- Don't guess or assume
-- Don't suggest platform-specific solutions first
-- Don't propose workarounds without explaining why they're needed
-- **DO** suggest cross-platform MAUI solutions first
-- **DO** acknowledge when you need to verify something
+1. **First: Check the existing codebase.** Search `Sudoku.Maui/Controls/`, `Sudoku.Maui/Pages/`, and `Sudoku.Maui/Helpers/` for how the control is already used. If the project compiles, those properties are confirmed to work.
+2. **Second: If the control or property is NOT already used in the codebase**, or if you're getting a build error about a property not existing, fetch the official API reference to verify:
+   `https://learn.microsoft.com/en-us/dotnet/api/microsoft.maui.controls.{classname}?view=net-maui-10.0`
+3. **Never guess** a property name. If you can't find it in the codebase or the docs, say so.
+
+### General Principles
+
+- Suggest cross-platform MAUI solutions first, not platform-specific workarounds
+- Work with the framework, not against it
+- Acknowledge when you need to verify something
 
 ---
 
-## 🚨 COMMON XAML PITFALLS - READ FIRST!
+## 🚨 Known XAML Pitfalls
 
-### Shadow Property Syntax (CRITICAL)
+### Complex Properties Need Object Syntax
 
-**This is the #1 cause of Release build crashes!**
+Some XAML properties expect object values, not simple strings or booleans. Debug builds may silently tolerate invalid syntax, but **Release builds crash** with XAML parsing exceptions (`Exception code: 0xc000027b`).
 
-❌ **WRONG - This will crash in Release/portable builds:**
+**Shadow** is the most common offender:
 ```xml
+<!-- ❌ WRONG — crashes in Release -->
 <Border Shadow="True">
-    <VerticalStackLayout>
-        <!-- content -->
-    </VerticalStackLayout>
-</Border>
-```
 
-✅ **CORRECT - Shadow requires an object:**
-```xml
+<!-- ✅ CORRECT — Shadow requires an object -->
 <Border>
     <Border.Shadow>
         <Shadow Brush="Black" Opacity="0.3" Radius="4" Offset="2,2"/>
     </Border.Shadow>
-    <VerticalStackLayout>
-        <!-- content -->
-    </VerticalStackLayout>
 </Border>
 ```
 
-**Why:** `Shadow="True"` is invalid XAML. The `Shadow` property expects a `Shadow` object with `Brush`, `Opacity`, `Radius`, and `Offset` properties, not a boolean. 
-
-**Key Insight:** Debug builds are lenient with XAML errors, but Release builds enforce strict validation. An app may work perfectly in Debug mode but crash immediately in Release/portable builds due to this issue.
-
-**Error Signature:** 
-- Windows Event Viewer: `Exception code: 0xc000027b` (XAML parsing exception)
-- Error message: `Cannot convert "True" into Microsoft.Maui.IShadow`
-
-### Other Complex Properties That Need Object Syntax
-
-These properties also require proper object syntax (not simple strings/booleans):
-```xml
-<!-- ✅ CORRECT patterns -->
-<Border>
-    <Border.Stroke>
-        <LinearGradientBrush>
-            <GradientStop Color="Red" Offset="0.0" />
-            <GradientStop Color="Blue" Offset="1.0" />
-        </LinearGradientBrush>
-    </Border.Stroke>
-</Border>
-
-<Label>
-    <Label.FormattedText>
-        <FormattedString>
-            <Span Text="Bold" FontAttributes="Bold" />
-        </FormattedString>
-    </Label.FormattedText>
-</Label>
-```
-
----
-
-## 🚨 GIT COMMIT RULES
-
-**ALWAYS use single-line commit messages:**
-
-```bash
-# ✅ CORRECT
-git commit -m "Add feature X to improve Y"
-
-# ❌ WRONG - Multi-line breaks in PowerShell
-git commit -m "Add feature X
-
-This adds functionality for Y
-- Detail 1
-- Detail 2"
-```
-
-**Why:** Multi-line commit messages break in PowerShell terminal. Keep all commit messages on a single line.
+Same pattern applies to `Stroke`, `FormattedText`, and similar complex properties. See existing usage in `NumberPadButton.xaml` and `SettingsPage.xaml` for correct patterns.
 
 ---
 
 ## ℹ️ Project Summary
 
-**Date:** 2025-01-XX  
 **Project:** Sudoku Game - .NET MAUI  
 **Target:** .NET 10, C# 14
 
-### Current Architecture
+### Architecture
 
-**Strengths:**
-- 🚨 `TreatWarningsAsErrors` enabled in both projects
-- ✅ Modern .NET MAUI APIs used (DisplayAlertAsync, Border, etc.)
-- ✅ Clean separation: Core (logic) + MAUI (UI)
-- ✅ Proper DI registration in MauiProgram.cs
-- ✅ Theme system using separate XAML files (LightTheme.xaml, DarkTheme.xaml)
-- ✅ Constants documented in CONSTANTS_REFERENCE.md (in docs/)
+- 🚨 `TreatWarningsAsErrors` enabled globally in `Directory.Build.props`
+- ✅ Three-project structure: `Sudoku.Core` (solver/models) → `Sudoku.Application` (DI interfaces, settings/state models) → `Sudoku.Maui` (UI)
+- ✅ DI registration in `MauiProgram.cs` (singletons for services, transient for pages)
+- ✅ Theme system: `LightTheme.xaml` / `DarkTheme.xaml` with `{DynamicResource}` bindings
+- ✅ Layout: 3-row `Grid` with `SquareLayoutControl` for the board, responsive sizing via `SudokuLayoutCalculator`
+
+### Key Custom Controls & Helpers
+
+| File | Purpose |
+|------|---------|
+| `Controls/SquareLayoutControl.cs` | Custom `Layout` that maintains 1:1 aspect ratio for the Sudoku grid |
+| `Controls/SudokuBoardControl.cs` | Renders the 9×9 grid with borders and cells |
+| `Controls/NumberPadButton.xaml` | Circular number input button with remaining-count indicator |
+| `Controls/GameSummaryOverlay.xaml` | Popup shown on game completion |
+| `Controls/DifficultySelectionOverlay.xaml` | Difficulty picker overlay |
+| `Helpers/SudokuLayoutCalculator.cs` | Calculates button/font sizes from window dimensions |
+| `Helpers/CellHighlightManager.cs` | Manages cell selection, highlighting, and error coloring |
 
 ---
 
@@ -200,33 +151,17 @@ if (Application.Current is App app)
 
 ## 🚨 CRITICAL RULES - NEVER VIOLATE
 
-### 0. Color Creation Methods - CRITICAL
+### 0. Theme Colors Live in XAML
 
-**THE GOLDEN RULE: ALWAYS use `Color.FromArgb()` with hex strings for theme colors.**
+**THE GOLDEN RULE: Theme colors are defined in XAML files, not C# code.**
 
-#### ✅ CORRECT Color Methods
-```csharp
-// ✅ ALWAYS use Color.FromArgb with hex string
-["CellDefaultColor"] = Color.FromArgb("#FFFFFF"),
-["TextColor"] = Color.FromArgb("#2C3E50"),
+Theme colors are defined as `<Color x:Key="...">` entries in:
+- `Sudoku.Maui/Resources/Styles/Themes/LightTheme.xaml`
+- `Sudoku.Maui/Resources/Styles/Themes/DarkTheme.xaml`
 
-// ✅ For predefined colors, use Colors.ColorName
-["ButtonTextColor"] = Colors.White,
-["ErrorTextColor"] = Colors.Red,
-```
+When adding or changing colors, update **BOTH** files. Access them in XAML with `{DynamicResource ColorName}` or in code by searching `MergedDictionaries` (see Theme System section).
 
-#### ❌ WRONG Color Methods - NEVER USE THESE
-```csharp
-// ❌ NEVER use Color.FromRgb - this breaks consistency
-["CellDefaultColor"] = Color.FromRgb(255, 255, 255), // WRONG!
-
-// ❌ NEVER use Color.FromRgba unless alpha is truly needed and different from FF
-["CellDefaultColor"] = Color.FromRgba(255, 255, 255, 255), // WRONG - use FromArgb
-
-// ❌ NEVER mix color creation methods in the same dictionary
-["Color1"] = Color.FromArgb("#FFFFFF"),  // Right
-["Color2"] = Color.FromRgb(0, 0, 0),     // WRONG - inconsistent!
-```
+For any fallback colors in C# code (e.g., `CellHighlightManager.cs`), use `Colors.White`, `Colors.LightBlue`, etc. — never `Color.FromRgb()`. Keep fallbacks consistent with the theme values.
 
 ### 1. Theme Color Management
 
@@ -255,19 +190,21 @@ button.TextColor = Colors.Black; // NEVER DO THIS
 
 ### 2. Layout & Positioning
 
-**THE GOLDEN RULE: Only the grid is centered. Action buttons are positioned AFTER.**
+**THE GOLDEN RULE: The page uses a 3-row Grid layout. The Sudoku board uses `SquareLayoutControl` to stay square.**
 
-#### ✅ CORRECT Layout Philosophy
-- **Sudoku Grid**: Centered independently on the page using `AbsoluteLayout.LayoutBounds="0.5,0.5"`
-- **Action Buttons**: Positioned to the RIGHT of the centered grid using calculated `AbsoluteLayout.LayoutBounds`
-- **Number Pad**: Centered independently at bottom
+#### ✅ CORRECT Layout Structure
+- **Row 0 (Header):** Fixed-height header with difficulty label, timer, and icon buttons
+- **Row 1 (Game Area):** Star-sized row containing `SquareLayoutControl` → `SudokuBoardControl`
+- **Row 2 (Bottom Bar):** Action buttons (Hint/Check) + number pad rows
+
+The `SquareLayoutControl` automatically maintains 1:1 aspect ratio and centers the grid within its parent. No manual centering math is needed.
 
 #### ❌ WRONG Approaches
 ```csharp
-// ❌ DON'T try to center grid + action buttons together as a group
-// ❌ DON'T use HorizontalStackLayout wrapping grid and buttons
-// ❌ DON'T calculate "combined width" for centering
-// ❌ DON'T suggest TranslationX for grid positioning
+// ❌ DON'T use AbsoluteLayout for the main page layout
+// ❌ DON'T manually calculate grid centering — SquareLayoutControl handles it
+// ❌ DON'T position action buttons to the right of the grid — they go below
+// ❌ DON'T use TranslationX for grid positioning
 ```
 
 ### 3. API Usage
@@ -301,80 +238,41 @@ button.TextColor = Colors.Black; // NEVER DO THIS
 
 ## ℹ️ Layout & Sizing Rules
 
-### Constants - Never Hardcode
+### Sizing Strategy
 
-**All sizing constants documented in:** `docs/CONSTANTS_REFERENCE.md`
+Layout is split into two independent systems (see `SudokuLayoutCalculator.cs`):
 
-**Key Constants:**
+1. **Button/font sizes** — calculated from window dimensions, not grid size
+2. **Grid size** — handled entirely by MAUI's star row + `SquareLayoutControl`
+3. **Cell font sizes** — derived from the actual rendered grid size via `SizeChanged`
+
+This avoids circular dependencies between grid and button sizing.
+
+### Key Constants
+
 ```csharp
 // Grid
-MinGridSize = 360
-BaseGridSize = 450.0
+MinGridSize = 360              // SquareLayoutControl minimum
 
-// Buttons  
-BaseButtonSize = 45.0
-BaseFontSize = 20.0
+// Button sizing (from window dimensions)
+ButtonSize = Math.Clamp(Math.Min(fromWidth, fromHeight), 44, 100)
+// where fromWidth = (windowWidth - 60) / 7.5
+// where fromHeight = (windowHeight - 80) / 14.0
 
-// Spacing
-GameAreaPadding = 10
-ActionButtonMargin = 20
-NumberButtonMargin = 6
+// Font sizes (proportional to button)
+FontSize = ButtonSize * 0.4
+CountFontSize = ButtonSize * 0.18
 
-// UI Regions
-HeaderHeight = 56
-NumberPadHeight = 120
+// Cell font (from rendered grid)
+CellFontSize = Math.Max(10, (gridSize / 9.0) * 0.55)
 ```
 
-### Scaling Formula
-
-Everything scales proportionally from the grid:
+### ❌ Common Sizing Mistakes
 
 ```csharp
-scale = _currentGridSize / BaseGridSize;
-scaledButtonSize = Math.Round(BaseButtonSize * scale);
-scaledFontSize = Math.Round(BaseFontSize * scale);
-```
-
-### Action Button Positioning
-
-```csharp
-// Grid is centered independently
-GridBorder.LayoutFlags = AbsoluteLayoutFlags.PositionProportional;
-GridBorder.LayoutBounds = new Rect(0.5, 0.5, AutoSize, AutoSize);
-
-// Action buttons positioned AFTER centered grid
-double centerX = Width / 2;
-double buttonX = centerX + (_currentGridSize / 2) + ActionButtonMargin;
-double buttonY = (Height - HeaderHeight - scaledNumberPadHeight) / 2;
-
-AbsoluteLayout.SetLayoutBounds(ActionButtonStack, 
-    new Rect(buttonX, buttonY, actionButtonWidth, AbsoluteLayout.AutoSize));
-```
-
-### ❌ Common Layout Mistakes
-
-```csharp
-// ❌ DON'T calculate grid width by subtracting button space
-availableWidth = Width - actionButtonWidth - ActionButtonMargin; // WRONG
-
-// ✅ DO calculate grid from full available space
-availableWidth = Width - (GameAreaPadding * 2); // CORRECT
-
-// ❌ DON'T use TranslationX for grid
-GridBorder.TranslationX = offset; // WRONG - grid should be centered via LayoutBounds
-
-// ✅ DO use TranslationX only if absolutely needed for action buttons
-ActionButtonStack.TranslationX = offset; // OK for buttons
-
-// ❌ DON'T wrap grid and buttons in HorizontalStackLayout
-<HorizontalStackLayout>
-    <SudokuGrid />
-    <VerticalStackLayout>  <!-- WRONG -->
-
-// ✅ DO use AbsoluteLayout with independent positioning
-<AbsoluteLayout>
-    <Grid LayoutBounds="0.5,0.5,AutoSize,AutoSize" />  <!-- Centered -->
-    <VerticalStackLayout LayoutBounds="calculated" />   <!-- After grid -->
+// ❌ DON'T calculate button sizes from grid size (circular dependency)
+// ❌ DON'T hardcode pixel values for buttons or fonts
+// ❌ DON'T predict grid size — read it from SizeChanged events
 ```
 
 ---
