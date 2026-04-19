@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.3.0] - 2025-01-17
+## [1.3.0] - 2026-01-17
 
 ### Fixed
 - Cell error styling now properly clears when corrected values are entered
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.2.0] - 2025-01-12
+## [1.2.0] - 2026-01-12
 
 ### Added
 - **Difficulty Selection Modal** - Professional modal popup at startup and for new games
@@ -74,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0] - 2025-01-08
+## [1.1.0] - 2026-01-08
 
 ### Added
 - **100% Strategy Test Coverage** - Comprehensive tests for all 11 solving strategies
@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] - 2025-01-05
+## [1.0.0] - 2026-01-05
 
 ### Added - Initial Release
 - **Core Gameplay**
