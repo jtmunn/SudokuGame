@@ -30,6 +30,8 @@ namespace Sudoku.Maui.Pages
         private int _elapsedSeconds;
         private string _currentDifficulty = "Easy";
         private bool _isPuzzleSolved;
+        // Lock state: disables board and action buttons after completion
+        private bool _isGameLocked;
         private int _mistakesCount;
         private int _hintsUsedCount;
         private bool _hasUserMadeEntries;
@@ -187,6 +189,7 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private async Task StartNewGameAsync(Sudoku.Core.Services.DifficultyLevel difficulty)
         {
+            _isGameLocked = false;
             CancellationTokenSource? spinnerCts = null;
             
             try
@@ -279,6 +282,7 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private void RestartCurrentGame()
         {
+            _isGameLocked = false;
             // Clear all non-given cells
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
@@ -335,6 +339,7 @@ namespace Sudoku.Maui.Pages
                 _elapsedSeconds = gameState.ElapsedSeconds;
                 _currentDifficulty = gameState.Difficulty ?? "Medium";
                 _isPuzzleSolved = gameState.IsSolved;
+                _isGameLocked = gameState.IsSolved;
                 _hasUserMadeEntries = BoardHasUserEntries(_currentBoard);
                 UpdateHeaderLabels();
                 
@@ -388,9 +393,8 @@ namespace Sudoku.Maui.Pages
         
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_isProcessingInput || _isGameLocked)
                 return;
-            
             _isProcessingInput = true;
             
             try
@@ -416,9 +420,8 @@ namespace Sudoku.Maui.Pages
         
         private async void OnRestartClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_isProcessingInput || _isGameLocked)
                 return;
-            
             _isProcessingInput = true;
             
             try
@@ -444,9 +447,8 @@ namespace Sudoku.Maui.Pages
         
         private async void OnSettingsClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_isProcessingInput || _isGameLocked)
                 return;
-            
             _isProcessingInput = true;
             
             try
@@ -466,9 +468,8 @@ namespace Sudoku.Maui.Pages
 
         private async void OnHintClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_isProcessingInput || _isGameLocked)
                 return;
-            
             _isProcessingInput = true;
             
             try
@@ -524,9 +525,8 @@ namespace Sudoku.Maui.Pages
 
         private async void OnCheckClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput)
+            if (_isProcessingInput || _isGameLocked)
                 return;
-            
             _isProcessingInput = true;
             
             try
@@ -573,6 +573,8 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private void UpdateGrid()
         {
+            // Disable action buttons if locked
+            HintButton.IsEnabled = CheckButton.IsEnabled = ClearButton.IsEnabled = !_isGameLocked;
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
                 for (int col = 0; col < SudokuBoard.Size; col++)
@@ -664,6 +666,8 @@ namespace Sudoku.Maui.Pages
         /// </summary>
         private void OnCellClicked(object? sender, CellClickedEventArgs e)
         {
+            if (_isGameLocked) return;
+            
             var cell = _currentBoard.GetCell(e.Row, e.Col);
             
             _selectedRow = e.Row;
@@ -718,7 +722,9 @@ namespace Sudoku.Maui.Pages
 
         private async Task ApplyNumberInputAsync(int number)
         {
-            if (_isProcessingInput) return; _isProcessingInput = true;
+            if (_isProcessingInput || _isGameLocked)
+                return;
+            _isProcessingInput = true;
             
             try
             {
@@ -869,6 +875,7 @@ namespace Sudoku.Maui.Pages
                 return;
             
             _isPuzzleSolved = true;
+            _isGameLocked = true;
             StopTimer();
             await _gameStateService.ClearGameStateAsync();
             
