@@ -2,20 +2,20 @@
 
 ## 🏗️ Architecture Overview
 
-A clean, maintainable Sudoku game with strict separation between game logic and UI presentation.
+A clean, maintainable Sudoku game with strict separation between game logic, application services, and UI presentation. Three layered projects: `Sudoku.Core` → `Sudoku.Application` → `Sudoku.Maui`.
 
 ```
 Solution Structure:
-📦 Sudoku.Core (Class Library)
+📦 Sudoku.Core (Class Library — no UI / no MAUI dependencies)
 │   ├── Models/
 │   │   ├── SudokuCell.cs         - Individual cell with candidate tracking
 │   │   └── SudokuBoard.cs        - 9x9 board with serialization
 │   ├── Services/
-│   │   ├── SudokuGenerator.cs    - Puzzle generation with technique-based difficulty
-│   │   ├── SudokuValidator.cs    - Move validation and error detection
-│   │   ├── SudokuBacktrackingSolver.cs - Backtracking solver for validation/hints
-│   │   ├── SudokuLogicalSolver.cs - Human-solvable technique solver
-│   │   └── SolveResult.cs        - Difficulty analysis results
+│   │   ├── SudokuGenerator.cs           - Puzzle generation with DifficultyLevel enum
+│   │   ├── SudokuValidator.cs           - Move validation and error detection
+│   │   ├── SudokuBacktrackingSolver.cs  - Backtracking solver for validation/hints
+│   │   ├── SudokuLogicalSolver.cs       - Human-solvable technique solver
+│   │   └── SolveResult.cs               - Difficulty analysis results
 │   └── Strategies/               - 11 solving strategy implementations
 │       ├── ISolvingStrategy.cs   - Strategy interface
 │       ├── StrategyResult.cs     - Strategy output model
@@ -24,41 +24,53 @@ Solution Structure:
 │       ├── Tough/                - X-Wing, Y-Wing, Swordfish
 │       └── Diabolical/           - XY-Chain
 
-📦 Sudoku.Maui (MAUI App)
-│   ├── Pages/
-│   │   ├── SudokuPage.xaml(.cs)  - Main game UI with responsive grid
-│   │   └── SettingsPage.xaml(.cs) - Settings configuration UI
-│   ├── Services/
-│   │   ├── ISettingsService.cs   - Settings interface
-│   │   ├── SettingsService.cs    - JSON-based settings persistence
-│   │   ├── IGameStateService.cs  - Game state interface
-│   │   └── GameStateService.cs   - Auto-save functionality
+📦 Sudoku.Application (Class Library — no UI / no MAUI dependencies)
 │   ├── Models/
-│   │   ├── GameSettings.cs       - Settings data model
-│   │   ├── GameState.cs          - Game state for persistence
-│   │   ├── GameStatistics.cs     - Solve time tracking
-│   │   └── DifficultyLevel.cs    - UI difficulty enum
+│   │   ├── GamePhase.cs          - Lifecycle enum: NotStarted/Generating/Playing/Completed
+│   │   ├── GameSettings.cs       - Persisted settings (theme, last difficulty, window state)
+│   │   ├── GameState.cs          - Snapshot used for auto-save / restore
+│   │   └── GameStatistics.cs     - Best solve times per DifficultyLevel
+│   └── Services/
+│       ├── IGameSession.cs       - Singleton game session contract
+│       ├── GameSession.cs        - Owns board, solution, timer, phase, statistics
+│       ├── GameSessionResults.cs - Discriminated outcomes (placement/hint/check)
+│       ├── PuzzleSolvedEventArgs.cs
+│       ├── ISettingsService.cs / IGameStateService.cs - Persistence interfaces
+
+📦 Sudoku.Maui (MAUI App — UI + platform-specific persistence)
+│   ├── MauiProgram.cs            - DI registration (singletons for services, transient for pages)
+│   ├── Pages/
+│   │   ├── SudokuPage.xaml(.cs)  - Thin adapter: rendering, animations, keyboard, alerts
+│   │   └── SettingsPage.xaml(.cs)
+│   ├── Services/
+│   │   ├── SettingsService.cs    - JSON-based settings persistence
+│   │   └── GameStateService.cs   - Auto-save implementation
 │   ├── Controls/
-│   │   ├── SudokuBoardControl.cs       - Custom grid rendering with theme support
-│   │   ├── NumberPadButton.xaml(.cs)   - Number input buttons with remaining count
-│   │   ├── DifficultySelectionOverlay.xaml(.cs) - Modal for difficulty selection
-│   │   └── GameSummaryOverlay.xaml(.cs) - Completion summary with statistics
+│   │   ├── SquareLayoutControl.cs       - Maintains 1:1 aspect ratio for the board
+│   │   ├── SudokuBoardControl.cs        - 9×9 grid renderer
+│   │   ├── NumberPadButton.xaml(.cs)    - Circular number button with remaining count
+│   │   ├── DifficultySelectionOverlay.xaml(.cs)
+│   │   └── GameSummaryOverlay.xaml(.cs)
+│   ├── Helpers/
+│   │   ├── SudokuLayoutCalculator.cs    - Button/font sizing from window dimensions
+│   │   └── CellHighlightManager.cs      - Cell selection / highlight / error coloring
 │   └── Resources/
 │       ├── Fonts/                - FontAwesome icons
-│       └── Styles/               - Theme colors and styles
-│           └── Themes/           - LightTheme.xaml, DarkTheme.xaml
+│       └── Styles/Themes/        - LightTheme.xaml, DarkTheme.xaml
 
 📦 Sudoku.Core.Tests (xUnit)
-│   ├── Services/
-│   │   ├── SudokuSolverTests.cs
-│   │   └── SudokuGeneratorTests.cs
-│   └── Strategies/
-│       ├── Basic/                - Tests for 7 basic strategies
-│       ├── Tough/                - Tests for X-Wing, Y-Wing, Swordfish
-│       └── Diabolical/           - Tests for XY-Chain
+│   ├── Models/                   - Board / cell behavior
+│   ├── Services/                 - Solver, generator, validator
+│   └── Strategies/               - One folder per category
 
+📦 Sudoku.Application.Tests (xUnit)
+│   ├── Models/                   - GameState behavior
+│   └── Services/
+│       └── GameSessionTests.cs   - Authorization, restore, placement, hint, check, restart
+
+📄 SudokuGame.slnx                 - Solution file (XML format, no GUIDs)
 📄 .github/copilot-instructions.md - Comprehensive guidelines for AI agents
-📄 docs/CONSTANTS_REFERENCE.md     - All sizing and spacing constants
+📄 docs/CONSTANTS_REFERENCE.md     - Sizing constants used by SudokuLayoutCalculator
 📄 docs/DIFFICULTY_ALGORITHM_RESEARCH.md - Strategy research and scoring
 📄 CHANGELOG.md                    - Version history and release notes
 ```
@@ -84,7 +96,7 @@ Solution Structure:
 2. **Open Solution**
    ```bash
    # Visual Studio
-   start SudokuGame.sln
+   start SudokuGame.slnx
    
    # VS Code
    code .
@@ -161,45 +173,37 @@ Themes are defined in separate XAML ResourceDictionary files:
 
 ## 📐 Layout & Sizing System
 
-### Constants
-
-**All sizing constants documented in:** `docs/CONSTANTS_REFERENCE.md`
-
-**Key Constants:**
-```csharp
-// Grid
-MinGridSize = 360
-BaseGridSize = 450.0
-
-// Buttons  
-BaseButtonSize = 45.0
-BaseFontSize = 20.0
-
-// Spacing
-GameAreaPadding = 10
-ActionButtonMargin = 20
-NumberButtonMargin = 6
-
-// UI Regions
-HeaderHeight = 56
-NumberPadHeight = 120
-```
-
-### Scaling Formula
-
-Everything scales proportionally:
-
-```csharp
-scale = _currentGridSize / BaseGridSize;
-scaledButtonSize = Math.Round(BaseButtonSize * scale);
-scaledFontSize = Math.Round(BaseFontSize * scale);
-```
+**All sizing constants documented in:** [CONSTANTS_REFERENCE.md](CONSTANTS_REFERENCE.md). Implementation lives in `Sudoku.Maui/Helpers/SudokuLayoutCalculator.cs`.
 
 ### Layout Philosophy
 
-- **Sudoku Grid**: Centered independently using `AbsoluteLayout.LayoutBounds="0.5,0.5"`
-- **Action Buttons**: Positioned to the RIGHT of centered grid
-- **Number Pad**: Centered independently at bottom
+Layout is split into two independent systems to avoid circular dependencies between grid and buttons:
+
+1. **Button & font sizes** — derived from **window dimensions**, clamped to a sensible range.
+2. **Grid size** — handled entirely by MAUI's star row plus `SquareLayoutControl`, which enforces a 1:1 aspect ratio.
+3. **Cell font sizes** — derived from the **actual rendered grid size** via `SizeChanged`, not predicted.
+
+### Page Structure (3-row Grid)
+
+- **Row 0 — Header**: difficulty label, timer, icon buttons (fixed height).
+- **Row 1 — Game Area**: star-sized; contains `SquareLayoutControl` → `SudokuBoardControl`.
+- **Row 2 — Bottom Bar**: action buttons (Hint/Check) plus number pad rows.
+
+### Key Formulas
+
+```csharp
+// Button size: clamped, derived from both width and height
+double fromWidth  = (windowWidth  - 60) / 7.5;
+double fromHeight = (windowHeight - 80) / 14.0;
+ButtonSize = Math.Clamp(Math.Min(fromWidth, fromHeight), 44, 100);
+
+// Font sizes proportional to button
+FontSize      = ButtonSize * 0.4;
+CountFontSize = ButtonSize * 0.18;
+
+// Cell font from rendered grid
+CellFontSize = Math.Max(10, (gridSize / 9.0) * 0.55);
+```
 
 ---
 
@@ -329,8 +333,8 @@ SomeAsyncMethod().Wait();                       // Use await
 // ❌ NEVER - Hardcoded colors
 button.TextColor = Colors.Black;                // Use theme resources
 
-// ❌ NEVER - Magic numbers
-Width = 450;                                    // Use constants
+// ❌ NEVER - Magic numbers / hardcoded sizes
+Width = 450;                                    // Use SudokuLayoutCalculator
 ```
 
 ### ✅ Correct Patterns
@@ -347,9 +351,9 @@ foreach (var dict in Application.Current.Resources.MergedDictionaries)
         button.TextColor = (Color)dict["ButtonTextColor"];
 }
 
-// ✅ CORRECT - Constants
-private const double BaseGridSize = 450.0;
-Width = BaseGridSize;
+// ✅ CORRECT - Sizing via the layout calculator
+var metrics = SudokuLayoutCalculator.Calculate(window.Width, window.Height);
+button.WidthRequest = metrics.ButtonSize;
 ```
 
 ---
@@ -358,28 +362,27 @@ Width = BaseGridSize;
 
 ### Current Test Coverage
 
-The project includes comprehensive unit tests using **xUnit**:
+The project includes comprehensive unit tests using **xUnit**, split across two test projects:
 
 ```
 Sudoku.Core.Tests/
+├── Models/                       - Board / cell behavior
 ├── Services/
-│   ├── SudokuSolverTests.cs      - Backtracking solver validation
-│   └── SudokuGeneratorTests.cs   - Puzzle generation tests
+│   ├── SudokuBacktrackingSolverTests.cs
+│   ├── SudokuLogicalSolverTests.cs
+│   ├── SudokuValidatorTests.cs
+│   └── SudokuGeneratorTests.cs
 └── Strategies/
-    ├── Basic/
-    │   ├── NakedSingleStrategyTests.cs
-    │   ├── HiddenSingleStrategyTests.cs
-    │   ├── PointingPairStrategyTests.cs
-    │   ├── BoxLineReductionStrategyTests.cs
-    │   ├── NakedPairStrategyTests.cs
-    │   ├── HiddenPairStrategyTests.cs
-    │   └── NakedTripleStrategyTests.cs
-    ├── Tough/
-    │   ├── XWingStrategyTests.cs
-    │   ├── YWingStrategyTests.cs
-    │   └── SwordfishStrategyTests.cs
-    └── Diabolical/
-        └── XYChainStrategyTests.cs
+    ├── Basic/                    - Naked/Hidden Singles, Pairs, Triples, Pointing Pairs, Box-Line
+    ├── Tough/                    - X-Wing, Y-Wing, Swordfish
+    └── Diabolical/               - XY-Chain
+
+Sudoku.Application.Tests/
+├── Models/
+│   └── GameStateTests.cs
+└── Services/
+    └── GameSessionTests.cs       - Phase authorization, restore, placement,
+                                     hint, check, restart, save persistence
 ```
 
 ### Running Tests
@@ -580,8 +583,14 @@ See [../CONTRIBUTING.md](../CONTRIBUTING.md) for:
 
 - **✨ Modern**: .NET 10, C# 14, latest features
 - **⚡ Performance**: Better rendering and startup time
-- **📦 Single Project**: Simplified project structure
-- **🚀 Future-Proof**: Microsoft's current focus
+- **� Future-Proof**: Microsoft's current focus
+
+### Why a `GameSession` Singleton Instead of Full MVVM?
+
+- **🧪 Testability**: All gameplay rules and lifecycle live in `Sudoku.Application` and are unit-tested without MAUI.
+- **🔒 Single source of truth**: `GamePhase` + `CanEditBoard` / `CanUseGameActions` make input authorization impossible to bypass.
+- **⚡ Performance**: The 9×9 grid hot path performed poorly with per-cell data bindings; the page subscribes to plain C# events instead.
+- **🪶 Simplicity**: No view-model layer or MVVM toolkit dependency to maintain.
 
 ### Why JSON Over SQLite for Settings?
 
@@ -608,8 +617,8 @@ See [../CONTRIBUTING.md](../CONTRIBUTING.md) for:
 | .NET | 10 | Runtime |
 | .NET MAUI | Latest | Cross-platform UI framework |
 | C# | 14 | Programming language |
-| CommunityToolkit.Mvvm | Latest | MVVM utilities |
 | System.Text.Json | Built-in | Settings serialization |
+| xUnit | 2.9.x | Unit testing framework |
 | FontAwesome Free | 6.5.1 | Icon font |
 
 ---

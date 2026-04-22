@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-04-21
+
+### Fixed
+- Board, number pad, hint/check buttons, clear button, and keyboard input are now correctly locked after a puzzle is solved (previously some input paths could still mutate a completed game)
+
+### Changed
+- Extracted gameplay state, timer, and lifecycle rules into a new `IGameSession` singleton in `Sudoku.Application`; `SudokuPage` is now a thin UI adapter (~45% smaller)
+- Centralized input authorization through a single `GamePhase` (`NotStarted`/`Generating`/`Playing`/`Completed`) — input is impossible to accept in the wrong phase
+- Updated `docs/DEVELOPERS.md` to reflect the three-project structure (`Sudoku.Core` / `Sudoku.Application` / `Sudoku.Maui`), `GameSession` design, current dependencies, and `SudokuGame.slnx`
+- Rewrote `docs/CONSTANTS_REFERENCE.md` to match the current `SudokuLayoutCalculator` (window-derived sizing, 3-row grid layout) instead of the obsolete `BaseGridSize` scaling model
+
+### Added
+- Recreated `Sudoku.Application.Tests` project with comprehensive `GameSession` coverage (phase authorization, restore, placement, hint, check, restart, save persistence)
+
+---
+
 ## [1.4.1] - 2026-04-19
 
 ### Changed

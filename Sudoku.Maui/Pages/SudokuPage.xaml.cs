@@ -1,43 +1,27 @@
+using Sudoku.Application.Models;
+using Sudoku.Application.Services;
 using Sudoku.Core.Models;
 using Sudoku.Core.Services;
-using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
-using Sudoku.Application.Services;
 using Sudoku.Maui.Controls;
 using Sudoku.Maui.Helpers;
-using AppModels = Sudoku.Application.Models;
+using CoreDifficulty = Sudoku.Core.Services.DifficultyLevel;
 
 namespace Sudoku.Maui.Pages
 {
     public partial class SudokuPage : ContentPage
     {
-        private readonly SudokuGenerator _generator;
-        private readonly SudokuValidator _validator;
-        private readonly SudokuBacktrackingSolver _solver;
         private readonly ISettingsService _settingsService;
-        private readonly IGameStateService _gameStateService;
+        private readonly IGameSession _session;
         private readonly CellHighlightManager _highlightManager;
 
-        private SudokuBoard _currentBoard;
-        private SudokuBoard? _solution;
-        private Button[,] _cellButtons;
+        private readonly Button[,] _cellButtons;
         private Button? _selectedButton;
         private int _selectedRow = -1;
         private int _selectedCol = -1;
         private bool _isFirstAppearing = true;
-
-        // Game state
-        private System.Timers.Timer? _gameTimer;
-        private int _elapsedSeconds;
-        private string _currentDifficulty = "Easy";
-        private bool _isPuzzleSolved;
-        // Lock state: disables board and action buttons after completion
-        private bool _isGameLocked;
-        private int _mistakesCount;
-        private int _hintsUsedCount;
-        private bool _hasUserMadeEntries;
         private bool _isProcessingInput;
 
-        // Colors for visual feedback - loaded from theme
+        // Theme color accessors --------------------------------------------------
         private Color DefaultCellColor => GetThemeColor("CellDefaultColor");
         private Color GivenCellColor => GetThemeColor("CellGivenColor");
         private Color ErrorCellColor => GetThemeColor("CellErrorColor");
@@ -48,67 +32,52 @@ namespace Sudoku.Maui.Pages
         {
             if (Microsoft.Maui.Controls.Application.Current?.Resources != null)
             {
-                // Search through merged dictionaries for theme colors
                 foreach (var dict in Microsoft.Maui.Controls.Application.Current.Resources.MergedDictionaries)
                 {
                     if (dict.ContainsKey(key))
                         return (Color)dict[key];
                 }
             }
-            
-            // Fail fast - color MUST exist in theme
             throw new InvalidOperationException($"Theme color '{key}' not found in any loaded theme. Ensure both LightTheme.xaml and DarkTheme.xaml define this color.");
         }
 
-        public SudokuPage(SudokuGenerator generator, SudokuValidator validator, 
-                         SudokuBacktrackingSolver solver, ISettingsService settingsService,
-                         IGameStateService gameStateService)
+        // Construction ----------------------------------------------------------
+        public SudokuPage(ISettingsService settingsService, IGameSession session)
         {
             InitializeComponent();
-            
-            _generator = generator;
-            _validator = validator;
-            _solver = solver;
-            _settingsService = settingsService;
-            _gameStateService = gameStateService;
-            _highlightManager = new CellHighlightManager((key, _) => GetThemeColor(key));
-            
-            _currentBoard = new SudokuBoard();
 
-            // Get cell buttons from the custom control
+            _settingsService = settingsService;
+            _session = session;
+            _highlightManager = new CellHighlightManager((key, _) => GetThemeColor(key));
+
             _cellButtons = SudokuBoardControl.GetAllCellButtons();
-            
-            // Subscribe to cell click events
             SudokuBoardControl.CellClicked += OnCellClicked;
 
-            // Grid lines are handled by DynamicResource in SudokuBoardControl
-            
             SizeChanged += OnPageSizeChanged;
             GridBorder.SizeChanged += OnGridBorderSizeChanged;
             UpdateButtonSizes();
-            
-            // Initialize all cells with default white backgrounds
+
+            // Wire to session events. Page is a long-lived singleton in practice
+            // (Shell caches it), so subscribe once for the lifetime of the page.
+            _session.PhaseChanged += OnSessionPhaseChanged;
+            _session.BoardChanged += OnSessionBoardChanged;
+            _session.TimerTick += OnSessionTimerTick;
+            _session.PuzzleSolved += OnSessionPuzzleSolved;
+
             UpdateGrid();
-            
-            // Don't start game here - wait for OnAppearing when theme is loaded
             ApplySettings();
         }
 
         private void ApplySettings()
         {
             var settings = _settingsService.LoadSettings();
-            // Only hide buttons if settings explicitly says so, otherwise show them
             HintButton.IsVisible = settings.ShowHintButton;
             CheckButton.IsVisible = settings.ShowCheckButton;
-            
-            // Trigger full layout update which includes button sizing
             UpdateButtonSizes();
         }
 
-        private void OnPageSizeChanged(object? sender, EventArgs e)
-        {
-            UpdateButtonSizes();
-        }
+        // Layout / sizing -------------------------------------------------------
+        private void OnPageSizeChanged(object? sender, EventArgs e) => UpdateButtonSizes();
 
         private void OnGridBorderSizeChanged(object? sender, EventArgs e)
         {
@@ -123,15 +92,11 @@ namespace Sudoku.Maui.Pages
         private void UpdateButtonSizes()
         {
             var layout = SudokuLayoutCalculator.Calculate(Width, Height);
-            
-            // Update number pad buttons in both rows
+
             UpdateButtonsInContainer(NumberPadRow1, layout);
             UpdateButtonsInContainer(NumberPadRow2, layout);
-            
-            // Clear button - same sizing as number pad (circular)
             UpdateCircularButton(ClearButton, layout);
-            
-            // Action buttons (Hint/Check) - compact pill-shaped
+
             double actionHeight = Math.Round(layout.ButtonSize * 0.45);
             double actionFontSize = Math.Round(layout.ButtonSize * 0.22);
             double actionIconSize = Math.Round(layout.ButtonSize * 0.22);
@@ -141,14 +106,13 @@ namespace Sudoku.Maui.Pages
             CheckButton.HeightRequest = actionHeight;
             CheckButton.CornerRadius = (int)(actionHeight / 2);
             CheckButton.FontSize = actionFontSize;
-            
-            // Scale the icon sizes inside Hint/Check
+
             if (HintButton.ImageSource is FontImageSource hintIcon)
                 hintIcon.Size = actionIconSize;
             if (CheckButton.ImageSource is FontImageSource checkIcon)
                 checkIcon.Size = actionIconSize;
         }
-        
+
         private static void UpdateButtonsInContainer(Microsoft.Maui.Controls.Layout container, LayoutMetrics layout)
         {
             foreach (var child in container.Children)
@@ -163,7 +127,7 @@ namespace Sudoku.Maui.Pages
                 }
             }
         }
-        
+
         private static void UpdateCircularButton(Button button, LayoutMetrics layout)
         {
             button.WidthRequest = layout.ButtonSize;
@@ -174,7 +138,6 @@ namespace Sudoku.Maui.Pages
 
         private void UpdateCellFontSizes(double fontSize)
         {
-            // Apply calculated font size to all cell buttons
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
                 for (int col = 0; col < SudokuBoard.Size; col++)
@@ -184,232 +147,44 @@ namespace Sudoku.Maui.Pages
             }
         }
 
-        /// <summary>
-        /// Starts a new game with a fresh puzzle.
-        /// </summary>
-        private async Task StartNewGameAsync(Sudoku.Core.Services.DifficultyLevel difficulty)
+        // Session event handlers (always dispatch to UI thread) -----------------
+        private void OnSessionPhaseChanged(object? sender, GamePhase phase)
         {
-            _isGameLocked = false;
-            CancellationTokenSource? spinnerCts = null;
-            
-            try
+            Dispatcher.Dispatch(() =>
             {
-                // Setup delayed spinner (only show if generation takes >500ms)
-                spinnerCts = new CancellationTokenSource();
-                var spinnerToken = spinnerCts.Token;
-                
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        // Check cancellation every 50ms instead of relying on exception
-                        // This avoids TaskCanceledException breaking the debugger
-                        for (int i = 0; i < 10; i++) // 10 * 50ms = 500ms
-                        {
-                            if (spinnerToken.IsCancellationRequested)
-                                return; // Exit without showing spinner
-                            
-                            await Task.Delay(50);
-                        }
-                        
-                        // If we reach here, generation is taking >500ms, show spinner
-                        if (!spinnerToken.IsCancellationRequested)
-                        {
-                            MainThread.BeginInvokeOnMainThread(() =>
-                            {
-                                LoadingOverlay.IsVisible = true;
-                                LoadingMessage.Text = "Generating puzzle...";
-                            });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log unexpected errors but don't crash
-                        System.Diagnostics.Debug.WriteLine($"Spinner task error: {ex.Message}");
-                    }
-                });  // ✅ Token only used inside the task
-                
-                // Generate new puzzle on background thread
-                var board = await Task.Run(() => _generator.Generate(difficulty));
-                
-                // Cancel spinner task if it hasn't shown yet
-                spinnerCts?.Cancel();
-                
-                _currentBoard = board;
-                
-                // Get solution
-                _solution = _solver.GetSolution(_currentBoard);
+                UpdateActionButtonsEnabled();
+                UpdateHeaderLabels();
+            });
+        }
 
-                // Update UI
-                UpdateGrid();
-                ClearSelection();
-                
-                // Reset and start timer
-                ResetTimer();
-                StartTimer();
-                
-                // Reset solved state and statistics
-                _isPuzzleSolved = false;
-                _mistakesCount = 0;
-                _hintsUsedCount = 0;
-                _hasUserMadeEntries = false;
-                
-                // Update difficulty
-                _currentDifficulty = difficulty.ToString();
-                UpdateHeaderLabels();
-                
-                // Save last played difficulty to settings
-                var settings = _settingsService.LoadSettings();
-                settings.LastPlayedDifficulty = difficulty;
-                await _settingsService.SaveSettingsAsync(settings);
-                
-                // Clear any saved game state since we're starting fresh
-                await _gameStateService.ClearGameStateAsync();
-            }
-            finally
-            {
-                // Cancel and dispose spinner task
-                spinnerCts?.Cancel();
-                spinnerCts?.Dispose();
-                
-                // Always hide loading overlay
-                LoadingOverlay.IsVisible = false;
-            }
-        }
-        
-        /// <summary>
-        /// Restarts the current game by clearing all user-entered values while keeping given cells.
-        /// </summary>
-        private void RestartCurrentGame()
+        private void OnSessionBoardChanged(object? sender, EventArgs e) =>
+            Dispatcher.Dispatch(UpdateGrid);
+
+        private void OnSessionTimerTick(object? sender, EventArgs e) =>
+            Dispatcher.Dispatch(() => TimerLabel.Text = $"Time: {FormatTime(_session.ElapsedSeconds)}");
+
+        private async void OnSessionPuzzleSolved(object? sender, PuzzleSolvedEventArgs e)
         {
-            _isGameLocked = false;
-            // Clear all non-given cells
-            for (int row = 0; row < SudokuBoard.Size; row++)
-            {
-                for (int col = 0; col < SudokuBoard.Size; col++)
-                {
-                    var cell = _currentBoard.GetCell(row, col);
-                    if (!cell.IsGiven)
-                    {
-                        cell.Value = 0;
-                        cell.HasError = false;
-                    }
-                }
-            }
-            
-            // Update UI
-            UpdateGrid();
-            ClearSelection();
-            
-            // Reset timer and statistics
-            ResetTimer();
-            StartTimer();
-            _isPuzzleSolved = false;
-            _mistakesCount = 0;
-            _hintsUsedCount = 0;
-            _hasUserMadeEntries = false;
-            
-            // Note: We keep _solution as it's still the same puzzle
+            await SummaryOverlay.ShowAsync(
+                e.DifficultyName,
+                e.ElapsedSeconds,
+                e.PreviousBestTime,
+                e.MistakesCount,
+                e.HintsUsedCount);
         }
-        
-        /// <summary>
-        /// Restores a game from saved state.
-        /// </summary>
-        private void RestoreGame(AppModels.GameState gameState)
-        {
-            try
-            {
-                // Deserialize board
-                if (!string.IsNullOrEmpty(gameState.BoardData))
-                {
-                    _currentBoard = SudokuBoard.Deserialize(gameState.BoardData);
-                }
-                else
-                {
-                    throw new InvalidOperationException("Board data is missing");
-                }
-                
-                // Deserialize solution if available
-                if (!string.IsNullOrEmpty(gameState.SolutionData))
-                {
-                    _solution = SudokuBoard.Deserialize(gameState.SolutionData);
-                }
-                
-                // Restore timer and state
-                _elapsedSeconds = gameState.ElapsedSeconds;
-                _currentDifficulty = gameState.Difficulty ?? "Medium";
-                _isPuzzleSolved = gameState.IsSolved;
-                _isGameLocked = gameState.IsSolved;
-                _hasUserMadeEntries = BoardHasUserEntries(_currentBoard);
-                UpdateHeaderLabels();
-                
-                // Update UI
-                UpdateGrid();
-                ClearSelection();
-                
-                // Start timer if puzzle not solved
-                if (!_isPuzzleSolved)
-                {
-                    StartTimer();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to restore game state: {ex.Message}");
-                // Fall back to showing difficulty selection (cannot be dismissed since there's no valid game)
-                _ = ShowDifficultySelectionAsync(canDismiss: false);
-            }
-        }
-        
-        /// <summary>
-        /// Saves the current game state.
-        /// </summary>
-        public async Task SaveCurrentGameStateAsync()
-        {
-            // Don't save if puzzle is solved or board is empty
-            if (_isPuzzleSolved || _currentBoard.GetAllCells().All(c => c.Value == 0))
-            {
-                return;
-            }
-            
-            try
-            {
-                var gameState = new AppModels.GameState
-                {
-                    BoardData = _currentBoard.Serialize(),
-                    SolutionData = _solution?.Serialize(),
-                    ElapsedSeconds = _elapsedSeconds,
-                    Difficulty = _currentDifficulty,
-                    IsSolved = _isPuzzleSolved
-                };
-                
-                await _gameStateService.SaveGameStateAsync(gameState);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"SudokuPage: Failed to save game state: {ex.Message}");
-            }
-        }
-        
+
+        // Header button handlers ------------------------------------------------
         private async void OnNewGameClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput || _isGameLocked)
-                return;
+            if (_isProcessingInput) return;
             _isProcessingInput = true;
-            
             try
             {
-                // Only prompt if puzzle is not solved AND user has made any entries
-                if (!_isPuzzleSolved && _hasUserMadeEntries)
+                if (_session.Phase == GamePhase.Playing && _session.HasUserMadeEntries)
                 {
                     bool answer = await DisplayAlertAsync("Abandon Puzzle?", "All progress will be lost. Start a new game?", "Yes", "No");
-                    if (!answer)
-                    {
-                        return;
-                    }
+                    if (!answer) return;
                 }
-                
-                // Show difficulty selection modal
                 await ShowDifficultySelectionAsync();
             }
             finally
@@ -417,47 +192,35 @@ namespace Sudoku.Maui.Pages
                 _isProcessingInput = false;
             }
         }
-        
+
         private async void OnRestartClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput || _isGameLocked)
-                return;
+            if (_isProcessingInput) return;
             _isProcessingInput = true;
-            
             try
             {
-                // Only prompt if puzzle is not solved AND user has made any entries
-                if (!_isPuzzleSolved && _hasUserMadeEntries)
+                if (_session.Phase == GamePhase.Playing && _session.HasUserMadeEntries)
                 {
                     bool answer = await DisplayAlertAsync("Restart Puzzle?", "All progress will be lost. Restart this puzzle?", "Yes", "No");
-                    if (!answer)
-                    {
-                        return;
-                    }
+                    if (!answer) return;
                 }
-                
-                // Restart the current puzzle
-                RestartCurrentGame();
+                _session.Restart();
+                ClearSelection();
             }
             finally
             {
                 _isProcessingInput = false;
             }
         }
-        
+
         private async void OnSettingsClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput || _isGameLocked)
-                return;
+            if (_isProcessingInput) return;
             _isProcessingInput = true;
-            
             try
             {
-                StopTimer();
-                
-                // Save game state before navigating away
-                await SaveCurrentGameStateAsync();
-                
+                _session.PauseTimer();
+                await _session.SaveAsync();
                 await Shell.Current.GoToAsync(nameof(SettingsPage));
             }
             finally
@@ -466,55 +229,35 @@ namespace Sudoku.Maui.Pages
             }
         }
 
+        // Game action handlers --------------------------------------------------
         private async void OnHintClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput || _isGameLocked)
-                return;
+            if (_isProcessingInput) return;
             _isProcessingInput = true;
-            
             try
             {
-                // Block hints if there are conflicts
-                _validator.UpdateErrorFlags(_currentBoard);
-                if (!_validator.IsValidState(_currentBoard))
+                var result = _session.TryGetHint();
+                switch (result.Outcome)
                 {
-                    UpdateGrid();
-                    await DisplayAlertAsync("Fix Conflicts First", "Resolve highlighted conflicts before requesting a hint.", "OK");
-                    return;
-                }
-
-                _solution ??= _solver.GetSolution(_currentBoard);
-                var hint = _solver.GetHint(_currentBoard);
-                if (hint == null)
-                {
-                    await DisplayAlertAsync("No Hint Available", "No valid hints are available right now.", "OK");
-                    return;
-                }
-
-                var (row, col, value) = hint.Value;
-                _currentBoard.SetCell(row, col, value);
-                
-                // Increment hints used counter
-                _hintsUsedCount++;
-
-                _selectedRow = row;
-                _selectedCol = col;
-                _selectedButton = _cellButtons[row, col];
-
-                // Update error flags AFTER setting the cell
-                _validator.UpdateErrorFlags(_currentBoard);
-                UpdateGrid();
-
-                if (_selectedButton != null)
-                {
-                    await _selectedButton.ScaleToAsync(1.08, 120, Easing.CubicOut);
-                    await _selectedButton.ScaleToAsync(1.0, 120, Easing.CubicIn);
-                }
-
-                // Check if solved AFTER all animations and updates complete
-                if (_validator.IsSolved(_currentBoard))
-                {
-                    await OnPuzzleSolvedAsync();
+                    case HintOutcome.Rejected:
+                        return;
+                    case HintOutcome.BlockedByConflicts:
+                        await DisplayAlertAsync("Fix Conflicts First", "Resolve highlighted conflicts before requesting a hint.", "OK");
+                        return;
+                    case HintOutcome.NoHintAvailable:
+                        await DisplayAlertAsync("No Hint Available", "No valid hints are available right now.", "OK");
+                        return;
+                    case HintOutcome.Provided:
+                        _selectedRow = result.Row;
+                        _selectedCol = result.Col;
+                        _selectedButton = _cellButtons[result.Row, result.Col];
+                        HighlightSelection(result.Row, result.Col);
+                        if (_selectedButton != null)
+                        {
+                            await _selectedButton.ScaleToAsync(1.08, 120, Easing.CubicOut);
+                            await _selectedButton.ScaleToAsync(1.0, 120, Easing.CubicIn);
+                        }
+                        return;
                 }
             }
             finally
@@ -525,36 +268,24 @@ namespace Sudoku.Maui.Pages
 
         private async void OnCheckClicked(object? sender, EventArgs e)
         {
-            if (_isProcessingInput || _isGameLocked)
-                return;
+            if (_isProcessingInput) return;
             _isProcessingInput = true;
-            
             try
             {
-                _validator.UpdateErrorFlags(_currentBoard);
-                UpdateGrid();
-
-                if (!_validator.IsValidState(_currentBoard))
+                var result = _session.Check();
+                switch (result.Outcome)
                 {
-                    await DisplayAlertAsync("Conflicts Found", "There are conflicts highlighted in red. Please fix them.", "OK");
-                    return;
-                }
-
-                if (_validator.IsSolved(_currentBoard))
-                {
-                    await OnPuzzleSolvedAsync();
-                    return;
-                }
-
-                _solution ??= _solver.GetSolution(_currentBoard);
-                if (_solution != null)
-                {
-                    int correct = _validator.CountCorrectCells(_currentBoard, _solution);
-                    await DisplayAlertAsync("Progress Check", $"No conflicts found. {correct}/81 cells are correct so far.", "OK");
-                }
-                else
-                {
-                    await DisplayAlertAsync("Progress Check", "No conflicts found so far.", "OK");
+                    case CheckOutcome.Rejected:
+                        return;
+                    case CheckOutcome.HasConflicts:
+                        await DisplayAlertAsync("Conflicts Found", "There are conflicts highlighted in red. Please fix them.", "OK");
+                        return;
+                    case CheckOutcome.Solved:
+                        // PuzzleSolved event handler will show the summary overlay.
+                        return;
+                    case CheckOutcome.InProgress:
+                        await DisplayAlertAsync("Progress Check", $"No conflicts found. {result.CorrectCellCount}/81 cells are correct so far.", "OK");
+                        return;
                 }
             }
             finally
@@ -563,29 +294,28 @@ namespace Sudoku.Maui.Pages
             }
         }
 
-        private void OnClearClicked(object? sender, EventArgs e)
+        private void OnClearClicked(object? sender, EventArgs e) => ClearSelectedCell();
+
+        // Grid rendering --------------------------------------------------------
+        private void UpdateActionButtonsEnabled()
         {
-            ClearSelectedCellAsync();
+            HintButton.IsEnabled = CheckButton.IsEnabled = ClearButton.IsEnabled = _session.CanUseGameActions;
         }
 
-        /// <summary>
-        /// Updates all cell buttons to reflect the current board state.
-        /// </summary>
         private void UpdateGrid()
         {
-            // Disable action buttons if locked
-            HintButton.IsEnabled = CheckButton.IsEnabled = ClearButton.IsEnabled = !_isGameLocked;
+            UpdateActionButtonsEnabled();
+
+            var board = _session.Board;
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
                 for (int col = 0; col < SudokuBoard.Size; col++)
                 {
-                    var cell = _currentBoard.GetCell(row, col);
+                    var cell = board.GetCell(row, col);
                     var button = _cellButtons[row, col];
 
-                    // Update text
                     button.Text = cell.Value == 0 ? "" : cell.Value.ToString();
 
-                    // Update styling - differentiate given vs user-entered cells
                     if (cell.HasError)
                     {
                         button.BackgroundColor = ErrorCellColor;
@@ -607,85 +337,60 @@ namespace Sudoku.Maui.Pages
                 }
             }
 
-            // Re-apply selection highlight if any
             if (_selectedRow >= 0 && _selectedCol >= 0)
             {
                 HighlightSelection(_selectedRow, _selectedCol);
             }
 
-            // Update number pad remaining counts
             UpdateNumberPadCounts();
         }
 
-        /// <summary>
-        /// Calculates and updates the remaining count for each number (1-9) on the number pad.
-        /// </summary>
         private void UpdateNumberPadCounts()
         {
-            // Count how many of each number (1-9) still need to be placed
-            var remainingCounts = new int[10]; // Index 0 unused, 1-9 for numbers
+            var remaining = new int[10];
+            for (int i = 1; i <= 9; i++) remaining[i] = 9;
 
-            // Each number should appear exactly 9 times in a solved puzzle
-            for (int i = 1; i <= 9; i++)
-            {
-                remainingCounts[i] = 9;
-            }
-
-            // Subtract the numbers already on the board
+            var board = _session.Board;
             for (int row = 0; row < SudokuBoard.Size; row++)
             {
                 for (int col = 0; col < SudokuBoard.Size; col++)
                 {
-                    var cell = _currentBoard.GetCell(row, col);
+                    var cell = board.GetCell(row, col);
                     if (cell.Value >= 1 && cell.Value <= 9)
-                    {
-                        remainingCounts[cell.Value]--;
-                    }
+                        remaining[cell.Value]--;
                 }
             }
 
-            // Update each NumberPadButton in both rows
-            UpdateNumPadCounts(NumberPadRow1, remainingCounts);
-            UpdateNumPadCounts(NumberPadRow2, remainingCounts);
+            UpdateNumPadCounts(NumberPadRow1, remaining);
+            UpdateNumPadCounts(NumberPadRow2, remaining);
         }
-        
-        private static void UpdateNumPadCounts(Microsoft.Maui.Controls.Layout container, int[] remainingCounts)
+
+        private static void UpdateNumPadCounts(Microsoft.Maui.Controls.Layout container, int[] remaining)
         {
             foreach (var child in container.Children)
             {
                 if (child is Controls.NumberPadButton numPadBtn)
                 {
-                    numPadBtn.RemainingCount = remainingCounts[numPadBtn.Number];
-                    numPadBtn.IsEnabled = remainingCounts[numPadBtn.Number] > 0;
+                    numPadBtn.RemainingCount = remaining[numPadBtn.Number];
+                    numPadBtn.IsEnabled = remaining[numPadBtn.Number] > 0;
                 }
             }
         }
 
-        /// <summary>
-        /// Handles cell selection, including given cells.
-        /// </summary>
+        // Selection / highlighting ---------------------------------------------
         private void OnCellClicked(object? sender, CellClickedEventArgs e)
         {
-            if (_isGameLocked) return;
-            
-            var cell = _currentBoard.GetCell(e.Row, e.Col);
-            
+            if (!_session.CanEditBoard) return;
+
             _selectedRow = e.Row;
             _selectedCol = e.Col;
             _selectedButton = _cellButtons[e.Row, e.Col];
-
             HighlightSelection(e.Row, e.Col);
         }
 
-        /// <summary>
-        /// Highlights the selected cell and related row/column/subgrid.
-        /// </summary>
         private void HighlightSelection(int row, int col)
         {
-            // Use CellHighlightManager to calculate colors
-            var colorMap = _highlightManager.CalculateColors(_currentBoard, row, col);
-            
-            // Apply colors to all cell buttons
+            var colorMap = _highlightManager.CalculateColors(_session.Board, row, col);
             for (int r = 0; r < SudokuBoard.Size; r++)
             {
                 for (int c = 0; c < SudokuBoard.Size; c++)
@@ -698,9 +403,6 @@ namespace Sudoku.Maui.Pages
             }
         }
 
-        /// <summary>
-        /// Clears the current selection.
-        /// </summary>
         private void ClearSelection()
         {
             _selectedRow = -1;
@@ -709,72 +411,25 @@ namespace Sudoku.Maui.Pages
             UpdateGrid();
         }
 
-        /// <summary>
-        /// Handles number button clicks from the number pad.
-        /// </summary>
+        // Number input ---------------------------------------------------------
         private async void OnNumPadButtonTapped(object? sender, EventArgs e)
         {
-            if (sender is not Controls.NumberPadButton numPadButton)
-                return;
-
+            if (sender is not Controls.NumberPadButton numPadButton) return;
             await ApplyNumberInputAsync(numPadButton.Number);
         }
 
         private async Task ApplyNumberInputAsync(int number)
         {
-            if (_isProcessingInput || _isGameLocked)
-                return;
+            if (_isProcessingInput) return;
+            if (_selectedRow < 0 || _selectedCol < 0) return;
+
             _isProcessingInput = true;
-            
             try
             {
-                if (number < 1 || number > 9)
-                    return;
-
-                if (_selectedRow < 0 || _selectedCol < 0)
-                    return;
-
-                var cell = _currentBoard.GetCell(_selectedRow, _selectedCol);
-                if (cell.IsGiven)
-                    return;
-
-                // Check if move conflicts with visible numbers
-                if (!_validator.IsValidMove(_currentBoard, _selectedRow, _selectedCol, number))
+                var result = _session.TryPlaceNumber(_selectedRow, _selectedCol, number);
+                if (result.Outcome == PlacementOutcome.VisibleConflict)
                 {
-                    // Invalid move (visible conflict) counts as a mistake
-                    _mistakesCount++;
-                    // Show conflict feedback - temporarily highlight cell as error
                     await ShowConflictFeedbackAsync();
-                    return;
-                }
-
-                // Move is valid (no visible conflicts), place it
-                _currentBoard.SetCell(_selectedRow, _selectedCol, number);
-                
-                // Mark that user has made an entry
-                _hasUserMadeEntries = true;
-
-                // Update error flags first to check for any conflicts across the board
-                _validator.UpdateErrorFlags(_currentBoard);
-
-                // Then check if the placed number matches the solution (this overrides conflict check)
-                if (_solution != null)
-                {
-                    var solutionCell = _solution.GetCell(_selectedRow, _selectedCol);
-                    if (cell.Value != solutionCell.Value)
-                    {
-                        cell.HasError = true;
-                        _mistakesCount++;
-                    }
-                }
-
-                // Update grid display
-                UpdateGrid();
-
-                // Check if solved
-                if (_validator.IsSolved(_currentBoard))
-                {
-                    await OnPuzzleSolvedAsync();
                 }
             }
             finally
@@ -793,48 +448,14 @@ namespace Sudoku.Maui.Pages
                 _selectedButton.BackgroundColor = originalColor;
             }
         }
-        private void ClearSelectedCellAsync()
+
+        private void ClearSelectedCell()
         {
-            if (_selectedRow < 0 || _selectedCol < 0)
-                return;
-
-            var cell = _currentBoard.GetCell(_selectedRow, _selectedCol);
-            if (cell.IsGiven || cell.Value == 0)
-                return;
-
-            cell.Value = 0;
-            cell.HasError = false;
-            _validator.UpdateErrorFlags(_currentBoard);
-            UpdateGrid();
-            
-            // Mark that user has made a change (clearing is also a change)
-            _hasUserMadeEntries = true;
+            if (_selectedRow < 0 || _selectedCol < 0) return;
+            _session.TryClearCell(_selectedRow, _selectedCol);
         }
 
-        // Timer management
-        private void StartTimer()
-        {
-            _gameTimer?.Stop();
-            _gameTimer = new System.Timers.Timer(1000);
-            _gameTimer.Elapsed += (s, e) =>
-            {
-                _elapsedSeconds++;
-                Dispatcher.Dispatch(() => TimerLabel.Text = $"Time: {FormatTime(_elapsedSeconds)}");
-            };
-            _gameTimer.Start();
-        }
-
-        private void StopTimer()
-        {
-            _gameTimer?.Stop();
-        }
-
-        private void ResetTimer()
-        {
-            _elapsedSeconds = 0;
-            TimerLabel.Text = "Time: 00:00";
-        }
-
+        // Header / time formatting ---------------------------------------------
         private static string FormatTime(int totalSeconds)
         {
             int minutes = totalSeconds / 60;
@@ -844,77 +465,11 @@ namespace Sudoku.Maui.Pages
 
         private void UpdateHeaderLabels()
         {
-            DifficultyLabel.Text = $"Difficulty: {_currentDifficulty}";
-            TimerLabel.Text = $"Time: {FormatTime(_elapsedSeconds)}";
-        }
-        
-        /// <summary>
-        /// Checks if the board contains any user-entered values (non-given cells with values).
-        /// </summary>
-        private bool BoardHasUserEntries(SudokuBoard board)
-        {
-            for (int row = 0; row < SudokuBoard.Size; row++)
-            {
-                for (int col = 0; col < SudokuBoard.Size; col++)
-                {
-                    var cell = board.GetCell(row, col);
-                    if (cell.Value != 0 && !cell.IsGiven)
-                        return true;
-                }
-            }
-            return false;
-        }
-        
-        /// <summary>
-        /// Handles puzzle completion - stops timer, updates statistics, and shows summary popup.
-        /// </summary>
-        private async Task OnPuzzleSolvedAsync()
-        {
-            // Prevent duplicate calls if already showing summary
-            if (_isPuzzleSolved)
-                return;
-            
-            _isPuzzleSolved = true;
-            _isGameLocked = true;
-            StopTimer();
-            await _gameStateService.ClearGameStateAsync();
-            
-            // Load statistics to check for best time
-            var stats = _settingsService.LoadStatistics();
-            var settings = _settingsService.LoadSettings();
-            var currentDifficultyEnum = settings.LastPlayedDifficulty ?? CoreDifficulty.Medium;
-            var previousBestTime = stats.GetBestTime(currentDifficultyEnum);
-            
-            // Update best time if this is a new record or first completion
-            if (!previousBestTime.HasValue || _elapsedSeconds < previousBestTime.Value)
-            {
-                stats.SetBestTime(currentDifficultyEnum, _elapsedSeconds);
-                await _settingsService.SaveStatisticsAsync(stats);
-            }
-            
-            // Show summary popup - IsBusy will be cleared by the popup event handlers
-            await SummaryOverlay.ShowAsync(
-                _currentDifficulty,
-                _elapsedSeconds,
-                previousBestTime,
-                _mistakesCount,
-                _hintsUsedCount
-            );
-        }
-        
-        private void OnSummaryDoneRequested(object? sender, EventArgs e)
-        {
-            // Popup already hidden by the control
-            _isProcessingInput = false;
-        }
-        
-        private async void OnSummaryPlayAgainRequested(object? sender, EventArgs e)
-        {
-            // Show difficulty selection for new game
-            _isProcessingInput = false;
-            await ShowDifficultySelectionAsync();
+            DifficultyLabel.Text = $"Difficulty: {_session.DifficultyName}";
+            TimerLabel.Text = $"Time: {FormatTime(_session.ElapsedSeconds)}";
         }
 
+        // Window event wiring --------------------------------------------------
         private void AttachWindowKeyHandler()
         {
 #if WINDOWS
@@ -927,7 +482,7 @@ namespace Sudoku.Maui.Pages
             }
 #endif
         }
-        
+
         private void AttachWindowFocusHandler()
         {
             var window = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
@@ -951,7 +506,7 @@ namespace Sudoku.Maui.Pages
             }
 #endif
         }
-        
+
         private void DetachWindowFocusHandler()
         {
             var window = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
@@ -969,7 +524,7 @@ namespace Sudoku.Maui.Pages
             {
                 if (e.Key == Windows.System.VirtualKey.Back || e.Key == Windows.System.VirtualKey.Delete)
                 {
-                    ClearSelectedCellAsync();
+                    ClearSelectedCell();
                     e.Handled = true;
                 }
                 return;
@@ -982,128 +537,111 @@ namespace Sudoku.Maui.Pages
         private static bool TryGetDigitFromVirtualKey(Windows.System.VirtualKey key, out int number)
         {
             number = 0;
-
             if (key >= Windows.System.VirtualKey.Number1 && key <= Windows.System.VirtualKey.Number9)
             {
                 number = (int)key - (int)Windows.System.VirtualKey.Number0;
                 return true;
             }
-
             if (key >= Windows.System.VirtualKey.NumberPad1 && key <= Windows.System.VirtualKey.NumberPad9)
             {
                 number = (int)key - (int)Windows.System.VirtualKey.NumberPad0;
                 return true;
             }
-
             return false;
         }
 #endif
 
-        private void OnWindowActivated(object? sender, EventArgs e)
-        {
-            // Resume timer if puzzle not solved and timer exists
-            if (!_isPuzzleSolved)
-            {
-                StartTimer();
-            }
-        }
-        
-        private void OnWindowDeactivated(object? sender, EventArgs e)
-        {
-            // Pause timer when window loses focus
-            StopTimer();
-        }
-        
+        private void OnWindowActivated(object? sender, EventArgs e) => _session.ResumeTimer();
+        private void OnWindowDeactivated(object? sender, EventArgs e) => _session.PauseTimer();
+
+        // Page lifecycle -------------------------------------------------------
         protected override void OnAppearing()
         {
             base.OnAppearing();
             AttachWindowKeyHandler();
             AttachWindowFocusHandler();
-            
-            // On first appearance, check for saved game or show difficulty selection
+
             if (_isFirstAppearing)
             {
-                var savedGame = _gameStateService.LoadGameState();
-                if (savedGame != null)
+                _isFirstAppearing = false;
+                if (!_session.TryResumeSavedGame())
                 {
-                    RestoreGame(savedGame);
-                }
-                else
-                {
-                    // No saved game - show difficulty selection modal (cannot be dismissed)
                     _ = ShowDifficultySelectionAsync(canDismiss: false);
                 }
-                _isFirstAppearing = false;
             }
             else
             {
-                // Apply settings to refresh button visibility
                 ApplySettings();
-                // Refresh cell colors to pick up current theme
                 UpdateGrid();
-                // Restart timer if coming back from settings
-                if (!_isPuzzleSolved)
-                {
-                    StartTimer();
-                }
+                _session.ResumeTimer();
             }
         }
-        
+
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
             DetachWindowKeyHandler();
             DetachWindowFocusHandler();
-            // Stop timer when leaving the page
-            StopTimer();
-            
-            // Save game state when navigating away
-            _ = SaveCurrentGameStateAsync();
+            _session.PauseTimer();
+            _ = _session.SaveAsync();
         }
-        
-        /// <summary>
-        /// Shows the difficulty selection popup.
-        /// </summary>
-        /// <param name="canDismiss">Whether the user can dismiss without selecting (false for first launch).</param>
+
+        // Difficulty / summary overlays ----------------------------------------
         private async Task ShowDifficultySelectionAsync(bool canDismiss = true)
         {
-            // Pause timer while modal is open
-            StopTimer();
-            
+            _session.PauseTimer();
+
             var settings = _settingsService.LoadSettings();
             var statistics = _settingsService.LoadStatistics();
-            
-            // Determine last played difficulty from settings or saved game state
             CoreDifficulty? lastPlayed = settings.LastPlayedDifficulty;
-            
+
             await DifficultyOverlay.ShowAsync(lastPlayed, statistics, canDismiss);
         }
-        
-        /// <summary>
-        /// Handles difficulty selection from the popup.
-        /// </summary>
+
         private async void OnDifficultySelected(object? sender, CoreDifficulty difficulty)
         {
-            await StartNewGameAsync(difficulty);
-        }
-        
-        /// <summary>
-        /// Handles difficulty popup dismissal (user tapped outside or clicked X).
-        /// </summary>
-        private void OnDifficultyOverlayDismissed(object? sender, EventArgs e)
-        {
-            // User dismissed the modal without selecting - resume timer if puzzle not solved
-            if (!_isPuzzleSolved)
+            CancellationTokenSource? spinnerCts = null;
+            try
             {
-                StartTimer();
+                spinnerCts = new CancellationTokenSource();
+                var spinnerToken = spinnerCts.Token;
+
+                _ = Task.Run(async () =>
+                {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (spinnerToken.IsCancellationRequested) return;
+                        await Task.Delay(50);
+                    }
+                    if (!spinnerToken.IsCancellationRequested)
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            LoadingOverlay.IsVisible = true;
+                            LoadingMessage.Text = "Generating puzzle...";
+                        });
+                    }
+                });
+
+                ClearSelection();
+                await _session.StartNewAsync(difficulty);
+            }
+            finally
+            {
+                spinnerCts?.Cancel();
+                spinnerCts?.Dispose();
+                LoadingOverlay.IsVisible = false;
             }
         }
+
+        private void OnDifficultyOverlayDismissed(object? sender, EventArgs e) => _session.ResumeTimer();
+
+        private void OnSummaryDoneRequested(object? sender, EventArgs e)
+        {
+            // No-op: overlay hides itself; lock state is owned by the session.
+        }
+
+        private async void OnSummaryPlayAgainRequested(object? sender, EventArgs e) =>
+            await ShowDifficultySelectionAsync();
     }
 }
-
-
-
-
-
-
-

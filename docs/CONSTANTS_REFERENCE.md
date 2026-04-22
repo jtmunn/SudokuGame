@@ -1,109 +1,93 @@
-﻿# Sudoku UI Constants Reference
+# Sudoku UI Constants Reference
 
-This document describes all the constants used throughout the Sudoku application for sizing and layout calculations.
+This document describes the layout and sizing model used throughout the Sudoku app.
 
-## SudokuPage.xaml.cs Constants
+The implementation lives in [`Sudoku.Maui/Helpers/SudokuLayoutCalculator.cs`](../Sudoku.Maui/Helpers/SudokuLayoutCalculator.cs). This document is a summary — the source code is authoritative.
 
-### Grid Sizing
-- **MinGridSize** = `360` - Minimum size (width/height) for the Sudoku grid
-- **BaseGridSize** = `450.0` - Reference size used for scaling calculations
+---
 
-### Button Sizing
-- **BaseButtonSize** = `45.0` - Base size for number pad and action buttons (circular)
-- **BaseFontSize** = `20.0` - Base font size for buttons
+## Design Principles
 
-### Layout Spacing
-- **GameAreaPadding** = `10` - Padding around the game area (applied to both sides)
-- **ActionButtonMargin** = `20` - Left margin separating action buttons from grid
-- **NumberButtonMargin** = `6` - Margin around each number button in the pad
+The layout is split into two independent systems to avoid circular dependencies between the grid and the buttons:
 
-### UI Regions
-- **HeaderHeight** = `56` - Height of the header bar (difficulty, timer, settings)
-- **NumberPadHeight** = `120` - Approximate height reserved for the number pad area
+1. **Button & font sizes** are derived from **window dimensions** (clamped to a sensible range).
+2. **Grid size** is handled entirely by MAUI's star row plus `SquareLayoutControl`, which enforces a 1:1 aspect ratio.
+3. **Cell font sizes** are derived from the **actual rendered grid size** via `SizeChanged`, so the value reflects what was actually measured rather than a prediction.
 
-### Cell Font Sizing (in UpdateCellFontSizes)
-- **FontSizeRatio** = `0.4` - Font size as 40% of cell size
-- **MinCellFontSize** = `16` - Minimum font size for grid cells
-- **MaxCellFontSize** = `60` - Maximum font size for grid cells
+This means there are no `BaseGridSize`-style scale factors and no manual `TranslationX` math.
 
-## App.xaml.cs Constants
+---
 
-### Window Sizing
-- **MinGridSize** = `360` - Matches SudokuPage minimum grid size
-- **BaseGridSize** = `450.0` - Reference grid size for calculations
-- **BaseButtonSize** = `45.0` - Base action button size
-- **ActionButtonMargin** = `20` - Action button left margin
-- **GameAreaPadding** = `10` - Game area padding (per side)
-- **MinSpacerWidth** = `50` - Minimum width for centering spacers
-- **MinWindowHeight** = `700` - Minimum window height
+## Constants
 
-## Scaling Formula
+### `SudokuLayoutCalculator`
 
-All UI elements scale proportionally based on the grid size:
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `MinGridSize` | `360` | Minimum size enforced by `SquareLayoutControl`. The window minimum width / height is sized so the grid never has to shrink below this. |
 
-```csharp
-scale = currentGridSize / BaseGridSize
-scaledButtonSize = BaseButtonSize * scale
-scaledFontSize = BaseFontSize * scale
-```
+### Magic numbers used in the calculator
 
-## Minimum Window Width Calculation
+These numbers are intentional, documented in the calculator code, and are not exposed as constants:
 
-```csharp
-MinimumWidth = MinGridSize                      // 360
-             + (BaseButtonSize * minScale)      // ~36
-             + ActionButtonMargin               // 20
-             + (GameAreaPadding * 2)            // 20
-             + MinSpacerWidth                   // 50
-             = ~486 (rounded to 520 for comfort)
-```
+| Expression | Where | Reason |
+|------------|-------|--------|
+| `(windowWidth - 60) / 7.5` | `Calculate` | "5 buttons across with margins" — yields a comfortable per-button width. |
+| `(windowHeight - 80) / 14.0` | `Calculate` | Prevents buttons from eating vertical space the grid needs in landscape. |
+| `Math.Clamp(..., 44, 100)` | `Calculate` | Never smaller than the platform-recommended 44 px tap target; never larger than 100 px. |
+| `ButtonSize * 0.4` | `FontSize` | Button label size proportional to the button. |
+| `ButtonSize * 0.18` | `CountFontSize` | Remaining-count badge size — much smaller than the label. |
+| `ButtonSize * 0.15` | `CountMargin` | Inset of the count badge from the top-right corner. |
+| `Math.Max(10, (gridSize / 9.0) * 0.55)` | `CalculateCellFontSize` | Cell digit takes ~55% of cell height; 10pt floor for tiny windows. |
+
+---
 
 ## Layout Structure
 
-**IMPORTANT: Grid Centering vs Action Button Positioning**
-
-The Sudoku grid is **centered independently** in the window. The action buttons are then positioned to the **right** of this centered grid using `TranslationX` offset. This ensures:
-- Grid remains centered regardless of action button visibility
-- Action buttons don't affect grid centering calculation
-- Number pad remains centered below the grid
+The page is a **3-row `Grid`**:
 
 ```
 +--------------------------------------------------------+
-| Header Bar (56px height)                               |
-|  [Difficulty] [Timer] [New] [Settings]                 |
+| Row 0 — Header (fixed height)                          |
+|   [Difficulty] [Timer]              [New] [Settings]   |
 +--------------------------------------------------------+
-| Game Area (Padding: 10px)                              |
+| Row 1 — Game Area (star-sized)                         |
 |                                                        |
-|          +----------+                                  |
-|          |   Grid   |  [Hint]                          |
-|          |  (360+)  |  [Check]                         |
-|          | CENTERED |  | positioned via TranslationX   |
-|          +----------+                                  |
+|              +-------------------+                     |
+|              |                   |                     |
+|              |  SudokuBoard      |                     |
+|              |  inside           |                     |
+|              |  SquareLayout     |                     |
+|              |  (always 1:1)     |                     |
+|              |                   |                     |
+|              +-------------------+                     |
 |                                                        |
 +--------------------------------------------------------+
-| Number Pad (~120px height)                             |
-|       [1] [2] [3] [4] [5] [6] [7] [8] [9]              |
-|                  CENTERED                              |
+| Row 2 — Bottom Bar                                     |
+|   [Hint]  [Check]                                      |
+|   [1] [2] [3] [4] [5] [6] [7] [8] [9]                  |
 +--------------------------------------------------------+
 ```
 
-## Action Button Positioning
+### Why no manual centering?
 
-Action buttons use `TranslationX` to position themselves relative to the centered grid:
+`SquareLayoutControl` automatically maintains a 1:1 aspect ratio and centers its child within whatever space MAUI gives it. The page does **not** use `AbsoluteLayout` and does **not** offset action buttons with `TranslationX` — they simply live in Row 2 below the grid.
 
-```csharp
-offsetFromCenter = (gridSize / 2) + ActionButtonMargin + (buttonWidth / 2)
-ActionButtonStack.TranslationX = offsetFromCenter
-```
+---
 
-This positions the center of the action button stack to the right of the grid edge.
+## Window Sizing
 
-## Future Modifications
+The window's minimum size is set so the grid can always render at `MinGridSize` (360) plus enough room for the header, bottom bar, and padding. Window-state persistence (size + position) is handled by `SettingsService` — see [WINDOW_SIZE_PERSISTENCE.md](WINDOW_SIZE_PERSISTENCE.md).
 
-To adjust sizing, modify these constants:
-- **Grid size range**: Change `MinGridSize` or `BaseGridSize`
-- **Button sizes**: Adjust `BaseButtonSize` and `BaseFontSize`
-- **Spacing**: Modify `ActionButtonMargin`, `GameAreaPadding`, `NumberButtonMargin`
-- **Window constraints**: Update `MinWindowHeight` or minimum width calculation
+---
 
-All calculations will automatically update based on the new constant values.
+## Modifying the Layout
+
+To change sizing behavior, edit [`SudokuLayoutCalculator.cs`](../Sudoku.Maui/Helpers/SudokuLayoutCalculator.cs) directly:
+
+- **Tap target floor / ceiling** — adjust the `Math.Clamp(..., 44, 100)` bounds.
+- **Cell digit size** — adjust the `0.55` factor in `CalculateCellFontSize`.
+- **Button label / badge** — adjust the `0.4` / `0.18` factors in `Calculate`.
+- **Minimum grid** — change `MinGridSize` (and update the window-minimum width/height accordingly).
+
+All consumers re-read these values on `SizeChanged`, so changes take effect immediately on the next layout pass.

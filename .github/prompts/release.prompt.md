@@ -19,24 +19,40 @@ Before proceeding, ask the user whether to run the build and unit tests now:
 - Based on the changes, suggest the next version (patch for fixes/minor improvements, minor for new features, major for breaking changes).
 - Ask the user to confirm the version number before proceeding.
 
-## 3. Update version and changelog
+## 3. Audit documentation
+
+Review the docs for drift caused by the unreleased changes. Cross-reference the change list from step 1 against:
+
+- `README.md`
+- `docs/DEVELOPERS.md` — architecture diagram, project list, build commands, dependency table, design decisions
+- `docs/CONSTANTS_REFERENCE.md` — must match the current code
+- `docs/TROUBLESHOOTING.md`, `docs/INSTALLATION.md`, `docs/WINDOW_SIZE_PERSISTENCE.md`, `docs/DIFFICULTY_ALGORITHM_RESEARCH.md` — only if relevant areas changed
+- `.github/copilot-instructions.md` — if architecture, conventions, or critical rules changed
+
+Report which docs (if any) are stale and ask the user whether to:
+- **Fix in this release** (preferred — docs ship with the code that made them stale), or
+- **Defer** and note as a follow-up.
+
+If fixing, make the doc updates now so they're included in the release commit.
+
+## 4. Update version and changelog
 
 - Update `Directory.Build.props`: bump `ApplicationDisplayVersion` and increment `ApplicationVersion` by 1.
 - Add a new section to `CHANGELOG.md` under the `---` separator, above the previous release, following the existing format:
   ```
   ## [X.Y.Z] - YYYY-MM-DD
 
-  ### Added/Changed/Fixed/Improved/Removed
+  ### Added/Changed/Deprecated/Removed/Fixed/Security
   - Description of change
   ```
-- Use today's date. Categorize changes using Keep a Changelog conventions.
+- Use today's date. Use only the six [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) categories listed above.
 
-## 4. Review
+## 5. Review
 
-- Show the user a summary of all changes made (version bump + changelog entry).
+- Show the user a summary of all changes made (version bump + changelog entry + any doc updates).
 - **Stop and wait** for the user to review and approve before continuing.
 
-## 5. Commit, tag, and push
+## 6. Commit, tag, and push
 
 Only after the user approves:
 

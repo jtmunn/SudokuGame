@@ -30,6 +30,9 @@ namespace Sudoku.Maui
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
             builder.Services.AddSingleton<IGameStateService, GameStateService>();
 
+            // Register the live game session as a singleton; survives page navigation.
+            builder.Services.AddSingleton<IGameSession, GameSession>();
+
             // Register pages
             builder.Services.AddTransient<SudokuPage>();
             builder.Services.AddTransient<SettingsPage>();
